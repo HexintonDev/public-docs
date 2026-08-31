@@ -1,8 +1,8 @@
-# ProcessEngine Sample Library
+# Hexinton Engine Sample Library
 
 Status: current public sample index.
 
-This library contains small, test-backed examples for one ProcessEngine behavior at a time. It is
+This library contains small, test-backed examples for one Hexinton Engine behavior at a time. It is
 not a collection of unverified trainer snippets. Each sample links to the exact fixture and test
 used as evidence.
 

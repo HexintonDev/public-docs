@@ -5,7 +5,7 @@
 * [Documentation Home](README.md)
 * [Public User Guide](guides/public-user-guide.md)
 
-## ProcessEngine Wiki
+## Hexinton Engine Wiki
 
 * [Technical Wiki](guides/engine/README.md)
   * [Wiki Framework](guides/engine/WIKI-FRAMEWORK.md)

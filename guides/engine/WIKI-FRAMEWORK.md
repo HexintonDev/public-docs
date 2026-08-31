@@ -1,8 +1,8 @@
-# HexMod ProcessEngine Wiki Framework
+# Hexinton Engine Wiki Framework
 
 Status: planning document for the public technical wiki.
 
-This is the first step of the public documentation work. It defines how the public ProcessEngine
+This is the first step of the public documentation work. It defines how the public Hexinton Engine
 pages, implementation references, and test fixtures are organized into a searchable English wiki.
 It is not a basic tutorial and it is not a promise that every planned feature already exists.
 
@@ -90,11 +90,11 @@ and links to focused examples instead of placing every feature in one long tutor
 ## Public Evidence Sources
 
 The public pages in this repository are the reader-facing source of truth for the first release.
-Executable behavior is cross-checked against the ProcessEngine implementation and test fixtures in
+Executable behavior is cross-checked against the Hexinton Engine implementation and test fixtures in
 the source repository. Internal architecture, product design, requirements, and implementation
 plans are intentionally excluded from this repository.
 
-The implementation and test evidence comes from the ProcessEngine source repository. Source
+The implementation and test evidence comes from the Hexinton Engine source repository. Source
 repository URLs are intentionally omitted from this public site.
 
 Before publishing a final page, reconcile conflicting statements against the implementation and
@@ -132,7 +132,7 @@ Every technical claim should be classified as one of:
 
 | Evidence | Meaning |
 | --- | --- |
-| Implementation | Behavior present in the current ProcessEngine or host code |
+| Implementation | Behavior present in the current Hexinton Engine or host code |
 | Test | Behavior covered by a repository test or fixture |
 | Existing docs | Already documented but requiring implementation reconciliation |
 | Planned | Design or future behavior that is not safe to use as current API |

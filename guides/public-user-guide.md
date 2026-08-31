@@ -442,9 +442,9 @@ Studio 提供 `Widget Preview` 预览训练器控件，但预览不能代替真�
 
 ## 进一步学习
 
-本文包含普通用户操作说明和基础脚本入门。要真正编写完整的训练器脚本，请先阅读英文 [ProcessEngine technical documentation](engine/README.md)。其中按主题说明内存扫描、Hook、Auto Assembler、Package 生命周期、Lua API、控件配置和测试方法。
+本文包含普通用户操作说明和基础脚本入门。要真正编写完整的训练器脚本，请先阅读英文 [Hexinton Engine technical documentation](engine/README.md)。其中按主题说明内存扫描、Hook、Auto Assembler、Package 生命周期、Lua API、控件配置和测试方法。
 
-- [ProcessEngine technical documentation](engine/README.md)
+- [Hexinton Engine technical documentation](engine/README.md)
 - [Script packages and lifecycle](engine/script-packages.md)
 - [Lua scripting](engine/lua-scripting.md)
 - [Memory and address resolution](engine/memory-and-addresses.md)

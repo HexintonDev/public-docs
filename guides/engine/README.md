@@ -1,4 +1,4 @@
-# HexMod ProcessEngine Documentation
+# Hexinton Engine Documentation
 
 Status: public technical wiki framework and navigation draft.
 
@@ -49,6 +49,6 @@ fixed GitHub source/test URLs so pages can link to examples without duplicating 
 
 ## Important Boundary
 
-The native ProcessEngine executes Lua and Auto Assembler runnables. Application JavaScript is a
+Hexinton Engine executes Lua and Auto Assembler runnables. Application JavaScript is a
 separate, capability-gated runtime owned by the desktop host. Do not use JavaScript APIs in a native
 Lua runnable.

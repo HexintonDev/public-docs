@@ -2,7 +2,7 @@
 
 Status: current public technical guide.
 
-Lua is the game-facing scripting runtime. It runs inside the native ProcessEngine and provides
+Lua is the game-facing scripting runtime. It runs inside Hexinton Engine and provides
 process discovery, address resolution, memory access, scanning, symbols, timers, and assembly.
 
 ## Process Selection

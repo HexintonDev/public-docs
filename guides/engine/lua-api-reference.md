@@ -1,6 +1,6 @@
 # Lua API Reference
 
-Status: current public API reference for native ProcessEngine runnables.
+Status: current public API reference for Hexinton Engine runnables.
 
 Function names are case-sensitive. Bare functions use the command's default process session.
 
