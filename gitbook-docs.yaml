@@ -1,0 +1,13 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+
+site:
+  title: Hexinton Mod Documentation
+  structure:
+    - type: space
+      key: hexmod-public-docs-en
+      title: English Documentation
+      path: en
+      default: true
+      content:
+        directory: ./
+        language: en
