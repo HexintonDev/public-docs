@@ -8,8 +8,8 @@ used as evidence.
 
 ## Pinned Source Version
 
-All links in this first edition are pinned to HexModClient commit
-[`3307591`](https://github.com/HexintonDev/HexModClient/tree/3307591b19f2f73e543636e77de0d77b959a3fd2).
+All samples in this first edition were checked against HexModClient commit `3307591`.
+Repository-relative evidence paths are recorded on each sample page without external links.
 
 ## Samples
 
@@ -24,13 +24,13 @@ All links in this first edition are pinned to HexModClient commit
 ## Using a Sample
 
 1. Read the sample page and its assumptions.
-2. Open the pinned fixture link.
-3. Open the pinned test link and inspect the asserted behavior.
-4. Copy the structure, not the game-specific values.
-5. Replace fixture addresses, process names, and symbols with values verified for your target.
-6. Add a cleanup path before enabling a write, patch, hook, service, or timer.
+2. Review the evidence paths and asserted behavior described on the page.
+3. Copy the structure, not the game-specific values.
+4. Replace fixture addresses, process names, and symbols with values verified for your target.
+5. Add a cleanup path before enabling a write, patch, hook, service, or timer.
 
 ## Link Policy
 
-These are commit-pinned source links. New wiki releases should create a new sample-index revision
-with links pinned to the release commit. Do not silently change an existing sample's evidence.
+These are commit-pinned evidence records. New wiki releases should create a new sample-index
+revision with the release commit and repository-relative evidence paths. Do not silently change an
+existing sample's evidence.

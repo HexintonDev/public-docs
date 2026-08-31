@@ -94,7 +94,8 @@ Executable behavior is cross-checked against the ProcessEngine implementation an
 the source repository. Internal architecture, product design, requirements, and implementation
 plans are intentionally excluded from this repository.
 
-Source repository: [HexModClient](https://github.com/HexintonDev/HexModClient)
+The implementation and test evidence comes from the ProcessEngine source repository. Source
+repository URLs are intentionally omitted from this public site.
 
 Before publishing a final page, reconcile conflicting statements against the implementation and
 tests. Mark design-only behavior as planned instead of presenting it as current.
@@ -114,12 +115,12 @@ Each sample entry should have:
 - cleanup behavior;
 - links to the source fixture and the test that validates it.
 
-Use permanent GitHub URLs for published samples. Prefer a commit-pinned URL when behavior must be
-historically exact:
+Keep a permanent evidence record for every published sample. When behavior must be historically
+exact, record the source commit and repository-relative evidence paths in the sample page:
 
 ```text
-https://github.com/HexintonDev/HexModClient/blob/<commit>/ProcessEngine/tests/script_fixtures/<sample>/...
-https://github.com/HexintonDev/HexModClient/blob/<commit>/ProcessEngine/tests/<test-file>
+ProcessEngine/tests/script_fixtures/<sample>/...
+ProcessEngine/tests/<test-file>
 ```
 
 Use `main` URLs only for living examples that are intentionally kept in sync with the current

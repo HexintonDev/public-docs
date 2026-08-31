@@ -4,12 +4,14 @@ Sample ID: `lua/multifile-require`
 
 This sample demonstrates package-local Lua modules and the `require` cache.
 
-## Source and Test
+## Evidence Record
 
-- [Pinned fixture directory](https://github.com/HexintonDev/HexModClient/tree/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/lua_require_multifile)
-- [Main Lua entry](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/lua_require_multifile/trainer.player/lua/main.lua)
-- [Inventory helper](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/lua_require_multifile/trainer.player/lua/helpers/inventory.lua)
-- [Module test](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_execution_controller_test.cpp)
+Validated against commit `3307591`.
+
+- Fixture: `ProcessEngine/tests/script_fixtures/lua_require_multifile/`
+- Main Lua entry: `.../trainer.player/lua/main.lua`
+- Inventory helper: `.../trainer.player/lua/helpers/inventory.lua`
+- Module test: `ProcessEngine/tests/script_execution_controller_test.cpp`
 
 ## Behavior
 

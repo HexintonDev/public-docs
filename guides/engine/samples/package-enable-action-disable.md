@@ -5,13 +5,15 @@ Sample ID: `package/enable-action-disable`
 This sample shows the smallest complete package lifecycle with a dependency, a Lua action, symbols,
 an Auto Assembler allocation, and matching cleanup.
 
-## Source and Test
+## Evidence Record
 
-- [Pinned fixture directory](https://github.com/HexintonDev/HexModClient/tree/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/basic_enable_chain)
-- [Player manifest](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/basic_enable_chain/trainer.player/package.json)
-- [Player Lua entry](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/basic_enable_chain/trainer.player/lua/main.lua)
-- [Dependency Lua entry](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/basic_enable_chain/trainer.shared/lua/main.lua)
-- [Lifecycle test](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_execution_controller_test.cpp)
+Validated against commit `3307591`.
+
+- Fixture: `ProcessEngine/tests/script_fixtures/basic_enable_chain/`
+- Player manifest: `.../trainer.player/package.json`
+- Player Lua entry: `.../trainer.player/lua/main.lua`
+- Dependency Lua entry: `.../trainer.shared/lua/main.lua`
+- Lifecycle test: `ProcessEngine/tests/script_execution_controller_test.cpp`
 
 ## Behavior
 

@@ -5,13 +5,15 @@ Sample ID: `aa/allocation-action-pair`
 This sample demonstrates an Auto Assembler action that allocates a named code cave and a second action
 that releases it.
 
-## Source and Test
+## Evidence Record
 
-- [Pinned fixture directory](https://github.com/HexintonDev/HexModClient/tree/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/aa_action_pair)
-- [Manifest](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/aa_action_pair/trainer.player/package.json)
-- [Enable action](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/aa_action_pair/trainer.player/aa/enable-godmode.aa)
-- [Disable action](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/aa_action_pair/trainer.player/aa/disable-godmode.aa)
-- [AA action test](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_execution_controller_test.cpp)
+Validated against commit `3307591`.
+
+- Fixture: `ProcessEngine/tests/script_fixtures/aa_action_pair/`
+- Manifest: `.../trainer.player/package.json`
+- Enable action: `.../trainer.player/aa/enable-godmode.aa`
+- Disable action: `.../trainer.player/aa/disable-godmode.aa`
+- AA action test: `ProcessEngine/tests/script_execution_controller_test.cpp`
 
 ## Behavior
 

@@ -17,6 +17,7 @@ This public repository contains usage and scripting documentation only. Internal
 product designs, requirements, implementation plans, and private operational notes are not part of
 this site.
 
-## Source
+## Evidence
 
-- [HexModClient source repository](https://github.com/HexintonDev/HexModClient)
+The technical pages and samples are cross-checked against the ProcessEngine implementation and
+automated test fixtures. Source repository URLs are intentionally omitted from this public site.

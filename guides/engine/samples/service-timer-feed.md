@@ -4,12 +4,14 @@ Sample ID: `service/timer-feed`
 
 This sample demonstrates a service that publishes one initial value and then updates it from a timer.
 
-## Source and Test
+## Evidence Record
 
-- [Pinned fixture directory](https://github.com/HexintonDev/HexModClient/tree/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/service_lifecycle)
-- [Manifest](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/service_lifecycle/trainer.service/package.json)
-- [Lua entry](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_fixtures/service_lifecycle/trainer.service/lua/main.lua)
-- [Service lifecycle test](https://github.com/HexintonDev/HexModClient/blob/3307591b19f2f73e543636e77de0d77b959a3fd2/ProcessEngine/tests/script_execution_controller_test.cpp)
+Validated against commit `3307591`.
+
+- Fixture: `ProcessEngine/tests/script_fixtures/service_lifecycle/`
+- Manifest: `.../trainer.service/package.json`
+- Lua entry: `.../trainer.service/lua/main.lua`
+- Service lifecycle test: `ProcessEngine/tests/script_execution_controller_test.cpp`
 
 ## Behavior
 
