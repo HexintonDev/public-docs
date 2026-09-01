@@ -1,9 +1,9 @@
 # Hexinton Engine Wiki Framework
 
-Status: planning document for the public technical wiki.
+Status: current public documentation framework.
 
-This is the first step of the public documentation work. It defines how the public Hexinton Engine
-pages, implementation references, and test fixtures are organized into a searchable English wiki.
+This page defines how the public Hexinton Engine pages, implementation references, and test
+evidence are organized into a searchable English wiki.
 It is not a basic tutorial and it is not a promise that every planned feature already exists.
 
 ## Goals
@@ -142,8 +142,9 @@ failure behavior, process/session scope, lifecycle ownership, and at least one f
 
 ## Build Order
 
-1. Approve this information architecture and naming. Completed in this initial draft.
-2. Build the sample index and pin source/test URLs. Initial library completed at [samples/README.md](samples/README.md).
+1. Approve this information architecture and naming. Completed for the current public Wiki.
+2. Build the sample index and associate each example with local implementation/test evidence. The
+  initial library is completed at [samples/README.md](samples/README.md).
 3. Reconcile package and Lua runtime contracts.
 4. Reconcile memory, pointer, and AOB behavior.
 5. Reconcile Auto Assembler, patch, and Hook behavior.
