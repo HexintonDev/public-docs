@@ -13,7 +13,7 @@ current limitations.
 
 ```lua
 function enable()
-    local ok, errorMessage = autoAssemble([[
+  local ok, errorMessage = autoAssemble([[
 alloc(newmem, 0x1000)
 label(returnhere)
 
@@ -27,7 +27,13 @@ newmem:
 end
 
 function disable()
-    -- Restore the patched site and deallocate newmem.
+  local ok, errorMessage = autoAssemble([[
+unregisterSymbol(newmem)
+dealloc(newmem)
+]])
+    if not ok then
+        error(errorMessage or "assembly cleanup failed")
+    end
 end
 ```
 

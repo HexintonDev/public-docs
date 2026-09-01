@@ -1,106 +1,208 @@
 # Auto Assembler API
 
-Status: current public directive reference.
+Status: current public directive and assembly reference.
 
-Auto Assembler is an action-oriented assembly runtime. The parser accepts directives and sends
-assembly chunks to the current package script context. Auto Assembler is not a Lua global runtime;
-`createThread` is an assembly directive, not a Lua function.
+Auto Assembler parses a source string in the current package script context. It executes control
+directives and assembles instruction chunks into the target process. It is synchronous under the
+process execution lane: a successful call means that the requested chunks were assembled and flushed
+before the call returned.
+
+There are two different kinds of lines:
+
+1. **Directives** such as `alloc(...)`, `aobScanModule(...)`, and `dealloc(...)` change runtime
+   state and are handled by Hexinton Engine.
+2. **Assembly lines** such as `mov`, `lea`, `cmp`, `jmp`, `call`, `nop`, and `ret` are parsed by the
+   x86/x64 text assembler and written to the current target chunk.
+
+Directive names are case-insensitive. Names and expressions are resolved in the current script and
+session context. The instruction dialect is x86/x64 AsmJit/AsmTK syntax; this page documents engine
+behavior, not every instruction available in that assembler.
 
 ## Directive Reference
 
 | Directive | Syntax | Behavior | Failure |
 | --- | --- | --- | --- |
-| `alloc` | `alloc(name, size?, nearAddress?)` | Allocates local script memory; default size is `0x1000` | Wrong argument count, invalid size/address, or allocation conflict fails with a line error |
-| `globalalloc` | `globalalloc(name, size?, nearAddress?)` | Allocates session-global memory | Same allocation and name failures as `alloc` |
-| `dealloc` | `dealloc(name)` | Releases a local or global allocation and linked names | Missing name or release failure fails with a line error |
-| `aobScan` | `aobScan(name, pattern)` | Binds the first process-wide AOB match as a script label | Wrong count or no match fails |
-| `aobScanModule` | `aobScanModule(name, module, pattern)` | Binds the first match in one module | Wrong count or no match fails |
-| `aobScanRegion` | `aobScanRegion(name, start, stop, pattern)` | Binds the first match in an address range | Wrong count, invalid range, or no match fails |
-| `fullAccess` | `fullAccess(address, size)` | Changes access for a target range | Invalid address/size or protection failure fails |
-| `createThread` | `createThread(address)` | Executes code at a resolved target address | Wrong count, unresolved address, or execution failure fails |
-| `label` | `label(name)` | Declares/resets a script label for later binding | Wrong count or invalid name fails |
-| `registersymbol` | `registersymbol(name)` | Publishes a script label/allocation as a symbol | Wrong count or unresolved name fails |
-| `unregistersymbol` | `unregistersymbol(name)` | Removes a script-owned symbol | Wrong count or symbol failure fails |
+| `alloc` | `alloc(name[, size[, nearAddress]])` | Allocates memory owned by the current script; omitted size is `0x1000` bytes | Invalid count, size, address, name, or allocation conflict |
+| `globalalloc` | `globalalloc(name[, size[, nearAddress]])` | Allocates session-global memory | Same validation and allocation failures as `alloc` |
+| `dealloc` | `dealloc(name)` | Releases a local or global allocation and linked names | Name is missing or cannot be released |
+| `aobScan` | `aobScan(name, pattern)` | Scans the process and binds the first hit to `name` | Invalid pattern or zero hits |
+| `aobScanModule` | `aobScanModule(name, module, pattern)` | Scans one module and binds the first hit | Invalid module/pattern or zero hits |
+| `aobScanRegion` | `aobScanRegion(name, start, stop, pattern)` | Scans the half-open address range selected by `start` and `stop` | Invalid expressions/range/pattern or zero hits |
+| `fullAccess` | `fullAccess(address, size)` | Requests writable/executable access for a target range | Invalid range or protection failure |
+| `createThread` | `createThread(address)` | Executes the resolved address through the session code-execution facility | Unresolved address or execution failure |
+| `label` | `label(name)` | Declares a script-visible label that can be bound by a later `name:` line | Invalid count or name |
+| `registerSymbol` | `registerSymbol(name)` | Explicitly publishes a script label or allocation | Unresolved name or symbol conflict |
+| `unregisterSymbol` | `unregisterSymbol(name)` | Removes a symbol published by this script | Invalid count or symbol failure |
 
-Directive names are parsed case-insensitively. User-defined names are validated by the engine.
+The parser accepts the lower-case spellings `registersymbol` and `unregistersymbol` as well.
+Unknown function-like lines are not silently treated as directives; they are passed to the assembler
+and normally fail as invalid assembly.
 
-## Allocation Example
+## Source Layout and Current Address
 
-```asm
-alloc(exampleCave, 0x1000)
-registersymbol(exampleCave)
-```
-
-Matching cleanup:
+An address header starts a new assembly chunk when its expression resolves immediately:
 
 ```asm
-unregistersymbol(exampleCave)
-dealloc(exampleCave)
-```
+alloc(codeCave, 0x1000)
 
-`globalalloc` uses session-global allocation ownership and should be used only when the allocation
-must outlive one script context. Do not use it to bypass package ownership.
-
-## Scan Examples
-
-```asm
-aobScan(injection, 48 8B ?? ?? 89)
-aobScanModule(moduleInjection, game.exe, 48 8B ?? ?? 89)
-aobScanRegion(regionInjection, game.exe+0x1000, game.exe+0x9000, 48 8B ?? ?? 89)
-```
-
-Each scan binds the first match to a script label. Zero matches are errors. The current directive
-implementation does not require uniqueness when multiple matches exist, so authors should choose a
-pattern and scope that are known to produce one compatible result and verify it before distributing a
-package.
-
-## `createThread`
-
-```asm
-alloc(threadStart, 0x1000)
-
-threadStart:
+codeCave:
+  xor eax, eax
   ret
 
-createThread(threadStart)
+game.exe+0x123456:
+  nop
 ```
 
-The directive resolves the entry address and invokes the session code-execution facility. The script
-author owns the code at that address and must ensure it is valid for the target architecture and safe
-to execute. The directive does not provide a managed thread handle, join operation, cancellation
-protocol, or automatic allocation lifetime management.
+The first chunk is written at `codeCave`; the second is written at the raw process address. A raw
+instruction cannot appear before an address or allocation header. An allocation-backed chunk is
+bounded by the allocation size. A raw target has no invented capacity limit, so the author must
+ensure the patch fits the intended region.
 
-## Hook Shape
+An address header is not the same as an internal label. If `loop:` does not resolve as a script,
+allocation, module, or session symbol, it is an assembler label inside the current chunk:
 
 ```asm
+alloc(codeCave, 0x100)
+
+codeCave:
+  xor eax, eax
+loop:
+  inc eax
+  cmp eax, 10
+  jl loop
+  ret
+```
+
+Internal labels are usable by instructions in that chunk only and are not persistent script symbols.
+To create a label that can connect separate chunks, declare it first with `label(name)`.
+
+## Allocation and Symbol Ownership
+
+`alloc` belongs to the current script context. `globalalloc` belongs to the engine session and should
+only be used when the storage must outlive one script context. Neither directive publishes a symbol
+for other scripts automatically.
+
+Enable:
+
+```asm
+alloc(codeCave, 0x1000)
+registerSymbol(codeCave)
+```
+
+Disable, in this order:
+
+```asm
+unregisterSymbol(codeCave)
+dealloc(codeCave)
+```
+
+Unregister published names before releasing their backing allocation. Package disable logic remains
+responsible for restoring patched bytes and releasing every package-owned resource.
+
+## AOB Scans
+
+Use `??` for a wildcard byte. The scan directives bind only the first result; they do not enforce
+uniqueness. A pattern with multiple hits is therefore not automatically safe to patch.
+
+```asm
+aobScan(processWideHit, 48 8B ?? ?? 89)
+aobScanModule(moduleHit, game.exe, 48 8B ?? ?? 89)
+aobScanRegion(regionHit, game.exe+0x1000, game.exe+0x9000, 48 8B ?? ?? 89)
+
+moduleHit:
+  nop
+```
+
+Zero hits are errors. Before shipping a package, verify that the selected pattern is unique enough
+for the supported game build and that the matched instruction boundary is safe to overwrite.
+
+## Access, Calls, and Threads
+
+`fullAccess` takes an address expression and a positive byte count. It does not assemble bytes or
+restore the previous protection automatically:
+
+```asm
+fullAccess(game.exe+0x200000, 0x1000)
+```
+
+`createThread` resolves one entry address and immediately asks the session to execute it. It does
+not return a thread handle and does not provide join, cancellation, or automatic allocation cleanup:
+
+```asm
+alloc(threadEntry, 0x100)
+
+threadEntry:
+  xor eax, eax
+  ret
+
+createThread(threadEntry)
+```
+
+The entry code must match the target architecture and calling/return expectations. Treat this
+directive as an advanced operation; keep the allocation alive for as long as the target can execute
+the entry point.
+
+## Complete Manual Hook Shape
+
+This is the shape of a manual hook, not an automatic trampoline generator:
+
+```asm
+aobScanModule(injection, game.exe, 48 8B 05 ?? ?? ?? ??)
 alloc(newmem, 0x1000, injection)
 label(returnhere)
+registerSymbol(injection)
 
 newmem:
-  ; preserve displaced instructions when required
+  ; Re-emit displaced instructions when required by the chosen overwrite length.
+  mov rax, [rip+0x1234]
   jmp returnhere
 
 injection:
   jmp newmem
   nop
+
 returnhere:
 ```
 
-The engine does not calculate overwrite length, relocate displaced instructions, synthesize a full
-trampoline, or restore the hook site automatically. Use a separate disable action to restore original
-bytes and release all package-owned resources.
+The engine does not calculate overwrite length, disassemble and relocate displaced instructions,
+create a complete trampoline, save original bytes, or restore the hook site during `dealloc`.
+Those operations must be implemented by the package's enable/disable design. `nop` padding must
+match the number of bytes deliberately overwritten; do not guess it from the visible source lines.
 
-## About `assert`
+## Lua Invocation
 
-`assert(...)` is not currently one of the parsed assembly directives. Do not document it as an
-engine-supported directive or rely on it for precondition checking. Use a validated AOB result,
-explicit address checks, and the package's supported error/cleanup path instead.
+Lua calls Auto Assembler with the source string and receives `true` on success or `false, error`
+on failure:
 
-## Lifecycle
+```lua
+function enable()
+    local ok, errorMessage = autoAssemble([[
+alloc(codeCave, 0x1000)
+registerSymbol(codeCave)
 
-Auto Assembler action failure returns a line-specific error through the package command result. Pair
-enable and disable actions, unregister symbols before deallocating their backing memory, and stop or
-release any thread-related package resources before destroying the process context.
+codeCave:
+  xor eax, eax
+  ret
+]])
+    if not ok then
+        error(errorMessage or "assembly failed")
+    end
+end
+```
+
+The optional `targetself=true` argument is not supported. The optional `disableInfo` argument is
+also not supported, so use a separate disable action and explicit cleanup. The Lua function does not
+automatically undo a successful enable when a later package operation fails.
+
+## Errors and Unsupported Directives
+
+Failures include the source line number for directive errors and assembly-chunk context for parser
+or flush errors. A failed scan, unresolved label, invalid instruction, protection change, or write
+failure must be handled as an enable failure.
+
+`assert(...)` is not a supported directive. Use a constrained AOB scan, explicit address checks, and
+the package error/disable path instead. The engine also does not provide automatic rollback for all
+side effects, so keep enable actions ordered and make disable actions idempotent.
 
 See [Assembly and Labels](assembly-and-labels.md), [Hooks and Auto Assembler](hooks-and-auto-assembler.md),
 and [Errors and Results](errors-and-results.md).
