@@ -85,3 +85,6 @@ labels, allocations, timers, or hooks. Duplicate visible symbols fail as ambiguo
 
 Before execution, the host validates strict JSON, declared files, unique runnable IDs, runtime and
 entry-file consistency, lifecycle entries, dependency constraints, and action arguments.
+
+See [Visibility and Namespaces](visibility-and-namespaces.md) for package-local modules and
+dependency-visible values.

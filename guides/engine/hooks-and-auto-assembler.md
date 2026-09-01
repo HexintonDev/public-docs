@@ -3,8 +3,11 @@
 Status: current public technical guide.
 
 Auto Assembler is the action-oriented assembly runtime. The current engine supports allocations,
-labels, AOB/module scans, jumps, and assembly chunks. Hook installation remains manual: the author
+labels, AOB/module/region scans, access changes, thread execution, jumps, and assembly chunks. Hook installation remains manual: the author
 must choose a safe overwrite length and restore original bytes during disable.
+
+See the [Auto Assembler API](auto-assembler-api.md) for directive syntax, argument rules, and
+current limitations.
 
 ## Basic Assembly Action
 

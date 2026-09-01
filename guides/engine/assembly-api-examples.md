@@ -37,11 +37,11 @@ Every allocation and symbol must have an owner and a cleanup path.
 
 ```asm
 aobScanModule(injection, game.exe, 48 8B ?? ?? 89)
-assert(injection, 48 8B ?? ?? 89)
 ```
 
-A scan must be compatible with the target build. Stop when the scan is missing or ambiguous; do
-not patch a guessed address.
+A scan must be compatible with the target build. The current directive binds the first match and
+fails when there is no match; choose a scope and pattern known to produce one safe result. Do not
+rely on `assert(...)`: it is not currently a parsed engine directive.
 
 ## Manual Hook Shape
 

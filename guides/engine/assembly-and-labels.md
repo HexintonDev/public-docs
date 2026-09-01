@@ -38,3 +38,6 @@ returnhere:
 Pair `alloc` with `dealloc`, and `registersymbol` with `unregistersymbol`. Package disable must
 release allocations, symbols, patches, hooks, and timers it created. Do not consume another package's
 private labels or allocations.
+
+See [Visibility and Namespaces](visibility-and-namespaces.md) for the package and session scope of
+these names.

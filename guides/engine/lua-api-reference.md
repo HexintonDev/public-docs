@@ -4,6 +4,11 @@ Status: current public API reference for Hexinton Engine runnables.
 
 Function names are case-sensitive. Bare functions use the command's default process session.
 
+This page is the compact index. See the dedicated [process and address API](lua-process-and-address-api.md),
+[memory API](lua-memory-api.md), [scanning and assembly API](lua-scanning-and-assembly-api.md), and
+[runtime utilities API](lua-runtime-utilities-api.md) pages for prototype, argument, return,
+failure, scope, threading, cleanup, and example details.
+
 ## Process Discovery
 
 | Function | Result |

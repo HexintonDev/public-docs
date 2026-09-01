@@ -58,6 +58,9 @@ Assigned globals persist for the current script ID. `local` values follow normal
 package-local module can be loaded with `require("helpers.inventory")`; module IDs use dot-separated
 segments and cannot contain absolute paths, `..`, or a `.lua` suffix.
 
+See [Visibility and Namespaces](visibility-and-namespaces.md) for complete global, module,
+dependency, symbol, and label scope rules.
+
 ## Timers and Services
 
 Use a service to publish changing state instead of repeatedly polling from a UI query. A service
