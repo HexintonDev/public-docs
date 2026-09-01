@@ -2,14 +2,9 @@
 
 Status: current public sample index.
 
-This library contains small, test-backed examples for one Hexinton Engine behavior at a time. It is
-not a collection of unverified trainer snippets. Each sample links to the exact fixture and test
-used as evidence.
-
-## Pinned Source Version
-
-All samples in this first edition were checked against HexModClient commit `3307591`.
-Repository-relative evidence paths are recorded on each sample page without external links.
+This library contains small, copyable examples for one Hexinton Engine behavior at a time. Each
+sample states its prerequisites, source layout, expected result, and cleanup behavior. Game names,
+addresses, and AOB patterns are illustrative unless a sample explicitly says otherwise.
 
 ## Samples
 
@@ -24,13 +19,6 @@ Repository-relative evidence paths are recorded on each sample page without exte
 ## Using a Sample
 
 1. Read the sample page and its assumptions.
-2. Review the evidence paths and asserted behavior described on the page.
-3. Copy the structure, not the game-specific values.
-4. Replace fixture addresses, process names, and symbols with values verified for your target.
-5. Add a cleanup path before enabling a write, patch, hook, service, or timer.
-
-## Link Policy
-
-These are commit-pinned evidence records. New wiki releases should create a new sample-index
-revision with the release commit and repository-relative evidence paths. Do not silently change an
-existing sample's evidence.
+2. Copy the structure, not the game-specific values.
+3. Replace addresses, process names, and symbols with values verified for your target.
+4. Add a cleanup path before enabling a write, patch, hook, service, or timer.

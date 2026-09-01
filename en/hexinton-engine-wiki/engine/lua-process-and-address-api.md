@@ -7,6 +7,24 @@ explicit aliases. Bare address functions use the command's default process sessi
 
 ## Process Discovery
 
+### `findProcess`
+
+```lua
+findProcess(processName) -> pid | nil
+```
+
+Returns the first matching process ID. Matching is case-insensitive and accepts `game` or
+`game.exe`. An empty name raises an argument error; no match returns `nil`.
+
+### `findProcesses`
+
+```lua
+findProcesses(processName) -> { pid, ... }
+```
+
+Returns a 1-based Lua array containing every matching process ID. No matches produce an empty
+array. An empty name raises an argument error.
+
 | Prototype | Return | Failure |
 | --- | --- | --- |
 | `findProcess(processName)` | First matching pid, or `nil` | Empty name or discovery exception raises a Lua error |
@@ -32,6 +50,15 @@ return { pid = pid }
 
 ## Explicit Process Handles
 
+### `openProcess`
+
+```lua
+openProcess(pid?) -> processHandle
+```
+
+With no argument, opens the command's default process. With a pid, opens that process session.
+Pid `0` and unavailable sessions raise a Lua error.
+
 | Prototype | Return | Failure |
 | --- | --- | --- |
 | `openProcess(pid?)` | Opaque process handle | pid `0`, invalid pid, or unavailable session raises a Lua error |
@@ -51,11 +78,38 @@ return { pid = target.pid, address = address }
 
 ## Address Resolution
 
+### `getAddress`
+
+```lua
+getAddress(expression) -> address
+```
+
+Resolves an integer, module expression, symbol, or supported pointer chain. An unresolved
+expression raises a Lua error.
+
 | Prototype | Return | Failure |
 | --- | --- | --- |
 | `getAddress(expression)` | Numeric address | Unresolved module, symbol, or pointer chain raises a Lua error |
 | `getAddressSafe(expression)` | Numeric address or `nil` | Converts resolution failure to `nil` |
 | `readPointer(address)` | Target-sized pointer | Invalid read raises a Lua error |
+
+### `getAddressSafe`
+
+```lua
+getAddressSafe(expression) -> address | nil
+```
+
+Resolves an address without raising for an unresolved expression. Use `nil` as a compatibility
+failure before reading or writing.
+
+### `readPointer`
+
+```lua
+readPointer(address) -> pointer
+```
+
+Reads one target-sized pointer. Invalid memory raises a Lua error. A valid null pointer is returned
+as the numeric value `0`.
 
 Expressions may be numeric addresses, module expressions, registered symbols, offsets, or the
 supported nested pointer-chain syntax. See [Pointers and Address Chains](pointers.md).

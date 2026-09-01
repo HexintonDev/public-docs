@@ -4,23 +4,22 @@ Status: current public API reference for Hexinton Engine runnables.
 
 Function names are case-sensitive. Bare functions use the command's default process session.
 
-This page is the compact index. See the dedicated [process and address API](lua-process-and-address-api.md),
-[memory API](lua-memory-api.md), [scanning and assembly API](lua-scanning-and-assembly-api.md), and
-[runtime utilities API](lua-runtime-utilities-api.md) pages for prototype, argument, return,
-failure, scope, threading, cleanup, and example details.
+The index is organized by function so a reader or assistant can open the exact contract instead of
+scanning a capability summary. Each linked entry provides prototype, parameters, return value,
+failure behavior, scope, and a focused example.
 
 ## Process Discovery
 
-| Function | Result |
+| Function | Detailed contract |
 | --- | --- |
-| `findProcess(name)` | First matching process ID, or `nil` |
-| `findProcesses(name)` | Lua array of matching process IDs |
-| `getProcessIDFromProcessName(name)` | Matching process ID |
-| `findWindow(className, title)` | Top-level window handle, or `nil` |
-| `getWindowProcessID(handle)` | Window owner process ID |
-| `findWindowProcessID(className, title)` | Matching window owner process ID |
-| `getDefaultPid()` | Default command process ID |
-| `getOpenedProcessID()` | Opened/default process ID |
+| [`findProcess`](lua-process-and-address-api.md#findprocess) | First matching process ID, or `nil` |
+| [`findProcesses`](lua-process-and-address-api.md#findprocesses) | Lua array of matching process IDs |
+| [`getProcessIDFromProcessName`](lua-process-and-address-api.md#getprocessidfromprocessname) | Matching process ID |
+| [`findWindow`](lua-process-and-address-api.md#findwindow) | Top-level window handle, or `nil` |
+| [`getWindowProcessID`](lua-process-and-address-api.md#getwindowprocessid) | Window owner process ID |
+| [`findWindowProcessID`](lua-process-and-address-api.md#findwindowprocessid) | Matching window owner process ID |
+| [`getDefaultPid`](lua-process-and-address-api.md#getdefaultpid) | Default command process ID |
+| [`getOpenedProcessID`](lua-process-and-address-api.md#getopenedprocessid) | Opened/default process ID |
 
 Process-name matching is case-insensitive on Windows. A name such as `game` may match `game.exe`.
 

@@ -4,15 +4,6 @@ Sample ID: `process/explicit-handles`
 
 This sample shows how a command's default process differs from processes opened explicitly by ID.
 
-## Evidence Record
-
-Validated against commit `3307591`.
-
-- Fixture: `ProcessEngine/tests/script_fixtures/openprocess_multi/`
-- Manifest: `.../trainer.multi/package.json`
-- Lua entry: `.../trainer.multi/lua/main.lua`
-- Integration test: `ProcessEngine/tests/openprocess_integration_test.cpp`
-
 ## Behavior
 
 Bare `writeInteger` uses the command/default process. `openProcess(pid)` returns a handle whose

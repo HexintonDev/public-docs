@@ -4,15 +4,6 @@ Sample ID: `service/timer-feed`
 
 This sample demonstrates a service that publishes one initial value and then updates it from a timer.
 
-## Evidence Record
-
-Validated against commit `3307591`.
-
-- Fixture: `ProcessEngine/tests/script_fixtures/service_lifecycle/`
-- Manifest: `.../trainer.service/package.json`
-- Lua entry: `.../trainer.service/lua/main.lua`
-- Service lifecycle test: `ProcessEngine/tests/script_execution_controller_test.cpp`
-
 ## Behavior
 
 The `watch-hp` service validates an optional positive `interval`, publishes an initial

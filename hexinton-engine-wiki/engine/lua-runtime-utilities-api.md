@@ -4,6 +4,26 @@ Status: current public API reference.
 
 ## Timer and Scheduling Functions
 
+### `createTimer`
+
+```lua
+createTimer() -> timer
+createTimer(enabled) -> timer
+createTimer(interval, callback) -> timer
+```
+
+Creates a timer. The two-argument overload is a one-shot timer; service code commonly creates a
+disabled timer, assigns `Interval` and `OnTimer`, then enables it. Destroy the handle during disable.
+
+### `sleep`
+
+```lua
+sleep(milliseconds) -> nil
+```
+
+Blocks the current Lua operation. Use short waits only; a service should generally use a timer so
+its lifecycle remains controllable.
+
 | Prototype | Return | Ownership/failure |
 | --- | --- | --- |
 | `createTimer()` | Enabled repeating timer handle | Creates an enabled timer with the default interval |
@@ -13,6 +33,15 @@ Status: current public API reference.
 | `publishEvent(event, value)` | No value | Invalid event/value or publication failure raises a Lua error |
 | `process` | Main module name string | Available for the attached default process |
 | `targetIs64Bit()` | Boolean | See [scanning and assembly](lua-scanning-and-assembly-api.md) |
+
+### `publishEvent`
+
+```lua
+publishEvent(event, value) -> nil
+```
+
+Publishes a JSON-compatible value to a declared service feed. Invalid event data or publication
+failure raises a Lua error.
 
 The timer object exposes the registered handle properties. The `(interval, callback)` overload is
 one-shot; common service usage calls `createTimer(false)`, assigns `Interval` and `OnTimer`, enables

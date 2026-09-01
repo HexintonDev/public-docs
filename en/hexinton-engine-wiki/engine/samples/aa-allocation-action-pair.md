@@ -5,21 +5,22 @@ Sample ID: `aa/allocation-action-pair`
 This sample demonstrates an Auto Assembler action that allocates a named code cave and a second action
 that releases it.
 
-## Evidence Record
-
-Validated against commit `3307591`.
-
-- Fixture: `ProcessEngine/tests/script_fixtures/aa_action_pair/`
-- Manifest: `.../trainer.player/package.json`
-- Enable action: `.../trainer.player/aa/enable-godmode.aa`
-- Disable action: `.../trainer.player/aa/disable-godmode.aa`
-- AA action test: `ProcessEngine/tests/script_execution_controller_test.cpp`
-
 ## Behavior
 
 The `enable-godmode` action runs `alloc(godmodeCave, 32)`. The matching `disable-godmode` action
 runs `dealloc(godmodeCave)`. The Lua package lifecycle remains Lua because Auto Assembler is
 action-only in the native host.
+
+## Files
+
+```text
+package.json
+aa/enable-godmode.aa
+aa/disable-godmode.aa
+```
+
+The enable file contains `alloc(godmodeCave, 32)` followed by `registerSymbol(godmodeCave)`.
+The disable file contains `unregisterSymbol(godmodeCave)` followed by `dealloc(godmodeCave)`.
 
 ## Reuse Rules
 

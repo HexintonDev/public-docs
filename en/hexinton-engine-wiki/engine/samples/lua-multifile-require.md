@@ -4,15 +4,6 @@ Sample ID: `lua/multifile-require`
 
 This sample demonstrates package-local Lua modules and the `require` cache.
 
-## Evidence Record
-
-Validated against commit `3307591`.
-
-- Fixture: `ProcessEngine/tests/script_fixtures/lua_require_multifile/`
-- Main Lua entry: `.../trainer.player/lua/main.lua`
-- Inventory helper: `.../trainer.player/lua/helpers/inventory.lua`
-- Module test: `ProcessEngine/tests/script_execution_controller_test.cpp`
-
 ## Behavior
 
 `require("helpers.inventory")` loads `lua/helpers/inventory.lua` from the current package. Calling

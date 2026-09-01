@@ -4,6 +4,33 @@ Status: current public API reference.
 
 ## Scan Functions
 
+### `AOBScan`
+
+```lua
+AOBScan(pattern) -> handle | nil
+```
+
+Scans the attached process using space-separated byte text. `??` matches one wildcard byte. Zero
+matches return `nil`; invalid patterns raise a Lua error.
+
+### `AOBScanUnique`
+
+```lua
+AOBScanUnique(pattern) -> address | nil
+```
+
+Returns an address only when exactly one match exists. Zero or multiple matches return `nil` and
+must be treated as a compatibility failure before patching.
+
+### `AOBScanModule`
+
+```lua
+AOBScanModule(moduleName, pattern) -> handle | nil
+```
+
+Limits the scan to one loaded module. Zero matches return `nil`; invalid module or pattern input
+raises a Lua error.
+
 | Prototype | Return | Failure/empty behavior |
 | --- | --- | --- |
 | `AOBScan(pattern)` | String-list handle of matching addresses, or `nil` | Invalid pattern or scan failure raises; zero matches returns `nil` |
@@ -22,6 +49,34 @@ local injection = hits[1]
 ```
 
 ## Assembly and Target Functions
+
+### `autoAssemble`
+
+```lua
+autoAssemble(text) -> true
+autoAssemble(text, true) -> false, error
+```
+
+Executes Auto Assembler text synchronously. The optional `targetself=true` and `disableInfo`
+arguments are not supported by the current runtime; use a separate disable action.
+
+### `fullAccess`
+
+```lua
+fullAccess(address, size) -> true
+```
+
+Requests access for a positive byte range. It does not write bytes or restore previous protection
+automatically.
+
+### `targetIs64Bit`
+
+```lua
+targetIs64Bit() -> boolean
+```
+
+Reports the attached target architecture so architecture-specific registers and instruction forms
+can be selected deliberately.
 
 | Prototype | Return | Failure |
 | --- | --- | --- |

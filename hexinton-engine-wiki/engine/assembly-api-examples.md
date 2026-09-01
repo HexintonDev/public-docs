@@ -33,6 +33,30 @@ dealloc(exampleCave)
 
 Every allocation and symbol must have an owner and a cleanup path.
 
+## Complete Copyable Example
+
+Enable action (`aa/enable-cave.aa`):
+
+```asm
+alloc(codeCave, 0x100)
+registerSymbol(codeCave)
+
+codeCave:
+  xor eax, eax
+  ret
+```
+
+Disable action (`aa/disable-cave.aa`):
+
+```asm
+unregisterSymbol(codeCave)
+dealloc(codeCave)
+```
+
+Expected result: enable creates a 256-byte script-owned allocation and publishes its address;
+disable removes the published symbol and releases the allocation. This sample does not patch a
+second address, so it does not pretend to restore bytes that it never saved.
+
 ## Module-Scoped Scan
 
 ```asm

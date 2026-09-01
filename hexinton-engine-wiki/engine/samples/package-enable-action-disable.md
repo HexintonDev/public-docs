@@ -5,16 +5,6 @@ Sample ID: `package/enable-action-disable`
 This sample shows the smallest complete package lifecycle with a dependency, a Lua action, symbols,
 an Auto Assembler allocation, and matching cleanup.
 
-## Evidence Record
-
-Validated against commit `3307591`.
-
-- Fixture: `ProcessEngine/tests/script_fixtures/basic_enable_chain/`
-- Player manifest: `.../trainer.player/package.json`
-- Player Lua entry: `.../trainer.player/lua/main.lua`
-- Dependency Lua entry: `.../trainer.shared/lua/main.lua`
-- Lifecycle test: `ProcessEngine/tests/script_execution_controller_test.cpp`
-
 ## Behavior
 
 The host enables `trainer.shared` before `trainer.player`. `enable` publishes a symbol and creates

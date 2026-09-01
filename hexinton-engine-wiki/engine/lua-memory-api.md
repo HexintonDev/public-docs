@@ -8,6 +8,9 @@ expressions.
 
 ## Typed Operations
 
+Each operation uses the default process unless called as a method on an explicit process handle,
+for example `target:readInteger(address)`.
+
 | Prototype | Width/representation | Failure |
 | --- | --- | --- |
 | `readBytes(address, count, returnAsTable?)` | Bytes; table when requested | Invalid address, count, or read raises a Lua error |
@@ -26,6 +29,41 @@ expressions.
 | `writeDouble(address, value)` | 64-bit floating point | Invalid value or write raises a Lua error |
 | `readString(address, maxLength, wideChar?)` | Narrow or wide string | Invalid address/length raises a Lua error |
 | `writeString(address, text, terminate?, wideChar?)` | Narrow or wide string | Invalid text/write raises a Lua error |
+
+### `readBytes`
+
+```lua
+readBytes(address, count, returnAsTable?) -> bytes | nil
+```
+
+Reads `count` raw bytes. Pass `true` for `returnAsTable` when the result must be a Lua array.
+Invalid addresses, counts, or reads raise a Lua error.
+
+### `writeBytes`
+
+```lua
+writeBytes(address, { byte, ... }) -> true
+```
+
+Writes raw bytes. Every value must be an integer from `0` through `255`; invalid values or a
+failed write raise a Lua error.
+
+### `readInteger`
+
+```lua
+readInteger(address, signed?) -> integer
+```
+
+Reads four bytes as a 32-bit integer. The optional `signed` flag controls signed interpretation.
+
+### `writeInteger`
+
+```lua
+writeInteger(address, value) -> true
+```
+
+Writes a 32-bit integer and returns `true`, or raises a Lua error when the address or value is
+invalid.
 
 Handle methods expose the same operations, for example `target:readInteger(address)`.
 
