@@ -2,7 +2,7 @@
 
 Status: current user guide and basic scripting introduction.
 
-This guide is for users who have installed and can open the Hexinton Mod client. It explains how to select a game, launch it, connect a trainer, and use mod features. It also introduces how to write a basic script in Studio. It does not cover source downloads, compilation, or client development. For more advanced mod development, see [Further learning](#further-learning).
+This guide is for users who have installed and can open the Hexinton Mod client. It explains how to select a game, launch it, connect a trainer, and use mod features. It also introduces how to write a basic script in Studio. It does not cover source downloads, compilation, or client development. For advanced mod development, see [Further Learning](#further-learning).
 
 ## Before You Start
 
@@ -18,15 +18,15 @@ Mods may modify a game process or save data. Back up important saves before use 
 
 ## Main Interface
 
-After opening the client, the left navigation bar contains these main entries:
+After opening the client, the left navigation bar contains these entries:
 
 | Entry | Purpose |
 | --- | --- |
-| Home | View registered games and recently used games |
-| Creator | Open creator features |
-| Debug | View application and connection status for troubleshooting |
-| Settings | Change the language and trainer feedback sounds |
-| My Games | View games registered with Hexinton Mod on this machine |
+| Home | View registered games and recently used games. |
+| Creator | Open creator features. |
+| Debug | View application and connection status for troubleshooting. |
+| Settings | Change the language and trainer feedback sounds. |
+| My Games | View games registered with Hexinton Mod on this machine. |
 
 The search box at the top of Home searches games registered with the local client. It does not search for or download games or mods from the network.
 
@@ -38,8 +38,8 @@ The search box at the top of Home searches games registered with the local clien
 
 The trainer page usually contains:
 
-* `Mods`: Shows trainer features available for the current game.
-* `Saves`: Content in the current version may be demonstration data and should not be treated as a production save-management feature.
+* `Mods`: Features available for the current game.
+* `Saves`: Current content may be demonstration data and is not a production save-management feature.
 * `Play`: Launches the game.
 * `Studio`: Opens the script and trainer package editor.
 
@@ -148,58 +148,58 @@ Synchronized packages are normally not editable directly. Creating a local copy 
 
 Use `New Package...` in Studio to create a package, or create this structure in a local copy:
 
-```
+```text
 example.health/
-	package.json
-	lua/main.lua
+  package.json
+  lua/main.lua
 ```
 
 The directory name must exactly match the `id` in `package.json`. Use English letters, numbers, hyphens, or dots in file and directory names, and avoid spaces.
 
 ### Write package.json
 
-`package.json` tells Hexinton Mod which scripts to load and which features users can execute. The following complete example is a useful starting point:
+`package.json` tells Hexinton Mod which scripts to load and which features users can execute:
 
 ```json
 {
-	"id": "example.health",
-	"version": "1.0.0",
-	"displayName": "Health Example",
-	"runtime": {
-		"files": [
-			{ "path": "lua/main.lua", "runtime": "lua" }
-		],
-		"public": { "lua": "lua/main.lua" },
-		"runnables": [
-			{
-				"id": "enable",
-				"kind": "enable",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "enable"
-			},
-			{
-				"id": "disable",
-				"kind": "disable",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "disable"
-			},
-			{
-				"id": "heal",
-				"kind": "action",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "heal",
-				"parameterSchema": {
-					"type": "object",
-					"properties": {
-						"amount": { "type": "integer" }
-					}
-				}
-			}
-		]
-	}
+  "id": "example.health",
+  "version": "1.0.0",
+  "displayName": "Health Example",
+  "runtime": {
+    "files": [
+      { "path": "lua/main.lua", "runtime": "lua" }
+    ],
+    "public": { "lua": "lua/main.lua" },
+    "runnables": [
+      {
+        "id": "enable",
+        "kind": "enable",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "enable"
+      },
+      {
+        "id": "disable",
+        "kind": "disable",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "disable"
+      },
+      {
+        "id": "heal",
+        "kind": "action",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "heal",
+        "parameterSchema": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "integer" }
+          }
+        }
+      }
+    ]
+  }
 }
 ```
 
@@ -224,20 +224,20 @@ local health = 100
 local maximumHealth = 100
 
 function enable()
-		-- Install features owned by this package here.
+    -- Install features owned by this package here.
 end
 
 function disable()
-		-- Remove hooks, timers, and other resources created by enable.
+    -- Remove hooks, timers, and other resources created by enable.
 end
 
 function heal(arguments)
-		local amount = arguments.amount or 25
-		health = math.min(maximumHealth, health + amount)
-		return {
-				current = health,
-				maximum = maximumHealth
-		}
+    local amount = arguments.amount or 25
+    health = math.min(maximumHealth, health + amount)
+    return {
+        current = health,
+        maximum = maximumHealth
+    }
 end
 ```
 
@@ -260,8 +260,54 @@ local processHandle = openProcess(pid)
 
 local address = processHandle:getAddress("game.exe+0x1234")
 local currentValue = processHandle:readInteger(address)
-### Save, Apply, and Test
+processHandle:writeInteger(address, 999)
 ```
+
+Common functions include:
+
+| Function | Purpose |
+| --- | --- |
+| `findProcess(name)` | Find the game process ID. |
+| `openProcess(pid)` | Open a session for a process. |
+| `getAddress(expression)` | Resolve a module, symbol, or address expression. |
+| `readInteger(address)` | Read an integer. |
+| `writeInteger(address, value)` | Write an integer. |
+| `readQword(address)` / `writeQword(address, value)` | Read or write a 64-bit integer. |
+| `readFloat(address)` / `writeFloat(address, value)` | Read or write a floating-point value. |
+| `AOBScan(pattern)` | Scan for a byte pattern. |
+| `registerSymbol(name, address)` | Register a package-scoped symbol. |
+| `autoAssemble(text)` | Execute an Auto Assembler operation. |
+| `createTimer(...)` | Create a timer task. |
+| `sleep(milliseconds)` | Pause the current script. |
+
+Prefer using the handle returned by `openProcess(...)` for reads and writes. For example, `processHandle:readInteger(...)` makes the target process explicit and helps avoid operating on another process. Address expressions can use a form such as `game.exe+0x1234`.
+
+### Show Script Features in the Trainer
+
+Defining a function in Lua does not automatically add a button to the trainer page. To expose an action, declare it in `package.json` under `runnables` and keep these fields consistent:
+
+```text
+runnables[].entryFile    -> actual Lua file
+runnables[].entrySymbol  -> actual Lua function name
+runnables[].runtime      -> lua
+```
+
+For example:
+
+```json
+{
+  "id": "heal",
+  "kind": "action",
+  "runtime": "lua",
+  "entryFile": "lua/main.lua",
+  "entrySymbol": "heal"
+}
+```
+
+The loaded trainer interface will then show this action. Its exact appearance depends on the trainer interface configuration provided by the package.
+
+### Save, Apply, and Test
+
 1. Edit `package.json` or a Lua file in the Studio editor.
 2. Wait for the editor to save automatically, or use its save action.
 3. Return to the game trainer page.
@@ -270,11 +316,11 @@ local currentValue = processHandle:readInteger(address)
 6. Start the game and wait until the session is connected.
 7. Run your new action or enable its toggle in the `Mods` page.
 8. Disable the feature after testing, then modify the script.
-| `readInteger(address)` | Read an integer. |
+
 Studio provides `Widget Preview` for trainer controls, but a preview does not replace testing with the real game. Scripts that read or write memory, scan, patch, or hook a process must be verified in a recoverable test environment.
-| `readQword(address)` / `writeQword(address, value)` | Read or write a 64-bit integer. |
+
 ### Common Script Errors
-| `AOBScan(pattern)` | Scan for a byte pattern. |
+
 | Symptom | Check |
 | --- | --- |
 | Package is not shown | The directory name matches `id`, and files are at their declared paths. |
@@ -284,37 +330,37 @@ Studio provides `Widget Preview` for trainer controls, but a preview does not re
 | Address read fails | The game is connected, and the module name and address expression are correct. |
 | Parameter is empty | `parameterSchema` matches the parameter name read by Lua. |
 | Change is not visible | The files were saved and `Apply package changes` was selected. |
-Defining a function in Lua does not automatically add a button to the trainer page. To expose an action, declare it in `package.json` under `runnables` and keep these three fields consistent:
+
 Fix script errors while the game is not running when possible. Do not hide errors by repeatedly selecting an execute button, and do not run memory-modification scripts found online unless you understand what they do.
-```
+
 ## Trainer Cannot Be Used
-runnables[].entrySymbol -> 实际 Lua 函数名
+
 If trainer controls are locked or unavailable, check the following in order:
-```
+
 1. The game is running.
 2. Hexinton Mod is not still preparing the session.
 3. The client is connected to the correct game process.
 4. The game version is compatible with the trainer.
 5. The trainer package synchronized and loaded successfully.
 6. The game is not running under a different Windows user or higher privilege level.
-	"kind": "action",
+
 If the game runs with administrator privileges, try running Hexinton Mod with the same privileges. Do not disable system security features without understanding the risks.
-	"entryFile": "lua/main.lua",
+
 ## Apply Package Updates
-}
+
 If the page shows `Apply package changes`, local trainer files have changed but are not yet applied to the current session.
 
 1. Make sure the current operation has completed.
 2. Select `Apply package changes`.
 3. Wait for `Applying package changes...` to finish.
 4. Confirm that trainer controls become available again.
-1. 在 Studio 编辑器中修改 `package.json` 或 Lua 文件。
+
 Ordinary users usually do not see this message. It mainly appears after local trainer content is edited or updated.
-3. 返回游戏训练器页面。
+
 ## Settings
-5. 等待 `Applying package changes...` 完成。
+
 Open `Settings` from the left navigation to change:
-7. 在 `模组` 页面执行你新增的动作或打开开关。
+
 * The client display language.
 * Trainer operation feedback sounds.
 * Sound volume.
@@ -322,11 +368,11 @@ Open `Settings` from the left navigation to change:
 * Feedback sound preview.
 
 Sounds only report trainer operation status. They do not mean that an in-game modification will remain active. Use the trainer result and in-game behavior as the final indication.
-| ------------ | ----------------------------------- |
+
 ## Stop Using the Trainer
-| package 无法加载 | `package.json` 是否为严格 JSON           |
+
 At the end of a session, use this order:
-| 启用后无法关闭      | `disable()` 是否清理了 `enable()` 创建的资源  |
+
 1. Disable persistent trainer features that are enabled.
 2. Wait for the disable operations to complete.
 3. Exit the game normally.
@@ -338,9 +384,9 @@ This gives the trainer an opportunity to clean up hooks, timers, memory allocati
 ## Frequently Asked Questions
 
 ### Hexinton Mod Cannot Find the Game
-2. Hexinton Mod 是否仍在准备会话；
+
 If you see `Hexinton Mod can't find the game.`:
-4. 当前游戏版本是否与训练器兼容；
+
 1. Confirm that the game is installed.
 2. Check the game `.exe` from the `Play` menu.
 3. If the installation shows `Missing file`, select the correct `.exe` again.
@@ -374,56 +420,10 @@ If you see `Hexinton Mod took too long to respond.`, do not retry repeatedly. Ch
 ### Current Operation Is Unavailable
 
 If you see `This action isn't available right now.`, the game may not be connected, the session may be updating, or the current trainer may not provide that operation. Wait for the state to stabilize and try again.
-2. 等待关闭操作完成；
+
 ### Client Version Is Out of Date
-4. 等待客户端显示游戏已经断开；
+
 If you see `This Hexinton Mod version is out of date.`, install the latest client version provided by the maintainer before using it again.
-
-这样可以让训练器有机会清理已经创建的钩子、计时器、内存分配和其他会话资源。
-
-## 常见问题
-
-### Hexinton Mod 找不到游戏
-
-如果看到 `Hexinton Mod can't find the game.`：
-
-1. 确认游戏已经安装；
-2. 从 `Play` 菜单检查游戏 `.exe`；
-3. 如果安装项显示 `Missing file`，重新选择正确的 `.exe`；
-4. 确认游戏没有被移动到新的目录。
-
-### Windows 无法启动游戏
-
-如果看到 `Windows couldn't start the game.`：
-
-* 尝试从游戏文件夹或官方启动器手动启动游戏；
-* 检查游戏文件是否完整；
-* 检查安全软件是否阻止客户端启动游戏；
-* 重新选择正确的游戏 `.exe`。
-
-### 启动链接无效
-
-如果看到 `The game's launch link isn't working.`，说明保存的 URI 或启动器链接已经失效。请使用有效的安装配置，或从官方启动器手动启动游戏。
-
-### 游戏已启动，但训练器仍然锁定
-
-* 等待游戏完成加载；
-* 确认启动的是受支持的游戏版本；
-* 确认没有同时运行多个同名游戏进程；
-* 打开“调试”页面查看会话状态；
-* 重启游戏和 Hexinton Mod 后重试。
-
-### 操作超时
-
-如果看到 `Hexinton Mod took too long to respond.`，不要立即连续重试。先检查游戏是否卡死或正在切换场景，等待几秒后再执行一次。
-
-### 当前操作不可用
-
-如果看到 `This action isn't available right now.`，通常表示游戏尚未连接、会话正在更新，或当前训练器没有提供该操作。等待状态稳定后重试。
-
-### 客户端版本过旧
-
-如果看到 `This Hexinton Mod version is out of date.`，请安装维护者提供的最新客户端版本后再使用。
 
 ## Current Version Limitations
 

@@ -1,258 +1,258 @@
 # Public User Guide
 
-状态：当前用户操作指南和基础脚本入门。
+Status: current user guide and basic scripting introduction.
 
-本文面向已经安装并能打开 Hexinton Mod 客户端的普通用户，介绍如何选择游戏、启动游戏、连接训练器并使用模组功能，也介绍如何使用 Studio 编写第一个基础脚本。本文不包含源码下载、编译或客户端程序搭建内容。本文包含基础脚本入门；更复杂的模组开发请参考“进一步学习”。
+This guide is for users who have installed and can open the Hexinton Mod client. It explains how to select a game, launch it, connect a trainer, and use mod features. It also introduces how to write a basic script in Studio. It does not cover source downloads, compilation, or client development. For advanced mod development, see [Further Learning](#further-learning).
 
-## 使用前须知
+## Before You Start
 
-使用 Hexinton Mod 前，请确认：
+Before using Hexinton Mod, confirm that:
 
-* 你使用的是 Windows 系统；
-* Hexinton Mod 客户端已经安装并能正常打开；
-* 目标游戏已经安装在本机；
-* 目标游戏已经出现在客户端的“我的游戏”列表中；
-* 你了解在线游戏的使用规则和反作弊政策。
+* You are using Windows.
+* The Hexinton Mod client is installed and opens normally.
+* The target game is installed locally.
+* The target game appears in the client's `My Games` list.
+* You understand the rules and anti-cheat policy for online games.
 
-模组可能修改游戏进程或存档。建议在使用前备份重要存档，并仅使用你信任的训练器和模组。不要在禁止修改游戏的在线模式中使用。
+Mods may modify a game process or save data. Back up important saves before use and only use trainers and mods that you trust. Do not use them in online modes that prohibit game modification.
 
-## 认识主界面
+## Main Interface
 
-打开客户端后，左侧导航栏包含以下主要入口：
+After opening the client, the left navigation bar contains these entries:
 
-| 入口   | 用途                         |
-| ---- | -------------------------- |
-| 首页   | 查看已注册游戏和最近使用的游戏            |
-| 创作者  | 进入创作者相关功能                  |
-| 调试   | 查看应用和连接状态，主要用于问题排查         |
-| 设置   | 修改语言和训练器反馈音效               |
-| 我的游戏 | 查看本机已经注册到 Hexinton Mod 的游戏 |
+| Entry | Purpose |
+| --- | --- |
+| Home | View registered games and recently used games. |
+| Creator | Open creator features. |
+| Debug | View application and connection status for troubleshooting. |
+| Settings | Change the language and trainer feedback sounds. |
+| My Games | View games registered with Hexinton Mod on this machine. |
 
-首页顶部的搜索框用于搜索已经注册到本机客户端的游戏。它不会搜索或下载网络上的游戏和模组。
+The search box at the top of Home searches games registered with the local client. It does not search for or download games or mods from the network.
 
-## 打开游戏训练器
+## Open a Game Trainer
 
-1. 在“首页”或“我的游戏”中找到目标游戏。
-2. 点击游戏卡片，进入该游戏的训练器页面。
-3. 等待客户端完成游戏信息和训练器内容的准备。
+1. Find the target game in `Home` or `My Games`.
+2. Select the game card to open its trainer page.
+3. Wait for the client to prepare the game information and trainer content.
 
-训练器页面通常包含：
+The trainer page usually contains:
 
-* `模组`：显示当前游戏可用的训练器功能；
-* `存档`：当前版本中的内容可能是演示数据，不建议将其作为正式存档管理功能使用；
-* `Play`：启动游戏；
-* `Studio`：打开脚本和训练器包编辑器，用于编写自己的脚本。
+* `Mods`: Features available for the current game.
+* `Saves`: Current content may be demonstration data and is not a production save-management feature.
+* `Play`: Launches the game.
+* `Studio`: Opens the script and trainer package editor.
 
-如果游戏没有出现在“我的游戏”中，当前版本没有面向普通用户的完整“添加新游戏”入口。请确认你使用的客户端版本已经为该游戏配置了注册信息。
+If the game does not appear in `My Games`, the current version does not provide a complete `Add New Game` workflow for ordinary users. Confirm that your client version has registration information for the game.
 
-## 选择游戏安装位置
+## Choose a Game Installation
 
-如果一个游戏存在多个安装位置，可以通过 `Play` 右侧的下拉按钮选择要启动的版本。
+If a game has multiple installations, use the dropdown beside `Play` to choose which version to launch.
 
-1. 点击 `Play` 右侧的下拉按钮。
-2. 在 `Launch installation` 列表中选择正确的游戏安装项。
-3. 选中的安装项会成为之后默认使用的安装位置。
+1. Select the dropdown beside `Play`.
+2. Choose the correct installation in the `Launch installation` list.
+3. The selected installation becomes the default for later launches.
 
-列表中可能出现以下状态：
+The list may show these statuses:
 
-* `Missing file`：之前保存的游戏可执行文件已经被移动、删除或无法访问；
-* `No installation profiles`：当前没有可用的游戏安装配置。
+* `Missing file`: The saved game executable was moved, deleted, or cannot be accessed.
+* `No installation profiles`: No game installation profile is currently available.
 
-菜单中的 `Add game executable` 用于选择游戏的 Windows `.exe` 文件。请选择游戏本身的可执行文件，不要选择启动器快捷方式、文件夹或其他类型的文件。
+Use `Add game executable` to select the game's Windows `.exe` file. Select the game executable itself, not a launcher shortcut, folder, or another file type.
 
-当前版本存在一个限制：当游戏完全没有安装配置时，安装位置菜单可能无法打开。如果遇到这种情况，普通用户暂时无法从该页面完成首次添加，请使用已经配置好游戏信息的客户端版本或联系维护者。
+Current limitation: when a game has no installation profile at all, the installation menu may not open. Ordinary users cannot complete the first addition from that page in this case. Use a client version with game information already configured or contact the maintainer.
 
-## 启动并连接游戏
+## Launch and Connect the Game
 
-1. 进入目标游戏的训练器页面。
-2. 确认 `Play` 使用的是正确安装位置。
-3. 点击 `Play`。
-4. 等待游戏启动。
-5. 等待 Hexinton Mod 检测游戏进程并完成连接。
+1. Open the target game's trainer page.
+2. Confirm that `Play` uses the correct installation.
+3. Select `Play`.
+4. Wait for the game to start.
+5. Wait for Hexinton Mod to detect and connect to the game process.
 
-启动过程中，按钮可能显示：
+During launch, the button may show:
 
-| 状态                    | 含义             |
-| --------------------- | -------------- |
-| `Launching...`        | 客户端正在发送并处理启动请求 |
-| `Cancel launch`       | 可以取消当前启动请求     |
-| `Preparing session`   | 正在准备训练器和游戏会话   |
-| `Updating session...` | 正在同步当前会话内容     |
-| `Running`             | 游戏已经运行         |
-| `Session sync failed` | 训练器内容同步失败      |
-| `No installation`     | 没有可用的游戏安装位置    |
+| Status | Meaning |
+| --- | --- |
+| `Launching...` | The client is sending and processing the launch request. |
+| `Cancel launch` | Cancels the current launch request. |
+| `Preparing session` | The trainer and game session are being prepared. |
+| `Updating session...` | The current session content is being synchronized. |
+| `Running` | The game is running. |
+| `Session sync failed` | Trainer content synchronization failed. |
+| `No installation` | No usable game installation is available. |
 
-看到 `Launch request accepted` 只表示客户端接受了启动请求，不代表训练器已经连接到游戏。请继续等待，直到训练器控件解除锁定。
+`Launch request accepted` only means that the client accepted the launch request. It does not mean that the trainer is connected. Continue waiting until the trainer controls are unlocked.
 
-游戏已经由 Steam、其他启动器或用户手动启动时，客户端仍需要检测到正确的目标进程并完成附加。只有连接完成后，游戏内修改功能才可使用。
+If the game was started by Steam, another launcher, or the user, the client still needs to detect the correct target process and attach to it. In-game modifications are available only after the connection is complete.
 
-## 使用训练器功能
+## Use Trainer Features
 
-连接成功后，打开 `模组` 标签。页面显示的功能由当前游戏已经同步并成功加载的训练器包提供。
+After connecting, open the `Mods` tab. The available features come from trainer packages synchronized and loaded successfully for the current game.
 
-### 开关功能
+### Toggles
 
-开关通常用于启用或禁用某项持续效果，例如无限生命或无限资源。
+Toggles usually enable or disable a persistent effect, such as unlimited health or resources.
 
-1. 打开对应开关。
-2. 等待操作完成提示。
-3. 需要恢复游戏原始行为时，关闭该开关。
+1. Turn on the relevant toggle.
+2. Wait for the operation to complete.
+3. Turn it off when you want to restore the game's original behavior.
 
-不要在命令仍在执行时反复点击。关闭游戏前，建议先关闭已经启用的持续功能。
+Do not click repeatedly while a command is running. Before closing the game, turn off persistent features that are still enabled.
 
-### 数值功能
+### Numeric Controls
 
-数值控件用于设置数量、倍率或其他参数。
+Numeric controls set quantities, multipliers, or other parameters.
 
-1. 输入或调整数值。
-2. 确认数值位于控件允许的范围内。
-3. 点击对应的执行按钮，或等待该控件按设计提交。
+1. Enter or adjust the value.
+2. Confirm that it is within the allowed range.
+3. Select the relevant execute button, or wait for the control to submit as designed.
 
-某些控件提供加减按钮或下拉选项。提交成功后，游戏中的实际值可能稍后才会更新。
+Some controls provide increment/decrement buttons or dropdown options. The actual in-game value may update shortly after a successful submission.
 
-### 动作功能
+### Actions
 
-带有 `Execute` 按钮的项目表示一次性操作，例如添加物品、传送或刷新数据。
+An item with an `Execute` button represents a one-time operation, such as adding an item, teleporting, or refreshing data.
 
-1. 按要求填写参数。
-2. 点击 `Execute`。
-3. 等待成功或失败结果。
+1. Enter the required parameters.
+2. Select `Execute`.
+3. Wait for the success or failure result.
 
-一次成功提示只代表该次命令完成，不表示功能会持续生效。需要持续效果时，应使用对应的开关功能。
+A success message confirms only that the command completed. It does not mean that the feature remains active. Use the relevant toggle for a persistent effect.
 
-### 只读状态
+### Read-only State
 
-部分项目只显示游戏中的当前值，不能编辑。它们会通过训练器状态更新自动刷新。命令刚完成时，显示值可能短暂保留旧内容，请等待下一次状态更新。
+Some items display the current in-game value and cannot be edited. They refresh through trainer state updates. Immediately after a command completes, the displayed value may briefly remain old; wait for the next state update.
 
-### 自定义界面
+### Custom Interfaces
 
-部分训练器会显示专用面板或小型应用，例如物品搜索、传送点列表或颜色选择器。它们只能调用该训练器明确授权的命令和数据。
+Some trainers show dedicated panels or small applications, such as an item search, waypoint list, or color picker. They can call only the commands and data explicitly authorized by that trainer.
 
-当游戏尚未连接时，自定义界面会保持锁定。连接成功后再进行操作。
+Custom interfaces remain locked while the game is not connected. Use them after the connection succeeds.
 
-## 编写自己的脚本
+## Write Your Own Script
 
-Hexinton Mod 使用 package 来组织脚本。一个 package 至少包含一个 `package.json` 和一个 Lua 文件。你不需要修改客户端程序本身，只需要在 `Studio` 中编辑 package 文件。
+Hexinton Mod organizes scripts into packages. A package contains at least a `package.json` file and one Lua file. You do not need to modify the client itself; edit package files in `Studio`.
 
-### 打开 Studio
+### Open Studio
 
-1. 打开目标游戏的训练器页面。
-2. 点击页面顶部的 `Studio`。
-3. 如果客户端提示只能在桌面应用中打开，请使用 Hexinton Mod 桌面客户端，而不是普通浏览器。
-4. 在 Studio 中选择要编辑的本地 package。
-5. 如果 package 是同步内容并显示为只读，选择 `Create Local Copy...`，然后编辑副本。
+1. Open the target game's trainer page.
+2. Select `Studio` at the top of the page.
+3. If the client says that Studio can only be opened in the desktop application, use the Hexinton Mod desktop client instead of a regular browser.
+4. Select the local package to edit in Studio.
+5. If the package is synchronized and read-only, select `Create Local Copy...` and edit the copy.
 
-同步 package 通常不能直接修改。创建本地副本可以避免直接覆盖同步内容，也方便你保留自己的修改。
+Synchronized packages are normally not editable directly. Creating a local copy prevents you from overwriting synchronized content and lets you keep your changes.
 
-### 创建 package 文件
+### Create Package Files
 
-在 Studio 中使用 `New Package...` 创建新 package，或在本地副本中建立如下文件结构：
+Use `New Package...` in Studio to create a package, or create this structure in a local copy:
 
-```
+```text
 example.health/
-	package.json
-	lua/main.lua
+  package.json
+  lua/main.lua
 ```
 
-目录名必须和 `package.json` 中的 `id` 完全一致。文件名和目录名使用英文、数字、短横线或点号，避免使用空格。
+The directory name must exactly match the `id` in `package.json`. Use English letters, numbers, hyphens, or dots in file and directory names, and avoid spaces.
 
-### 编写 package.json
+### Write package.json
 
-`package.json` 告诉 Hexinton Mod 要加载哪些脚本，以及用户可以执行哪些功能。下面是一个可以作为起点的完整示例：
+`package.json` tells Hexinton Mod which scripts to load and which features users can execute:
 
 ```json
 {
-	"id": "example.health",
-	"version": "1.0.0",
-	"displayName": "Health Example",
-	"runtime": {
-		"files": [
-			{ "path": "lua/main.lua", "runtime": "lua" }
-		],
-		"public": { "lua": "lua/main.lua" },
-		"runnables": [
-			{
-				"id": "enable",
-				"kind": "enable",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "enable"
-			},
-			{
-				"id": "disable",
-				"kind": "disable",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "disable"
-			},
-			{
-				"id": "heal",
-				"kind": "action",
-				"runtime": "lua",
-				"entryFile": "lua/main.lua",
-				"entrySymbol": "heal",
-				"parameterSchema": {
-					"type": "object",
-					"properties": {
-						"amount": { "type": "integer" }
-					}
-				}
-			}
-		]
-	}
+  "id": "example.health",
+  "version": "1.0.0",
+  "displayName": "Health Example",
+  "runtime": {
+    "files": [
+      { "path": "lua/main.lua", "runtime": "lua" }
+    ],
+    "public": { "lua": "lua/main.lua" },
+    "runnables": [
+      {
+        "id": "enable",
+        "kind": "enable",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "enable"
+      },
+      {
+        "id": "disable",
+        "kind": "disable",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "disable"
+      },
+      {
+        "id": "heal",
+        "kind": "action",
+        "runtime": "lua",
+        "entryFile": "lua/main.lua",
+        "entrySymbol": "heal",
+        "parameterSchema": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "integer" }
+          }
+        }
+      }
+    ]
+  }
 }
 ```
 
-这几个字段最重要：
+The most important fields are:
 
-* `id`：package 的唯一 ID，必须和目录名一致；
-* `version`：package 版本号；
-* `runtime.files`：所有要加载的运行时文件；
-* `runnables`：脚本提供的功能列表；
-* `kind`：功能类型，常用的是 `enable`、`disable` 和 `action`；
-* `entrySymbol`：Lua 文件中实际存在的函数名；
-* `parameterSchema`：动作接受的参数格式。
+* `id`: The package's unique ID, which must match the directory name.
+* `version`: The package version.
+* `runtime.files`: All runtime files to load.
+* `runnables`: The features provided by the script.
+* `kind`: The feature type, commonly `enable`, `disable`, or `action`.
+* `entrySymbol`: The function name that exists in the Lua file.
+* `parameterSchema`: The parameter format accepted by an action.
 
-JSON 必须使用严格格式：属性名和文本值都要使用双引号，最后一个属性后不要加逗号。
+JSON must use strict syntax: property names and string values require double quotes, and the final property must not have a trailing comma.
 
-### 编写 Lua 脚本
+### Write the Lua Script
 
-在 `lua/main.lua` 中写入：
+Put the following in `lua/main.lua`:
 
 ```lua
 local health = 100
 local maximumHealth = 100
 
 function enable()
-		-- 在这里安装属于本 package 的功能。
+    -- Install features owned by this package here.
 end
 
 function disable()
-		-- 在这里移除 enable 创建的钩子、计时器和其他资源。
+    -- Remove hooks, timers, and other resources created by enable.
 end
 
 function heal(arguments)
-		local amount = arguments.amount or 25
-		health = math.min(maximumHealth, health + amount)
-		return {
-				current = health,
-				maximum = maximumHealth
-		}
+    local amount = arguments.amount or 25
+    health = math.min(maximumHealth, health + amount)
+    return {
+        current = health,
+        maximum = maximumHealth
+    }
 end
 ```
 
-脚本规则：
+Script rules:
 
-* `enable()` 在 package 开始工作时执行；
-* `disable()` 在停止 package 时执行，必须负责清理资源；
-* `action` 函数接收一个参数表，例如 `arguments.amount`；
-* 函数可以返回数字、字符串、布尔值或由这些值组成的表；
-* 不要把密钥、账号信息或私人文件内容写进 package；
-* 只操作你明确知道属于目标游戏的地址、符号和进程。
+* `enable()` runs when the package starts.
+* `disable()` runs when the package stops and must clean up its resources.
+* An `action` function receives a parameter table, such as `arguments.amount`.
+* Functions may return numbers, strings, booleans, or tables containing those values.
+* Do not put keys, account information, or private file contents in a package.
+* Operate only on addresses, symbols, and processes that you know belong to the target game.
 
-### 常用 Lua 操作
+### Common Lua Operations
 
-脚本连接到游戏后，可以使用以下常用函数：
+After the script is connected to the game, it can use common functions such as these:
 
 ```lua
 local pid = findProcess("game.exe")
@@ -263,186 +263,186 @@ local currentValue = processHandle:readInteger(address)
 processHandle:writeInteger(address, 999)
 ```
 
-常用函数包括：
+Common functions include:
 
-| 函数                                                  | 用途                   |
-| --------------------------------------------------- | -------------------- |
-| `findProcess(name)`                                 | 查找游戏进程 ID            |
-| `openProcess(pid)`                                  | 打开指定进程会话             |
-| `getAddress(expression)`                            | 解析模块、符号或地址表达式        |
-| `readInteger(address)`                              | 读取整数                 |
-| `writeInteger(address, value)`                      | 写入整数                 |
-| `readQword(address)` / `writeQword(address, value)` | 读取或写入 64 位整数         |
-| `readFloat(address)` / `writeFloat(address, value)` | 读取或写入浮点数             |
-| `AOBScan(pattern)`                                  | 按字节特征扫描地址            |
-| `registerSymbol(name, address)`                     | 注册当前 package 的符号     |
-| `autoAssemble(text)`                                | 执行 Auto Assembler 操作 |
-| `createTimer(...)`                                  | 创建定时任务               |
-| `sleep(milliseconds)`                               | 暂停当前脚本               |
+| Function | Purpose |
+| --- | --- |
+| `findProcess(name)` | Find the game process ID. |
+| `openProcess(pid)` | Open a session for a process. |
+| `getAddress(expression)` | Resolve a module, symbol, or address expression. |
+| `readInteger(address)` | Read an integer. |
+| `writeInteger(address, value)` | Write an integer. |
+| `readQword(address)` / `writeQword(address, value)` | Read or write a 64-bit integer. |
+| `readFloat(address)` / `writeFloat(address, value)` | Read or write a floating-point value. |
+| `AOBScan(pattern)` | Scan for a byte pattern. |
+| `registerSymbol(name, address)` | Register a package-scoped symbol. |
+| `autoAssemble(text)` | Execute an Auto Assembler operation. |
+| `createTimer(...)` | Create a timer task. |
+| `sleep(milliseconds)` | Pause the current script. |
 
-推荐优先使用 `openProcess(...)` 返回的句柄进行读写。例如 `processHandle:readInteger(...)` 明确表示操作哪个进程，避免误操作其他进程。地址表达式可以使用类似 `game.exe+0x1234` 的格式。
+Prefer using the handle returned by `openProcess(...)` for reads and writes. For example, `processHandle:readInteger(...)` makes the target process explicit and helps avoid operating on another process. Address expressions can use a form such as `game.exe+0x1234`.
 
-### 把脚本功能显示在训练器中
+### Show Script Features in the Trainer
 
-仅仅在 Lua 中写出函数，不一定会自动在训练器页面显示按钮。要让用户看到一个动作，必须在 `package.json` 的 `runnables` 中声明它，并确保以下三项一致：
+Defining a function in Lua does not automatically add a button to the trainer page. To expose an action, declare it in `package.json` under `runnables` and keep these fields consistent:
 
+```text
+runnables[].entryFile    -> actual Lua file
+runnables[].entrySymbol  -> actual Lua function name
+runnables[].runtime      -> lua
 ```
-runnables[].entryFile  -> 实际 Lua 文件
-runnables[].entrySymbol -> 实际 Lua 函数名
-runnables[].runtime -> lua
-```
 
-例如：
+For example:
 
 ```json
 {
-	"id": "heal",
-	"kind": "action",
-	"runtime": "lua",
-	"entryFile": "lua/main.lua",
-	"entrySymbol": "heal"
+  "id": "heal",
+  "kind": "action",
+  "runtime": "lua",
+  "entryFile": "lua/main.lua",
+  "entrySymbol": "heal"
 }
 ```
 
-然后在训练器页面中，这个动作会由已加载的训练器界面显示。控件的具体外观取决于 package 提供的训练器界面配置。
+The loaded trainer interface will then show this action. Its exact appearance depends on the trainer interface configuration provided by the package.
 
-### 保存、应用和测试
+### Save, Apply, and Test
 
-1. 在 Studio 编辑器中修改 `package.json` 或 Lua 文件。
-2. 等待编辑器自动保存，或使用编辑器提供的保存操作。
-3. 返回游戏训练器页面。
-4. 如果出现 `Apply package changes`，点击它。
-5. 等待 `Applying package changes...` 完成。
-6. 启动游戏并等待状态变为已连接。
-7. 在 `模组` 页面执行你新增的动作或打开开关。
-8. 测试完成后关闭功能，再修改脚本。
+1. Edit `package.json` or a Lua file in the Studio editor.
+2. Wait for the editor to save automatically, or use its save action.
+3. Return to the game trainer page.
+4. If `Apply package changes` appears, select it.
+5. Wait for `Applying package changes...` to finish.
+6. Start the game and wait until the session is connected.
+7. Run your new action or enable its toggle in the `Mods` page.
+8. Disable the feature after testing, then modify the script.
 
-Studio 提供 `Widget Preview` 预览训练器控件，但预览不能代替真实游戏测试。涉及内存读写、扫描、补丁或钩子的脚本，必须在可恢复的测试环境中验证。
+Studio provides `Widget Preview` for trainer controls, but a preview does not replace testing with the real game. Scripts that read or write memory, scan, patch, or hook a process must be verified in a recoverable test environment.
 
-### 常见脚本错误
+### Common Script Errors
 
-| 现象           | 检查内容                                |
-| ------------ | ----------------------------------- |
-| package 不显示  | 目录名是否等于 `id`，文件是否位于声明的路径            |
-| package 无法加载 | `package.json` 是否为严格 JSON           |
-| 按钮点击后失败      | `entrySymbol` 是否和 Lua 函数名完全一致       |
-| 启用后无法关闭      | `disable()` 是否清理了 `enable()` 创建的资源  |
-| 读取地址失败       | 游戏是否已连接，模块名和地址表达式是否正确               |
-| 参数为空         | `parameterSchema` 和 Lua 中读取的参数名是否一致 |
-| 修改没有出现       | 是否保存文件并点击 `Apply package changes`   |
+| Symptom | Check |
+| --- | --- |
+| Package is not shown | The directory name matches `id`, and files are at their declared paths. |
+| Package cannot load | `package.json` uses strict JSON syntax. |
+| Button fails after selection | `entrySymbol` exactly matches the Lua function name. |
+| Feature cannot be disabled | `disable()` cleans up resources created by `enable()`. |
+| Address read fails | The game is connected, and the module name and address expression are correct. |
+| Parameter is empty | `parameterSchema` matches the parameter name read by Lua. |
+| Change is not visible | The files were saved and `Apply package changes` was selected. |
 
-脚本错误应先在游戏未运行状态下修复。不要通过反复点击执行按钮来掩盖错误，也不要在不了解指令含义时直接运行网上找到的内存修改脚本。
+Fix script errors while the game is not running when possible. Do not hide errors by repeatedly selecting an execute button, and do not run memory-modification scripts found online unless you understand what they do.
 
-## 训练器无法操作
+## Trainer Cannot Be Used
 
-训练器控件处于锁定或不可点击状态时，依次检查：
+If trainer controls are locked or unavailable, check the following in order:
 
-1. 游戏是否已经运行；
-2. Hexinton Mod 是否仍在准备会话；
-3. 客户端是否已经连接到正确的游戏进程；
-4. 当前游戏版本是否与训练器兼容；
-5. 训练器包是否同步或加载失败；
-6. 游戏是否以不同的 Windows 用户或更高权限运行。
+1. The game is running.
+2. Hexinton Mod is not still preparing the session.
+3. The client is connected to the correct game process.
+4. The game version is compatible with the trainer.
+5. The trainer package synchronized and loaded successfully.
+6. The game is not running under a different Windows user or higher privilege level.
 
-如果游戏使用管理员权限启动，请尝试让 Hexinton Mod 使用相同权限运行。不要在不了解风险的情况下关闭系统安全功能。
+If the game runs with administrator privileges, try running Hexinton Mod with the same privileges. Do not disable system security features without understanding the risks.
 
-## 应用包更新
+## Apply Package Updates
 
-如果页面显示 `Apply package changes`，表示本地训练器文件已经发生变化，但尚未应用到当前会话。
+If the page shows `Apply package changes`, local trainer files have changed but are not yet applied to the current session.
 
-1. 确保当前操作已经完成。
-2. 点击 `Apply package changes`。
-3. 等待 `Applying package changes...` 结束。
-4. 确认训练器控件恢复可用。
+1. Make sure the current operation has completed.
+2. Select `Apply package changes`.
+3. Wait for `Applying package changes...` to finish.
+4. Confirm that trainer controls become available again.
 
-普通用户通常不会看到此提示。它主要出现在本地训练器内容被编辑或更新后。
+Ordinary users usually do not see this message. It mainly appears after local trainer content is edited or updated.
 
-## 设置
+## Settings
 
-进入左侧的“设置”页面，可以修改：
+Open `Settings` from the left navigation to change:
 
-* 客户端显示语言；
-* 训练器操作反馈音效；
-* 音效音量；
-* 连续提示音之间的时间间隔；
-* 提示音预览。
+* The client display language.
+* Trainer operation feedback sounds.
+* Sound volume.
+* The interval between consecutive feedback sounds.
+* Feedback sound preview.
 
-音效仅用于反馈训练器操作状态，不代表游戏中的修改一定持续生效。最终状态仍以训练器结果和游戏内表现为准。
+Sounds only report trainer operation status. They do not mean that an in-game modification will remain active. Use the trainer result and in-game behavior as the final indication.
 
-## 停止使用
+## Stop Using the Trainer
 
-结束本次使用时，建议按照以下顺序操作：
+At the end of a session, use this order:
 
-1. 关闭已经启用的持续训练器功能；
-2. 等待关闭操作完成；
-3. 正常退出游戏；
-4. 等待客户端显示游戏已经断开；
-5. 关闭 Hexinton Mod。
+1. Disable persistent trainer features that are enabled.
+2. Wait for the disable operations to complete.
+3. Exit the game normally.
+4. Wait for the client to show that the game is disconnected.
+5. Close Hexinton Mod.
 
-这样可以让训练器有机会清理已经创建的钩子、计时器、内存分配和其他会话资源。
+This gives the trainer an opportunity to clean up hooks, timers, memory allocations, and other session resources.
 
-## 常见问题
+## Frequently Asked Questions
 
-### Hexinton Mod 找不到游戏
+### Hexinton Mod Cannot Find the Game
 
-如果看到 `Hexinton Mod can't find the game.`：
+If you see `Hexinton Mod can't find the game.`:
 
-1. 确认游戏已经安装；
-2. 从 `Play` 菜单检查游戏 `.exe`；
-3. 如果安装项显示 `Missing file`，重新选择正确的 `.exe`；
-4. 确认游戏没有被移动到新的目录。
+1. Confirm that the game is installed.
+2. Check the game `.exe` from the `Play` menu.
+3. If the installation shows `Missing file`, select the correct `.exe` again.
+4. Confirm that the game was not moved to another directory.
 
-### Windows 无法启动游戏
+### Windows Cannot Start the Game
 
-如果看到 `Windows couldn't start the game.`：
+If you see `Windows couldn't start the game.`:
 
-* 尝试从游戏文件夹或官方启动器手动启动游戏；
-* 检查游戏文件是否完整；
-* 检查安全软件是否阻止客户端启动游戏；
-* 重新选择正确的游戏 `.exe`。
+* Try starting the game manually from its folder or official launcher.
+* Check that the game files are complete.
+* Check whether security software blocked the client from starting the game.
+* Select the correct game `.exe` again.
 
-### 启动链接无效
+### Launch Link Is Invalid
 
-如果看到 `The game's launch link isn't working.`，说明保存的 URI 或启动器链接已经失效。请使用有效的安装配置，或从官方启动器手动启动游戏。
+If you see `The game's launch link isn't working.`, the saved URI or launcher link is no longer valid. Use a valid installation profile or start the game manually from its official launcher.
 
-### 游戏已启动，但训练器仍然锁定
+### Game Started but Trainer Is Still Locked
 
-* 等待游戏完成加载；
-* 确认启动的是受支持的游戏版本；
-* 确认没有同时运行多个同名游戏进程；
-* 打开“调试”页面查看会话状态；
-* 重启游戏和 Hexinton Mod 后重试。
+* Wait for the game to finish loading.
+* Confirm that a supported game version is running.
+* Confirm that multiple processes with the same name are not running at once.
+* Open `Debug` to view the session status.
+* Restart the game and Hexinton Mod, then try again.
 
-### 操作超时
+### Operation Timed Out
 
-如果看到 `Hexinton Mod took too long to respond.`，不要立即连续重试。先检查游戏是否卡死或正在切换场景，等待几秒后再执行一次。
+If you see `Hexinton Mod took too long to respond.`, do not retry repeatedly. Check whether the game is frozen or changing scenes, wait a few seconds, and try once more.
 
-### 当前操作不可用
+### Current Operation Is Unavailable
 
-如果看到 `This action isn't available right now.`，通常表示游戏尚未连接、会话正在更新，或当前训练器没有提供该操作。等待状态稳定后重试。
+If you see `This action isn't available right now.`, the game may not be connected, the session may be updating, or the current trainer may not provide that operation. Wait for the state to stabilize and try again.
 
-### 客户端版本过旧
+### Client Version Is Out of Date
 
-如果看到 `This Hexinton Mod version is out of date.`，请安装维护者提供的最新客户端版本后再使用。
+If you see `This Hexinton Mod version is out of date.`, install the latest client version provided by the maintainer before using it again.
 
-## 当前版本限制
+## Current Version Limitations
 
-以下界面或功能在当前版本中尚未形成完整的普通用户流程：
+The following screens or features do not yet provide a complete ordinary-user workflow in the current version:
 
-* 在线模组目录、下载、安装和卸载；
-* 从客户端注册一个全新的游戏；
-* 没有任何安装配置时首次添加游戏 `.exe`；
-* `存档` 页面的正式存档管理；
-* AI Assistant 的真实在线回答；
-* 训练器预设的正式保存和加载；
-* Lag Remover；
-* 首页部分推荐内容和筛选按钮。
+* Online mod catalog, download, installation, and removal.
+* Registering a new game from the client.
+* Adding a game's `.exe` for the first time when no installation profile exists.
+* Production save management on the `Saves` page.
+* Real online responses from AI Assistant.
+* Production save and load support for trainer presets.
+* Lag Remover.
+* Some recommendations and filter buttons on Home.
 
-这些内容可能出现在界面中，但不应被视为当前可依赖的正式功能。
+These items may appear in the interface, but should not be treated as reliable production features yet.
 
-## 进一步学习
+## Further Learning
 
-本文包含普通用户操作说明和基础脚本入门。要真正编写完整的训练器脚本，请先阅读英文 [Hexinton Engine technical documentation](../hexinton-engine-wiki/engine/)。其中按主题说明内存扫描、Hook、Auto Assembler、Package 生命周期、Lua API、控件配置和测试方法。
+This guide covers ordinary-user operation and basic scripting. For complete trainer scripts, start with the [Hexinton Engine technical documentation](../hexinton-engine-wiki/engine/). It covers memory scanning, hooks, Auto Assembler, package lifecycle, the Lua API, control configuration, and testing by topic.
 
 * [Hexinton Engine technical documentation](../hexinton-engine-wiki/engine/)
 * [Script packages and lifecycle](../hexinton-engine-wiki/engine/script-packages.md)
@@ -452,16 +452,16 @@ Studio 提供 `Widget Preview` 预览训练器控件，但预览不能代替真�
 * [Hooks and Auto Assembler](../hexinton-engine-wiki/engine/hooks-and-auto-assembler.md)
 * [Testing and failure handling](../hexinton-engine-wiki/engine/testing.md)
 
-## 获取帮助
+## Get Help
 
-报告问题时，请提供：
+When reporting a problem, provide:
 
-* Hexinton Mod 客户端版本；
-* Windows 版本；
-* 游戏名称和游戏版本；
-* 游戏安装来源，例如 Steam 或独立安装；
-* 问题发生前的操作步骤；
-* 页面显示的完整错误信息；
-* “调试”页面中与本次会话相关的状态信息。
+* The Hexinton Mod client version.
+* The Windows version.
+* The game name and version.
+* The game installation source, such as Steam or an independent installation.
+* The steps taken before the problem occurred.
+* The complete error message shown on the page.
+* Session status from the `Debug` page.
 
-不要公开上传账号令牌、私人文件路径、存档文件或其他敏感信息。
+Do not publicly upload account tokens, private file paths, save files, or other sensitive information.
