@@ -8,5 +8,5 @@ site:
       path: en
       default: true
       content:
-        directory: ./
+        directory: ./en
         language: en
