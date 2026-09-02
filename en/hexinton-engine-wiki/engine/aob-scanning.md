@@ -13,7 +13,7 @@ if not hits or #hits == 0 then
     error("pattern not found")
 end
 
-local address = hits[1]
+local address = hits[0]
 ```
 
 `??` is a wildcard byte. Treat an empty result as a compatibility failure and do not write to an
@@ -38,7 +38,7 @@ if not hits or #hits ~= 1 then
     error("expected exactly one compatible instruction")
 end
 
-local hookAddress = hits[1]
+local hookAddress = hits[0]
 ```
 
 AOB results are process addresses. Check the attached process, module name, match count, and expected

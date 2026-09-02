@@ -53,6 +53,7 @@
   * [Application State Synchronization](hexinton-engine-wiki/application/application-state-synchronization.md)
   * [Custom Interfaces](hexinton-engine-wiki/application/custom-interfaces.md)
   * [Custom Interface Quickstart](hexinton-engine-wiki/application/custom-interface-quickstart.md)
+  * [Complete Custom Interface Example](hexinton-engine-wiki/application/custom-interface-health-example.md)
   * [Custom Interface Manifest](hexinton-engine-wiki/application/custom-interface-manifest.md)
   * [Custom Interface API](hexinton-engine-wiki/application/custom-interface-api.md)
   * [Custom Interface Security](hexinton-engine-wiki/application/custom-interface-security.md)

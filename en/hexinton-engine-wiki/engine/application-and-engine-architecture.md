@@ -25,8 +25,10 @@ User selects installation
   -> Application updates controls and feeds
 ```
 
-A command result confirms completion of that command. It does not replace the authoritative state
-published by a service-backed view model.
+A command result confirms completion of one requested operation. It is not the Service, Feed,
+ViewModel, or current target value. A Service observes changing values; the host Feed routes those
+observations; the host ViewModel stores the current projected value; and the UI renders that
+ViewModel. A state delta is only the transport message describing a ViewModel mutation.
 
 ## Complete Command Flow
 
@@ -44,7 +46,7 @@ UI event
   -> native host executes the runnable under the pid context lock
   -> engine returns success JSON or structured error
   -> transaction executor returns typed outcome
-  -> GameSession commits the authoritative trainer value when policy allows
+  -> GameSession commits the trainer projection when policy allows
   -> session projector updates the application ViewModel
   -> application state channel assigns the next stateVersion
   -> WebView writer sends the contiguous delta
@@ -61,7 +63,7 @@ The command-operation projection and session trainer projection are separate:
 | `/sessions/{gameId}/trainerView` | The authoritative committed trainer value |
 
 A successful native result does not automatically mean that a changing game value has been
-observed. Service-backed values use the feed path.
+observed. Service-backed values use the Service -> Feed -> ViewModel path.
 
 ## Package Boundary
 
@@ -73,18 +75,19 @@ render controls; the engine uses them to validate and execute work.
 
 The engine must reject unresolved addresses, missing scan results, invalid arguments, stale process
 sessions, unsupported runtimes, and failed assembly. The application should display the structured
-failure and keep the control state consistent with the last authoritative feed.
+failure and keep the control state consistent with the last Feed value accepted by the host.
 
-## Service Feed Flow
+## Service -> Feed -> ViewModel Flow
 
 ```text
-Lua service publishes initial state and starts timer
+Lua Service publishes an initial observation and starts its timer
   -> native event queue stores package-scoped event and sequence
   -> host event pump drains events after the process wait handle signals
   -> event is checked against current pid and session token
   -> event is enqueued on the owning GameSession worker
   -> stale/out-of-scope event is rejected
-  -> immutable TrainerView is updated
+  -> matching Feed stores the accepted observation
+  -> immutable TrainerView/ViewModel is updated
   -> projector emits one application-state delta
   -> WebView receives delta, then matching checkpoint
 ```

@@ -8,6 +8,7 @@ Engine package commands.
 - [Application JavaScript Host Capabilities](application-js-host-capabilities.md)
 - [Custom Interfaces](custom-interfaces.md)
 - [Custom Interface Quickstart](custom-interface-quickstart.md)
+- [Complete Custom Interface Example](custom-interface-health-example.md)
 - [Custom Interface Manifest](custom-interface-manifest.md)
 - [Custom Interface API](custom-interface-api.md)
 - [Custom Interface Security](custom-interface-security.md)

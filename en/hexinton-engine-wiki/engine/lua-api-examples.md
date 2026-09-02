@@ -62,7 +62,7 @@ if not hits or #hits ~= 1 then
     error("expected exactly one compatible match")
 end
 
-local address = hits[1]
+local address = hits[0]
 return { address = address }
 ```
 

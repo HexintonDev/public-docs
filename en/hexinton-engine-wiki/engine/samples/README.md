@@ -14,7 +14,7 @@ addresses, and AOB patterns are illustrative unless a sample explicitly says oth
 | [`lua/multifile-require`](lua-multifile-require.md) | Lua modules | Package-local `require`, module caching, and dependency-visible globals |
 | [`process/explicit-handles`](process-explicit-handles.md) | Process handles | Default versus explicit processes, typed I/O, process discovery, and windows |
 | [`service/timer-feed`](service-timer-feed.md) | Services | Initial event, recurring timer, parameter schema, and cleanup |
-| [`aa/allocation-action-pair`](aa-allocation-action-pair.md) | Auto Assembler | Separate enable/disable AA actions that allocate and release a named cave |
+| [`aa/allocation-action-pair`](aa-allocation-action-pair.md) | Auto Assembler | Separate allocation/release AA actions for a named cave |
 
 ## Using a Sample
 

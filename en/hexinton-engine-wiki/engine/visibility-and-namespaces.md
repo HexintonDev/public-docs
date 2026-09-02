@@ -105,9 +105,11 @@ package runnable and does not establish package-local visibility.
 Declare a dependency explicitly:
 
 ```json
-"dependencies": [
-  { "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }
-]
+{
+  "dependencies": [
+    { "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }
+  ]
+}
 ```
 
 The host creates dependency context IDs and enables dependencies before the dependent package. The

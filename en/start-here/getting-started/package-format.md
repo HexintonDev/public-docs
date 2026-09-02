@@ -47,7 +47,11 @@ Kinds are `enable`, `disable`, `action`, `query`, and `service`. Every package n
 ## Dependencies
 
 ```json
-"dependencies": [{ "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }]
+{
+  "dependencies": [
+    { "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }
+  ]
+}
 ```
 
 Dependencies enable before dependents and disable in reverse order. Consume only declared public values; private labels, allocations, timers, and hooks are not dependency API.

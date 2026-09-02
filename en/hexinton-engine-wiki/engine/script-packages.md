@@ -73,9 +73,11 @@ contract instead of relying on accidental global names.
 ## Dependencies
 
 ```json
-"dependencies": [
-  { "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }
-]
+{
+  "dependencies": [
+    { "id": "trainer.shared", "compatible": "^1.0.0", "tested": "1.0.2" }
+  ]
+}
 ```
 
 Dependencies are enabled before the dependent package. Do not consume another package's private
