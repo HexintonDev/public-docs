@@ -2,26 +2,25 @@
 
 Status: current public technical Wiki.
 
-This section is for script authors, tool integrators, and AI assistants that need to create or explain HexMod engine scripts. The information architecture is defined in [WIKI-FRAMEWORK.md](wiki-framework.md). Current behavior is labeled and kept separate from planned or internal-only material.
+This section is for script authors, tool integrators, and AI assistants that need to create or explain HexMod engine scripts. Current behavior is labeled and kept separate from planned or internal-only material.
 
 ## Start Here
 
 Read the pages in this order:
 
-1. [Wiki framework](wiki-framework.md)
-2. [Script packages and lifecycle](script-packages.md)
-3. [Lua scripting](lua-scripting.md)
-4. [Visibility and namespaces](visibility-and-namespaces.md)
-5. [Memory and address resolution](memory-and-addresses.md)
-6. [AOB scanning](aob-scanning.md)
-7. [Hooks and Auto Assembler](hooks-and-auto-assembler.md)
-8. [Auto Assembler API](auto-assembler-api.md)
-9. [Lua API reference](lua-api-reference.md)
-10. [Thread model](thread-model.md)
-11. [View Models and State Feeds](view-models-and-feeds.md)
-12. [Application and Engine Architecture](application-and-engine-architecture.md)
-13. [Testing and failure handling](testing.md)
-14. [Sample library](samples/)
+1. [Script packages and lifecycle](script-packages.md)
+2. [Lua scripting](lua-scripting.md)
+3. [Visibility and namespaces](visibility-and-namespaces.md)
+4. [Memory and address resolution](memory-and-addresses.md)
+5. [AOB scanning](aob-scanning.md)
+6. [Hooks and Auto Assembler](hooks-and-auto-assembler.md)
+7. [Auto Assembler API](auto-assembler-api.md)
+8. [Lua API reference](lua-api-reference.md)
+9. [Thread model](thread-model.md)
+10. [View Models and State Feeds](view-models-and-feeds.md)
+11. [Application and Engine Architecture](application-and-engine-architecture.md)
+12. [Testing and failure handling](testing.md)
+13. [Sample library](samples/)
 
 ## Capability Map
 
