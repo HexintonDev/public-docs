@@ -2,90 +2,123 @@
 
 Status: current public API reference.
 
-## Scan Functions
+Scan functions run against the attached default process and execute on the Lua runtime worker. AOB
+patterns use space-separated byte text; `??` matches one wildcard byte. A scan result is only an
+address candidate. Validate the target module, expected bytes, instruction boundaries, architecture,
+and return path before writing a patch.
 
-### `AOBScan`
+## `AOBScan`
 
 ```lua
-AOBScan(pattern) -> handle | nil
+AOBScan(pattern) -> stringListHandle | nil
 ```
 
-Scans the attached process using space-separated byte text. `??` matches one wildcard byte. Zero
-matches return `nil`; invalid patterns raise a Lua error.
+Scans the entire attached process for `pattern`. No matches return `nil`. Invalid pattern text,
+unavailable process state, or a scan failure raises a Lua error. A successful result is opaque
+string-list userdata, not a normal Lua array; each stored address is formatted as an uppercase
+hexadecimal string without a `0x` prefix.
 
-### `AOBScanUnique`
+The list is 0-based when indexed: `hits[0]` is the first address. `#hits` returns the number of
+matches. `hits.Count` is an equivalent count property, and `hits:destroy()` releases the list early.
+After destruction, numeric indexing returns `nil` and `#hits` returns `0`; the userdata is also
+released automatically by Lua garbage collection.
+
+```lua
+local hits = AOBScan("48 8B ?? ?? 89")
+if not hits then
+    error("pattern was not found")
+end
+for index = 0, #hits - 1 do
+    print(index, hits[index])
+end
+hits:destroy()
+```
+
+## `AOBScanUnique`
 
 ```lua
 AOBScanUnique(pattern) -> address | nil
 ```
 
-Returns an address only when exactly one match exists. Zero or multiple matches return `nil` and
-must be treated as a compatibility failure before patching.
-
-### `AOBScanModule`
+Scans the entire attached process and returns one numeric address only when exactly one match is
+found. Zero matches and multiple matches both return `nil`; neither case distinguishes “not found”
+from “ambiguous”. Invalid pattern text, unavailable process state, or a scan failure raises a Lua
+error. Treat `nil` as a compatibility failure and do not patch a fallback address.
 
 ```lua
-AOBScanModule(moduleName, pattern) -> handle | nil
+local injection = AOBScanUnique("48 8B ?? ?? 89")
+if not injection then
+    error("pattern is missing or ambiguous")
+end
 ```
 
-Limits the scan to one loaded module. Zero matches return `nil`; invalid module or pattern input
-raises a Lua error.
+## `AOBScanModule`
 
-| Prototype | Return | Failure/empty behavior |
-| --- | --- | --- |
-| `AOBScan(pattern)` | String-list handle of matching addresses, or `nil` | Invalid pattern or scan failure raises; zero matches returns `nil` |
-| `AOBScanUnique(pattern)` | One address, or `nil` | Zero or multiple matches return `nil` |
-| `AOBScanModule(moduleName, pattern)` | String-list handle, or `nil` | Invalid module/pattern or scan failure raises; zero matches returns `nil` |
-| `AOBScanModuleUnique(moduleName, pattern)` | One address, or `nil` | Zero or multiple matches return `nil` |
+```lua
+AOBScanModule(moduleName, pattern) -> stringListHandle | nil
+```
 
-Use `??` for a wildcard byte. Treat `nil` or ambiguous results as a compatibility failure.
+Scans only the loaded module named by `moduleName`. The module name and pattern are required string
+arguments. No matches return `nil`; invalid module/pattern text, unavailable process state, or a
+scan failure raises a Lua error. Its result uses the same string-list userdata, 0-based indexing,
+`#hits`, `Count`, `destroy`, formatting, and garbage-collection behavior as `AOBScan`.
 
 ```lua
 local hits = AOBScanModule("game.exe", "48 8B ?? ?? 89")
 if not hits or #hits ~= 1 then
-    error("expected one compatible result")
+    error("expected one match in game.exe")
 end
-local injection = hits[1]
+local injectionText = hits[0]
+hits:destroy()
 ```
 
-## Assembly and Target Functions
+## `AOBScanModuleUnique`
 
-### `autoAssemble`
+```lua
+AOBScanModuleUnique(moduleName, pattern) -> address | nil
+```
+
+Scans the named loaded module and returns a numeric address only for exactly one match. Zero or
+multiple matches return `nil`. Invalid module/pattern text, unavailable process state, or scan
+failure raises a Lua error. This is the module-scoped equivalent of `AOBScanUnique`.
+
+```lua
+local injection = AOBScanModuleUnique("game.exe", "48 8B ?? ?? 89")
+if not injection then
+    error("module pattern is missing or ambiguous")
+end
+```
+
+## String-List Handle
+
+The handle returned by `AOBScan` and `AOBScanModule` exposes only the following native surface:
+
+| Member | Result |
+| --- | --- |
+| `hits[index]` | Formatted address string for a 0-based valid index, otherwise `nil` |
+| `#hits` | Current number of entries, or `0` after destruction |
+| `hits.Count` | Current number of entries, or `0` after destruction |
+| `hits:destroy()` | No return value; clears the owned result list |
+
+The address strings can be consumed by address-resolution APIs where a hexadecimal address
+expression is accepted, or converted by the caller as appropriate. The handle does not expose a
+Lua array iterator, a `pairs` contract, process writes, or an automatic patch/rollback operation.
+
+## `autoAssemble`
 
 ```lua
 autoAssemble(text) -> true
-autoAssemble(text, true) -> false, error
+autoAssemble(text, targetself) -> true
+autoAssemble(text, targetself, disableInfo) -> true
+autoAssemble(text, ...) -> false, errorMessage
 ```
 
-Executes Auto Assembler text synchronously. The optional `targetself=true` and `disableInfo`
-arguments are not supported by the current runtime; use a separate disable action.
-
-### `fullAccess`
-
-```lua
-fullAccess(address, size) -> true
-```
-
-Requests access for a positive byte range. It does not write bytes or restore previous protection
-automatically.
-
-### `targetIs64Bit`
-
-```lua
-targetIs64Bit() -> boolean
-```
-
-Reports the attached target architecture so architecture-specific registers and instruction forms
-can be selected deliberately.
-
-| Prototype | Return | Failure |
-| --- | --- | --- |
-| `autoAssemble(text, targetself?, disableInfo?)` | Success flag and optional error text | Assembly/parser/process failure returns failure details or raises at the Lua boundary |
-| `fullAccess(address, size)` | Operation result | Invalid range/protection change raises a Lua error |
-| `targetIs64Bit()` | Boolean | Reflects the attached target architecture |
-
-`autoAssemble` executes Auto Assembler text in the current script/session context. It does not turn
-native `EngineSession` patch methods into Lua functions.
+Executes Auto Assembler text synchronously in the current script/session context. On success it
+returns exactly `true`. On assembly, parser, address, allocation, protection, or process failure it
+returns `false` followed by an error string rather than throwing that failure directly. The optional
+`targetself=true` mode is explicitly unsupported and returns `false, errorMessage`; a non-`nil`
+`disableInfo` argument is also unsupported. Omit both optional arguments and put cleanup in the
+package disable path.
 
 ```lua
 local ok, errorMessage = autoAssemble([[
@@ -97,12 +130,44 @@ if not ok then
 end
 ```
 
-## Ownership
+`autoAssemble` does not expose native `EngineSession` patch methods as Lua functions and does not
+create an automatic disable/rollback record.
+
+## `fullAccess`
+
+```lua
+fullAccess(address, size) -> true
+```
+
+Requests writable/executable access for a positive byte range beginning at `address` in the default
+process. `size` must be greater than zero. It returns `true` after the underlying access operation;
+an invalid address, non-positive size, unavailable process, or protection failure raises a Lua
+error. It does not write bytes, remember the old protection, or restore protection automatically.
+
+```lua
+local hook = getAddressSafe("game.exe+0x1234")
+if not hook then error("unsupported build") end
+fullAccess(hook, 6)
+```
+
+## `targetIs64Bit`
+
+```lua
+targetIs64Bit() -> boolean
+```
+
+Returns whether the attached default process uses 64-bit pointers. Use the result to choose
+architecture-specific registers, pointer widths, and instruction forms. It does not inspect the
+assembly text and does not change the target architecture.
+
+```lua
+local pointerDirective = targetIs64Bit() and "dq" or "dd"
+```
+
+## Ownership and Cleanup
 
 Pair `alloc` with `dealloc`, and `registersymbol` with `unregistersymbol`. Restore hook-site bytes
-and release resources from the package disable path. `createThread` is an Auto Assembler directive
-whose thread/resource lifecycle must be handled by the assembly author; this page does not claim a
-Lua `createThread` global because none is registered.
-
-A scan result is an address candidate, not proof that bytes are safe to overwrite. Validate expected
-bytes, instruction length, architecture, and return path before patching.
+and release allocations from the package disable path. Destroy scan list handles once their address
+candidates have been copied or used. `createThread` is an Auto Assembler directive whose thread
+and resource lifecycle must be handled by the assembly author; there is no Lua `createThread`
+global. A successful scan or assembly action never proves that a patch is compatible or reversible.

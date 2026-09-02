@@ -90,12 +90,9 @@ and links to focused examples instead of placing every feature in one long tutor
 ## Public Evidence Sources
 
 The public pages in this repository are the reader-facing source of truth for the first release.
-Executable behavior is cross-checked against the Hexinton Engine implementation and test fixtures in
-the source repository. Internal architecture, product design, requirements, and implementation
-plans are intentionally excluded from this repository.
-
-The implementation and test evidence comes from the Hexinton Engine source repository. Source
-repository URLs are intentionally omitted from this public site.
+Executable behavior is cross-checked against private implementation and test evidence before
+publication. Internal architecture, product design, requirements, implementation plans, source
+paths, and repository URLs are intentionally excluded from this public site.
 
 Before publishing a final page, reconcile conflicting statements against the implementation and
 tests. Mark design-only behavior as planned instead of presenting it as current.
@@ -113,15 +110,11 @@ Each sample entry should have:
 - expected inputs and outputs;
 - required target assumptions;
 - cleanup behavior;
-- links to the source fixture and the test that validates it.
+- a private evidence record maintained outside the public page.
 
-Keep a permanent evidence record for every published sample. When behavior must be historically
-exact, record the source commit and repository-relative evidence paths in the sample page:
-
-```text
-ProcessEngine/tests/script_fixtures/<sample>/...
-ProcessEngine/tests/<test-file>
-```
+Keep a permanent private evidence record for every published sample. When behavior must be
+historically exact, record the source revision and repository-relative evidence paths in the
+internal maintenance record, not in the public page.
 
 Use `main` URLs only for living examples that are intentionally kept in sync with the current
 implementation. The sample index should record the commit used for each release of the wiki.
