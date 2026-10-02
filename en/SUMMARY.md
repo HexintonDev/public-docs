@@ -46,6 +46,7 @@
     * [Service Timer Feed](hexinton-engine-wiki/engine/samples/service-timer-feed.md)
     * [Auto Assembler Action Pair](hexinton-engine-wiki/engine/samples/aa-allocation-action-pair.md)
 * [Application Integration](hexinton-engine-wiki/application/README.md)
+  * [Reverse-engineering MCP Experiment](hexinton-engine-wiki/application/reverse-engineering-mcp-experiment.md)
   * [Application JavaScript Host Capabilities](hexinton-engine-wiki/application/application-js-host-capabilities.md)
   * [Session and Game State](hexinton-engine-wiki/application/session-and-game-state.md)
   * [Game Detection](hexinton-engine-wiki/application/game-detection.md)

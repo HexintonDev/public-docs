@@ -174,6 +174,11 @@ await JavaScript cleanup scopes. This adds no test-generation button or automati
 
 ## References and terminals
 
+Developer experiments have verified CE and Ghidra MCP through the actual assistant. These are
+not automatic installation/attachment features yet; see the
+[reverse-engineering MCP experiment](../../hexinton-engine-wiki/application/reverse-engineering-mcp-experiment.md)
+for tested behavior and limits.
+
 The assistant can search the public documentation through GitBook MCP and read full API pages.
 Bundled package/runtime/interface/debugging skills provide relevant local references when remote
 documentation is unavailable. Local references are a revisioned client snapshot and can be older
