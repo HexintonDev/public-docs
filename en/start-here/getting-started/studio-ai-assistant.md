@@ -166,6 +166,12 @@ does not prove the model wrote adequate tests. Review assertions and coverage. U
 or a game-specific prerequisite must be reported with its actual reason, rather than faked coverage.
 Save does not automatically run behavioral tests; on-save static diagnostics remain separate.
 
+The assistant can use [Package Test Helpers v1](../../hexinton-engine-wiki/engine/package-test-helpers.md)
+for assertions, temporary mocks, cleanup and Lua memory restoration. Studio supplies these inside
+each test copy through `context.helpers`; users do not need to copy a helper folder into every
+package. The assistant still needs to import actual package code, write meaningful checks and
+await JavaScript cleanup scopes. This adds no test-generation button or automatic Apply behavior.
+
 ## References and terminals
 
 The assistant can search the public documentation through GitBook MCP and read full API pages.

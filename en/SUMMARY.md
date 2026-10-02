@@ -37,6 +37,7 @@
   * [Patching](hexinton-engine-wiki/engine/patching.md)
   * [Troubleshooting](hexinton-engine-wiki/engine/troubleshooting.md)
   * [Testing](hexinton-engine-wiki/engine/testing.md)
+  * [Package Test Helpers v1](hexinton-engine-wiki/engine/package-test-helpers.md)
   * [AI Gap Review Checklist](hexinton-engine-wiki/engine/ai-gap-review-checklist.md)
   * [Sample Library](hexinton-engine-wiki/engine/samples/README.md)
     * [Package Lifecycle](hexinton-engine-wiki/engine/samples/package-enable-action-disable.md)

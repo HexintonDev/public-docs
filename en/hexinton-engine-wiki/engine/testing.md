@@ -70,6 +70,7 @@ The context passed to tests contains:
 | `packageRoot` | Absolute path to this case's disposable package copy. |
 | `scriptsRoot` | Captured packages directory; dependencies live under their package IDs. |
 | `fixture` | `null` for unit cases; owned controlled target metadata for integration cases. |
+| `helpers` | Versioned test-only modules: `version`, `luaFile`, `jsModule`. See [Package Test Helpers v1](package-test-helpers.md). |
 
 Lua tests may return a function or a table with the entry symbol, or define that global symbol.
 JavaScript tests export the entry symbol from their module. A thrown error/assertion or a returned
@@ -90,6 +91,12 @@ end
 For JS, import production code normally, for example `import { clamp } from '../math.mjs'` in
 `tests/unit.mjs`, and export `runTest(ctx)` with assertions that throw on a mismatch. Existing JS
 module resolution and capability rules apply. TypeScript compilation is not built into this runner.
+
+[Package Test Helpers v1](package-test-helpers.md) supplies readable assertions, scoped temporary
+mocks and cleanup, plus native Lua memory capture/restoration. Tests load these explicitly from
+their context. Use the lifecycle examples there to check repeated enable/disable and failed enable
+cleanup against actual production code. They are test utilities, not a scaffold generator or an
+automatic lifecycle runner.
 
 ## Controlled integration target
 
