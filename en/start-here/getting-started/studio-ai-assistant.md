@@ -1,8 +1,8 @@
 # Studio AI Assistant
 
 Status: current manual-Apply Studio assistant workflow, updated 2026-10-02. Availability depends on
-the installed client build. Dedicated package validation and unit/integration runners are still being
-expanded; the tools below describe what exists today.
+the installed client build. Shared static validation and diagnostic navigation are available in this
+build; package-facing unit/integration runners remain a later step.
 
 ## Game and package scope
 
@@ -51,7 +51,8 @@ These are assistant tool names, not PowerShell commands or Lua host APIs.
 | `list_game_packages` | Lists this game's packages, files, ownership, and writability. |
 | `prepare_package_edit(packageId, createSeparateCopy=false, waitForEditor=false)` | Returns a writable ID/directory; copies a synced source and coordinates agent editors. |
 | `create_local_package(packageId, displayName)` | Creates and prepares a local package with an initial manifest. |
-| `validate_package(packageId)` | Checks manifest identity/version presence and referenced runtime entry files. It does not run the package. |
+| `validate_package(packageId)` | Captures saved files and checks manifest identity/version presence, descriptors/entries, hosted bindings, the native dependency graph, and Lua/JavaScript syntax. It does not Apply or run code. |
+| `get_package_diagnostics()` | Reads this game's current validation reports and recorded execution failures, including source/revision and original causes. |
 | `get_package_commands(packageId)` | Returns applied runnable IDs, kinds, parameter schemas, applied/enabled state, attachment, pending Apply, and the last runtime error. |
 | `execute_package_command(operation, packageId?, runnableId?, argumentsJson?)` | Executes `apply`, `enable`, `disable`, `action`, or `query` through the current game's session. |
 
@@ -78,20 +79,36 @@ health API. The conversation supplies the game ID; these tools cannot choose a d
 
 ## Checks and error feedback
 
-The assistant should distinguish these results:
+Open **Problems** beside Widget Preview and Terminal, then select **Validate game** to check saved
+packages without activating them. Saving alone does not start validation. Independent failures are
+reported together: a broken manifest does not suppress Lua or JavaScript syntax checks.
 
-- identity/entry-file checks from `validate_package`;
-- syntax/schema checks from an actual compiler or validator;
-- unit tests of isolated logic;
-- integration tests against a controlled target;
-- execution against the actual game.
+Each report identifies the package, saved/applied source, content revision, operation and check list.
+Checks are `passed`, `failed`, or `not_run`. Lua uses the native Lua parser without calling the
+chunk; `.js`/`.mjs` files use the same parser library as the application JavaScript runtime, without
+importing or executing modules. Dependency checks use the native manifest planner. Hosted binding
+errors preserve the compiler's actual cause.
 
-Only report a check as passed when that corresponding check ran. Apply and a successful preview do
-not prove game behavior. The dedicated package-facing syntax and unit/integration runner is not yet
-exposed. Existing package test scripts can run in a terminal when available; unrun tests must be
-reported as unrun. Loading a runtime script is execution, not a side-effect-free syntax check.
+AA assembly, address/symbol resolution against a process, and runtime behavior are explicitly
+`not_run`. An application-only package has no native runtime graph to check. Static validation
+does not type-check TypeScript, execute imports, check every runtime export, or prove addresses and
+behavior. A report with `valid: true` means no checked error occurred; inspect its unrun checks.
+Package-facing unit/integration runners are not yet exposed. Existing package test scripts can run
+in a terminal when available; record their actual command and results separately.
 
-Execution returns `ok`, the result value, diagnostics, and an error when present. Users and the
+Failed **user Apply** opens Problems. Apply checks the exact captured candidate before disabling
+affected packages, so a static failure leaves the previous applied generation running. Agent checks
+and command failures appear in the conversation without selecting Problems. Both surfaces use the
+same reports and preserve original error codes, messages and details. Select a file diagnostic to
+open its normal editor tab. Available line/column locations and markers apply only when the saved
+file revision matches; dirty or changed files retain their contents and are identified as stale.
+
+The latest saved report replaces earlier saved results for that package. Execution failures retain
+their applied revision. Report history is bounded to 100 reports per game and lasts for the app
+lifetime; tool outputs also persist in conversation history. Later runtime failures are readable
+through `get_package_diagnostics`; they do not automatically start another assistant turn.
+
+Execution returns `ok`, the result value, diagnostics, reports, and an error when present. Users and the
 assistant receive the original runtime cause, including a location when supplied by the runtime.
 Failures can occur after some work has completed. In particular, this receipt fragment means Apply
 committed the new generation but a package failed to re-enable:

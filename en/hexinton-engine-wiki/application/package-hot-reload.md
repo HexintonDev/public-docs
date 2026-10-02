@@ -31,7 +31,7 @@ pending drafts are not preserved as a separate inactive generation across sessio
 ## Transaction
 
 ```text
-prepare -> capture applied files -> compile preview -> plan -> disable affected packages
+prepare -> capture files -> static validation -> compile preview -> plan -> disable affected packages
   -> promote package/applied files -> assign graph and trainer view
   -> restore compatible prior enable intent -> publish one state revision
 ```
@@ -48,9 +48,13 @@ For an enabled package, the previous generation's disable function runs before f
 the new generation's enable function runs after commit. Dependency changes can restart affected
 enabled dependents. Unaffected packages are not deliberately disabled/re-enabled.
 
-Apply checks package/view contracts needed for this transaction. It is not a complete runtime syntax
-check or a behavior test. A Lua syntax failure, for example, can be discovered during re-enable after
-the new graph has already committed. Action-only packages can be applied without a hosted widget.
+Apply checks the exact captured candidate with the shared manifest, entry, hosted binding, native
+dependency, Lua and JavaScript parse checks before disabling anything. A static failure rejects the
+candidate and keeps the previous applied generation. Checks that require execution, including AA
+assembly against a target, remain unrun. Action-only packages can be applied without a hosted widget.
+
+This is not a behavior test. An enable function can parse successfully and fail during execution
+after commit, leaving the package disabled with a detailed re-enable error.
 
 ## Command
 
@@ -76,7 +80,7 @@ re-enable fails. Inspect the committed flag and detailed errors before retrying.
 native execution starts cannot establish that all side effects were undone.
 
 See [Studio AI Assistant](../../start-here/getting-started/studio-ai-assistant.md) for tool parameters,
-explicit execution requests, and the distinction between checks and live execution.
+explicit execution requests, shared Problems reports, and the distinction between checks and live execution.
 
 ## Invariants
 

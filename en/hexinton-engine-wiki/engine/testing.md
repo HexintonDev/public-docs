@@ -7,6 +7,16 @@ with a real game.
 
 ## Minimum Test Cases
 
+Studio's **Problems → Validate game** and the assistant's `validate_package` use shared static
+checks without Apply or code execution. Reports include manifest, entries, hosted binding, native
+dependency and Lua/JavaScript parse results. AA and runtime behavior are explicitly unrun. Failed
+user Apply opens Problems and rejects static failures before lifecycle changes. File diagnostics
+open the normal editor with revision-aware locations. See [Studio AI Assistant](../../start-here/getting-started/studio-ai-assistant.md#checks-and-error-feedback)
+for the check limits and saved/applied error feedback.
+
+Package-facing unit/integration test runners are a later step. A syntax pass cannot establish that
+host functions exist, imports resolve at runtime, addresses are correct, or cleanup restores memory.
+
 Verify each package with:
 
 1. valid `enable` and `disable` execution;
