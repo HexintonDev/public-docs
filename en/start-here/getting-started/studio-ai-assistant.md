@@ -80,8 +80,17 @@ health API. The conversation supplies the game ID; these tools cannot choose a d
 ## Checks and error feedback
 
 Open **Problems** beside Widget Preview and Terminal, then select **Validate game** to check saved
-packages without activating them. Saving alone does not start validation. Independent failures are
-reported together: a broken manifest does not suppress Lua or JavaScript syntax checks.
+packages without activating them. Successful user saves, including Studio's autosave and explicit
+Overwrite, also validate that saved package after a short debounce. Editor markers and the Problems
+count update without switching the selected output tab. This never applies or executes a package.
+Failed saves retain the buffer and show their save error; validation does not run for unsaved content.
+Independent failures are reported together: a broken manifest does not suppress Lua or JavaScript
+syntax checks.
+
+AI file writes and external filesystem changes do not trigger this editor-save check. The assistant
+continues to call `validate_package` explicitly and retrieve diagnostics through its normal tools.
+Repeated user saves are coalesced, and a save during an active check schedules a check of the newer
+revision. If a validation command cannot finish, Studio distinguishes that failure from saving the file.
 
 Each report identifies the package, saved/applied source, content revision, operation and check list.
 Checks are `passed`, `failed`, or `not_run`. Lua uses the native Lua parser without calling the
