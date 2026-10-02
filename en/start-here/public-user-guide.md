@@ -310,14 +310,20 @@ The loaded trainer interface will then show this action. Its exact appearance de
 
 1. Edit `package.json` or a Lua file in the Studio editor.
 2. Wait for the editor to save automatically, or use its save action.
-3. Return to the game trainer page.
-4. If `Apply package changes` appears, select it.
+3. Confirm that the saved changes are pending Apply. Saving does not restart or change running packages.
+4. Select `Apply package changes` in Studio or on the game trainer page.
 5. Wait for `Applying package changes...` to finish.
 6. Start the game and wait until the session is connected.
 7. Run your new action or enable its toggle in the `Mods` page.
 8. Disable the feature after testing, then modify the script.
 
 Studio provides `Widget Preview` for trainer controls, but a preview does not replace testing with the real game. Scripts that read or write memory, scan, patch, or hook a process must be verified in a recoverable test environment.
+
+Apply includes the complete game's saved package graph. Existing commands keep using applied files
+until then, including files first loaded after a save. Keep/Undo in AI code review does not activate
+the package. Newly applied packages stay disabled until explicitly enabled or invoked; an action
+or query can enable its owning package before running. See [Studio AI Assistant](getting-started/studio-ai-assistant.md)
+for the editing/execution workflow and current validation limits.
 
 ### Common Script Errors
 
@@ -356,6 +362,14 @@ If the page shows `Apply package changes`, local trainer files have changed but 
 4. Confirm that trainer controls become available again.
 
 Ordinary users usually do not see this message. It mainly appears after local trainer content is edited or updated.
+
+Apply may restart affected enabled packages and dependent packages using old disable/new enable
+functions. If re-enable fails, the new files can already be committed while that package remains
+disabled. Read the detailed error, fix the cause, Apply the correction, and explicitly enable if
+needed. Apply does not compile every inactive script or prove that the mod works in a game.
+
+Applied copies belong to the current session. Starting a new session initially uses the current
+saved workspace; it does not preserve a separate inactive draft generation across restart.
 
 ## Settings
 

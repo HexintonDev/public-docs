@@ -7,6 +7,7 @@
 * [Scripting](start-here/getting-started/README.md)
   * [Package Format](start-here/getting-started/package-format.md)
   * [Runtime Selection](start-here/getting-started/runtimes.md)
+  * [Studio AI Assistant](start-here/getting-started/studio-ai-assistant.md)
 
 ## Hexinton Engine Wiki
 

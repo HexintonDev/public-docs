@@ -6,6 +6,7 @@ Public documentation for Hexinton Mod and the Hexinton Engine scripting runtime.
 
 * [Hexinton Engine technical Wiki](hexinton-engine-wiki/engine/)
 * [Public user guide](start-here/public-user-guide.md)
+* [Studio AI assistant and manual Apply](start-here/getting-started/studio-ai-assistant.md)
 * [Sample library](hexinton-engine-wiki/engine/samples/)
 
 The Hexinton Engine technical Wiki is for script authors, trainer creators, tool integrators, and AI assistants. The user guide is for people operating the installed Hexinton Mod client.

@@ -43,6 +43,11 @@ end
 
 ## Authoring Loop
 
+In Studio, save edits and run available checks before explicitly selecting Apply. Saving leaves
+the running session on its applied files. Apply updates the whole game's graph; new packages are
+not automatically enabled. Actions and queries can enable their owning package. See
+[Studio AI Assistant](studio-ai-assistant.md) and [Package Hot Reload](../../hexinton-engine-wiki/application/package-hot-reload.md).
+
 1. Declare every file and runnable in the manifest.
 2. Validate process, address, scan, and architecture assumptions.
 3. Make `enable` and `disable` idempotent.
