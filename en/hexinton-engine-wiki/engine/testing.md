@@ -17,6 +17,9 @@ for the check limits and saved/applied error feedback.
 Use Studio's **Tests** tab or the assistant's `run_package_tests` for separate behavioral results.
 A syntax pass cannot establish that host functions exist, imports resolve at runtime, addresses are
 correct, or cleanup restores memory.
+Test declaration discovery is also performed by the test runner. A package can pass static
+validation while `tests/studio.tests.json` references a missing test file; run the tests and inspect
+their discovery result before treating the suite as verified.
 
 Verify each package with:
 
@@ -111,6 +114,11 @@ allocation contains the 16-byte ASCII signature `HEXMODTESTPLAYER`, a pointer at
 `fixture` provides `pid`, `baseAddress`, `size`, `signatureAddress`, `playerAddress`, and `statsAddress`.
 At stats, 32-bit health is at `+0`, maximum health at `+4`, and gold at `+16`, initially 100 each.
 These addresses are fixture contracts, not game offsets.
+Use the supplied addresses instead of assuming where the fixture placed its player or stats.
+If a test builds a different pointer graph inside the allocation, check every cell and record fits
+within `baseAddress .. baseAddress + size`, preserve the fixture's signature/pointers/stats, and
+restore all modified bytes. Overlapping a synthetic vitals record with fixture gold can make a
+resolver test appear correct while corrupting unrelated state.
 
 For a production module exposing `setHealth(statsAddress, value)` that clamps to max and returns
 the resulting health:

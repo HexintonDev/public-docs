@@ -62,3 +62,9 @@ unit/integration test and manual Apply workflow.
 
 See [Studio AI Assistant](../../start-here/getting-started/studio-ai-assistant.md) for the current
 package workflow.
+
+For value scans, debugger captures, address translation and replacement checks,
+see [Live Memory to Static Analysis](live-memory-to-static-analysis.md). The extended
+controlled evaluation also exercised equal-value HUD/NPC decoys and corrected an
+accidental pointer chain through a C++ runtime object. These checks remain necessary
+before turning a one-session address discovery into a reusable package.
