@@ -61,6 +61,10 @@ segments and cannot contain absolute paths, `..`, or a `.lua` suffix.
 See [Visibility and Namespaces](visibility-and-namespaces.md) for complete global, module,
 dependency, symbol, and label scope rules.
 
+For explicit file imports, see [`loadfile` and `dofile`](lua-runtime-utilities-api.md#loadfile-and-dofile).
+These file functions accept UTF-8 Windows paths; their default environment is the ordinary global
+environment, distinct from package-local `require`.
+
 ## Timers and Services
 
 Use a service to publish changing state instead of repeatedly polling from a UI query. A service

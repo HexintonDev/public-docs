@@ -92,6 +92,11 @@ For JS, import production code normally, for example `import { clamp } from '../
 `tests/unit.mjs`, and export `runTest(ctx)` with assertions that throw on a mismatch. Existing JS
 module resolution and capability rules apply. TypeScript compilation is not built into this runner.
 
+Unicode Windows working directories, Lua test entry filenames and entry symbols are supported.
+The driver quotes Lua strings as UTF-8 byte escapes; context JSON can contain Unicode escapes.
+`dofile`/`loadfile` imports and diagnostic filenames preserve UTF-8. Other stock Lua filesystem APIs
+retain their own filename behavior; see [file loading](lua-runtime-utilities-api.md#loadfile-and-dofile).
+
 [Package Test Helpers v1](package-test-helpers.md) supplies readable assertions, scoped temporary
 mocks and cleanup, plus native Lua memory capture/restoration. Tests load these explicitly from
 their context. Use the lifecycle examples there to check repeated enable/disable and failed enable

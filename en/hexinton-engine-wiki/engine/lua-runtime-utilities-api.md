@@ -6,6 +6,28 @@ These globals execute on the Lua runtime worker. Timer callbacks are serialized 
 calls, and event publication detaches the payload before it is passed to the host publisher. Values
 returned from a runnable and values sent through `publishEvent` must be JSON-compatible Lua values.
 
+## `loadfile` and `dofile`
+
+```lua
+loadfile(filename?, mode?, environment?) -> chunk | nil, error
+dofile(filename?) -> all chunk return values
+```
+
+Filenames are UTF-8, including Unicode Windows directories and filenames. Relative filenames
+resolve against the process working directory. A missing filename reads stdin using ordinary Lua
+behavior. `loadfile` compiles without invoking the chunk; its optional `mode` uses Lua's `t`, `b`
+or `bt` rules. When supplied, the third argument becomes the chunk's environment. Omitting it
+uses the standard global environment; it does not inherit the calling package's local environment.
+
+`loadfile` returns `nil` plus the actual load error; `dofile` raises load/execution errors and
+forwards all results, including nil slots. UTF-8 BOM and a leading shebang line are supported;
+text source line numbers remain accurate. `dofile` supports yielding when called in a coroutine.
+
+Package-local `require` retains its existing module-ID, cache and scope rules and supports a
+Unicode package root. This does not change filename handling for other stock Lua libraries such
+as `io.open`, `os.rename` or native-library loaders. The host's JSON protocol accepts ordinary
+UTF-8 text and `\uXXXX` escapes, including valid surrogate pairs; malformed pairs are parse errors.
+
 ## `createTimer`
 
 ```lua
