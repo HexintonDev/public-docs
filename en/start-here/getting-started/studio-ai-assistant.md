@@ -2,7 +2,7 @@
 
 Status: current manual-Apply Studio assistant workflow, updated 2026-10-02. Availability depends on
 the installed client build. Shared static validation and diagnostic navigation are available in this
-build; package-facing unit/integration runners remain a later step.
+build; package unit/integration runs are available through the Tests tab and assistant tools.
 
 ## Game and package scope
 
@@ -21,8 +21,9 @@ Local packages and local copies are writable after the assistant prepares its ed
 2. It prepares a writable target or creates a local package, then edits files with its coding tools.
 3. Saved edits refresh the Files tree and mark the game pending Apply. Open a changed file from the
    conversation to review it in the code editor. Keep/Undo are review actions, not runtime activation.
-4. The assistant runs available checks and reports their actual scope and results. Ordinary editing
-   requests leave the changes pending Apply.
+4. The assistant is instructed to always write/update meaningful unit **and** integration tests for
+   every package creation or change, including UI and metadata changes, then run static validation
+   and both suites. It reports actual results and blocked coverage. Ordinary editing leaves pending Apply.
 5. Select **Apply package changes**, or explicitly ask the assistant to Apply. Apply updates the
    complete game's graph, including other saved package changes.
 6. Enable the feature or run its action/query using the trainer, a binding, or an explicit assistant
@@ -53,6 +54,9 @@ These are assistant tool names, not PowerShell commands or Lua host APIs.
 | `create_local_package(packageId, displayName)` | Creates and prepares a local package with an initial manifest. |
 | `validate_package(packageId)` | Captures saved files and checks manifest identity/version presence, descriptors/entries, hosted bindings, the native dependency graph, and Lua/JavaScript syntax. It does not Apply or run code. |
 | `get_package_diagnostics()` | Reads this game's current validation reports and recorded execution failures, including source/revision and original causes. |
+| `discover_package_tests(packageId)` | Reads the package's `tests/studio.tests.json` declaration without execution. |
+| `run_package_tests(packageId, kind="all")` | Runs captured saved files through fresh Lua/JavaScript workers or declared framework commands. Integration cases receive an owned memory target. No Apply or live-game execution. |
+| `get_package_test_results()` | Reads this game's bounded app-lifetime test history, including detailed errors, locations, output and captured revision. |
 | `get_package_commands(packageId)` | Returns applied runnable IDs, kinds, parameter schemas, applied/enabled state, attachment, pending Apply, and the last runtime error. |
 | `execute_package_command(operation, packageId?, runnableId?, argumentsJson?)` | Executes `apply`, `enable`, `disable`, `action`, or `query` through the current game's session. |
 
@@ -102,8 +106,7 @@ AA assembly, address/symbol resolution against a process, and runtime behavior a
 `not_run`. An application-only package has no native runtime graph to check. Static validation
 does not type-check TypeScript, execute imports, check every runtime export, or prove addresses and
 behavior. A report with `valid: true` means no checked error occurred; inspect its unrun checks.
-Package-facing unit/integration runners are not yet exposed. Existing package test scripts can run
-in a terminal when available; record their actual command and results separately.
+Run behavioral checks separately in **Tests**; a static report does not include test-suite results.
 
 Failed **user Apply** opens Problems. Apply checks the exact captured candidate before disabling
 affected packages, so a static failure leaves the previous applied generation running. Agent checks
@@ -135,6 +138,33 @@ committed the new generation but a package failed to re-enable:
 Read the accompanying `reenableErrors`, fix the cause, Apply the correction, and explicitly enable
 if needed. Repeating the same command is not a substitute for reading its failure. The previous
 failed attempt remains useful evidence; Stop does not prove native side effects were undone.
+
+## Package tests and current package
+
+Open **Tests** beside Problems and select **Run tests**. The package ID at the far right of this tab
+bar follows the active code-editor tab, including AI review tabs. Explorer package rows do not carry
+a separate selected-package highlight; opening a package header opens its manifest. With no active
+file there is no current package and Run tests is disabled.
+
+Tests use saved files, so save your buffer first. Each run captures the package and installed
+dependencies; each case gets a fresh worker copy. Lua and JavaScript use the real installed runtimes.
+Integration cases also start a fresh owned process with known memory and pointer-chain addresses.
+External test frameworks can use declared command cases. See [Testing](../../hexinton-engine-wiki/engine/testing.md)
+for the declaration and test context. This is a controllable fixture, not a replacement for final
+testing against the actual game.
+
+The panel shows passed, failed, not-run and cancelled cases, durations, detailed failure causes and
+expandable output. File failures open ordinary editor tabs with revision-aware locations. **Stop**
+terminates the owned worker/target tree and skips remaining cases. Different packages can run
+concurrently; a second run for the same game/package is rejected while the first is active.
+History keeps the latest 20 runs per game for the app lifetime. Results obtained by the assistant
+appear inline in its tool activity without switching the output tab; they also remain in chat history.
+
+Both suites are mandatory in assistant instructions. Missing unit or integration cases produce
+`not_run` and an **Incomplete** run, never a green empty suite. This policy guides the model; it
+does not prove the model wrote adequate tests. Review assertions and coverage. Unavailable tooling
+or a game-specific prerequisite must be reported with its actual reason, rather than faked coverage.
+Save does not automatically run behavioral tests; on-save static diagnostics remain separate.
 
 ## References and terminals
 
