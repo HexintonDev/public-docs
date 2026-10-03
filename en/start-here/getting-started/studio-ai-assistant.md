@@ -139,6 +139,11 @@ Read the accompanying `reenableErrors`, fix the cause, Apply the correction, and
 if needed. Repeating the same command is not a substitute for reading its failure. The previous
 failed attempt remains useful evidence; Stop does not prove native side effects were undone.
 
+Assistant turns have no Studio-imposed duration limit. A turn continues until the
+agent finishes, you select **Stop**, application shutdown cancels it, or an actual
+runtime/provider failure occurs. Streaming and tool activity continue throughout
+long runs. Stop still aborts the agent and waits for owned package tests to clean up.
+
 ## Package tests and current package
 
 Open **Tests** beside Problems and select **Run tests**. The package ID at the far right of this tab
