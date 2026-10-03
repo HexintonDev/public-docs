@@ -1,5 +1,7 @@
 # Studio AI Assistant
 
+For optional live-memory and static-analysis setup, see [Studio Reverse-engineering Tools](studio-reverse-engineering-tools.md).
+
 Status: current manual-Apply Studio assistant workflow, updated 2026-10-02. Availability depends on
 the installed client build. Shared static validation and diagnostic navigation are available in this
 build; package unit/integration runs are available through the Tests tab and assistant tools.

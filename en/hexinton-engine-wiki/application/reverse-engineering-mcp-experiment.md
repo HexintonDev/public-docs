@@ -1,5 +1,8 @@
 # Reverse-engineering MCP experiment
 
+The experiment below is historical. New builds add [managed Studio installation and hosting](../../start-here/getting-started/studio-reverse-engineering-tools.md);
+the qualification below describes the earlier developer setup.
+
 **Status: developer experiment, tested 2026-10-03.** Automatic installation, game attachment and
 CE/Ghidra launch controls are not available as Studio product features yet.
 

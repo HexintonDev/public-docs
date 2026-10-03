@@ -8,6 +8,7 @@
   * [Package Format](start-here/getting-started/package-format.md)
   * [Runtime Selection](start-here/getting-started/runtimes.md)
   * [Studio AI Assistant](start-here/getting-started/studio-ai-assistant.md)
+  * [Studio Reverse-engineering Tools](start-here/getting-started/studio-reverse-engineering-tools.md)
 
 ## Hexinton Engine Wiki
 
