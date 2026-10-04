@@ -2,7 +2,7 @@
 
 For optional live-memory and static-analysis setup, see [Studio Reverse-engineering Tools](studio-reverse-engineering-tools.md).
 
-Status: current manual-Apply Studio assistant workflow, updated 2026-10-02. Availability depends on
+Status: current manual-Apply Studio assistant workflow, updated 2026-10-04. Availability depends on
 the installed client build. Shared static validation and diagnostic navigation are available in this
 build; package unit/integration runs are available through the Tests tab and assistant tools.
 
@@ -12,9 +12,15 @@ Open Studio for a game to work with that game's packages. Its conversation list 
 already belong to that game. Several conversations can run concurrently on independent packages.
 If another conversation owns the same editing target, the assistant can wait or create a separate copy.
 
-Synced packages are readable references. Editing one creates an independent local copy. A copy does
-not replace or disable the source package, and does not rewrite other packages' dependencies.
-Local packages and local copies are writable after the assistant prepares its editing target.
+Authors can edit their synced packages after signing in and confirming ownership with the backend.
+The client creates a local author draft linked to the same package and publishing profile; verified
+downloaded files remain intact. Sync updates do not overwrite the draft. Previously confirmed drafts
+are available offline to the same account. Signing out or switching accounts removes author editing
+access. Publishing remains separately authorized by the server; editing does not upload a version.
+
+Other users create an independent local copy before editing a synced package. This copy does not
+replace or disable the source package or rewrite other packages' dependencies. Local packages and
+local copies are writable after the assistant prepares its editing target.
 
 ## Editing workflow
 
@@ -52,7 +58,7 @@ These are assistant tool names, not PowerShell commands or Lua host APIs.
 | Tool | Behavior |
 | --- | --- |
 | `list_game_packages` | Lists this game's packages, files, ownership, and writability. |
-| `prepare_package_edit(packageId, createSeparateCopy=false, waitForEditor=false)` | Returns a writable ID/directory; copies a synced source and coordinates agent editors. |
+| `prepare_package_edit(packageId, createSeparateCopy=false, waitForEditor=false)` | Returns a writable ID/directory and coordinates agent editors. An author's synced package keeps its ID; another user's synced package becomes a separate local copy. |
 | `create_local_package(packageId, displayName)` | Creates and prepares a local package with an initial manifest. |
 | `validate_package(packageId)` | Captures saved files and checks manifest identity/version presence, descriptors/entries, hosted bindings, the native dependency graph, and Lua/JavaScript syntax. It does not Apply or run code. |
 | `get_package_diagnostics()` | Reads this game's current validation reports and recorded execution failures, including source/revision and original causes. |
@@ -181,8 +187,9 @@ await JavaScript cleanup scopes. This adds no test-generation button or automati
 
 ## References and terminals
 
-Developer experiments have verified CE and Ghidra MCP through the actual assistant. These are
-not automatic installation/attachment features yet; see the
+Studio can install and host CE and Ghidra for the assistant. Targets are selected explicitly;
+see [Studio Reverse-engineering Tools](studio-reverse-engineering-tools.md). Earlier controlled tests
+are described in the
 [reverse-engineering MCP experiment](../../hexinton-engine-wiki/application/reverse-engineering-mcp-experiment.md)
 for tested behavior and limits.
 

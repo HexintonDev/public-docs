@@ -6,6 +6,7 @@ These pages describe supported boundaries between hosted UI, application JavaScr
 Engine package commands.
 
 - [Application JavaScript Host Capabilities](application-js-host-capabilities.md)
+- [Custom Game Launchers](custom-game-launchers.md)
 - [Package Hot Reload and Manual Apply](package-hot-reload.md)
 - [Studio AI Assistant](../../start-here/getting-started/studio-ai-assistant.md)
 - [Custom Interfaces](custom-interfaces.md)

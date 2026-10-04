@@ -59,6 +59,9 @@ Launcher calls return a serializable acceptance object containing `accepted`, `m
 `target`. A launcher may start one terminal executable or URI, but may not recursively dispatch
 another custom-script strategy.
 
+See [Custom Game Launchers](custom-game-launchers.md) for the support-package files, saved
+installation format, required return value and an Elden Ring launch example.
+
 ## WinAPI
 
 `hex.winapi.call` requires `winapi`. A request names a module, export, return type, and optional

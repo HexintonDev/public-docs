@@ -50,6 +50,7 @@
   * [Reverse-engineering MCP Experiment](hexinton-engine-wiki/application/reverse-engineering-mcp-experiment.md)
   * [Live Memory to Static Analysis](hexinton-engine-wiki/application/live-memory-to-static-analysis.md)
   * [Application JavaScript Host Capabilities](hexinton-engine-wiki/application/application-js-host-capabilities.md)
+  * [Custom Game Launchers](hexinton-engine-wiki/application/custom-game-launchers.md)
   * [Session and Game State](hexinton-engine-wiki/application/session-and-game-state.md)
   * [Game Detection](hexinton-engine-wiki/application/game-detection.md)
   * [Package Hot Reload](hexinton-engine-wiki/application/package-hot-reload.md)
