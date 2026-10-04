@@ -1,6 +1,6 @@
 # Install reverse-engineering tools in Studio
 
-Status: current managed tool workflow, updated 2026-10-04. Availability depends on the installed build.
+Status: current managed tool workflow, updated 2026-10-05. Availability depends on the installed build.
 
 Open Studio for a game. If Cheat Engine or Ghidra is missing, the **Reverse engineering tools**
 dialog offers installation for each one. You can choose **Continue to Studio** and install later
@@ -25,12 +25,23 @@ WebView2 prerequisite is separate. Available bundle versions are pinned to the i
 
 ## Using them with Hex Assistant
 
-Installed tools start on demand when an assistant session opens. CE uses a private hidden instance,
+Installed tools start on demand when an assistant session opens or you change a tool's window option.
+Each installed tool has separate **Background** and **Visible** options in the tools dialog, saved
+for this Studio game. In Visible mode, you and the assistant use the same managed instance and project.
+You can inspect the tool window and make manual changes; verify the selected process/program again
+before the assistant continues. These options do not connect to a CE or Ghidra window you opened separately.
+
+CE shows or hides its window without restarting, retaining its table and selected process.
+Ghidra waits for this game's AI conversations to finish, saves the project, and restarts in the chosen
+mode. The dialog shows waiting/changing progress and any original error. A failed save stops the
+mode change. CE's visibility remains available while Ghidra waits for an AI run.
+
+CE uses a private instance, hidden by default,
 which starts unattached. It can select the game's process or another program you ask to inspect.
 Call `instance_list`, then `process_list`, `process_attach` with a positive PID or exact process name,
 and `process_get_current` to verify the selection. Pass the discovered `instanceId` to every CE call.
 
-Ghidra runs headlessly with a persistent project for this Studio game. It starts with no automatic
+Ghidra uses a persistent project for this Studio game, with Background mode as the default. It starts with no automatic
 game import. Use `import_binary` with an absolute executable or DLL path, then `list_project_binaries`
 to check readiness and obtain the exact `binary_name` for analysis calls. Ghidra provides static file
 analysis here; the managed integration does not expose live debugger attachment.
@@ -38,7 +49,11 @@ analysis here; the managed integration does not expose live debugger attachment.
 Ask the assistant to inspect **get_reverse_engineering_status** first. This reports installation,
 suggested game executable/PID, target-selection guidance, host availability and original startup errors.
 The suggested game PID is not a receipt for CE's current selection. Ghidra analysis/indexing runs
-asynchronously; the assistant must check project readiness before interpreting results.
+asynchronously. Analysis, code search and string search have separate readiness flags. The assistant
+can use `wait_for_binary` with capability `analysis`, `code` or `strings` and a bounded timeout of up
+to 60 seconds. Cancelling the wait leaves analysis running. A temporary `not_ready` result does not
+mean the binary is missing. Short import names from `list_imports` can be used with `list_xrefs`;
+ambiguous names require a qualified DLL name or address.
 
 For example:
 
@@ -54,7 +69,11 @@ An exited managed host restarts at the next message. Starting or restarting a ga
 trainer or other program explicitly selected through CE. If the selected process itself exits,
 attach to its new PID and rediscover live addresses before continuing.
 
-Windows permissions still apply. A trainer that requires elevation must be launched with the user's
+Windows permissions still apply. Normal `process_create` reports the original Windows error if
+launch fails, and confirms the started PID separately from CE attachment. Error 740 means Windows
+requires elevation; it does not mean the trainer started or exited. Debugger launch can report
+unverified creation if CE does not select a new PID. Check the actual process list before retrying.
+A trainer that requires elevation must be launched with the user's
 approval; an ordinary Studio/CE process may be unable to inspect an elevated target. This workflow
 does not automatically elevate the app, approve UAC prompts or change security settings.
 
@@ -67,5 +86,4 @@ Finding a live address and understanding static pseudocode are different steps. 
 addresses using the module's RVA and live base, verify the actual process/CE instance, and resolve
 heap pointers again after recreation or restart. Tool output is evidence, not proof a mod is correct.
 Package changes still follow [the manual Apply and testing workflow](studio-ai-assistant.md).
-Tool installation does not Apply or enable packages. Headless hosting is the current managed mode;
-a GUI/headless settings toggle is not part of this installer release.
+Tool installation and window changes do not Apply or enable packages.
