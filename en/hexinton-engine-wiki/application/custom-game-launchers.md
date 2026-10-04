@@ -1,7 +1,7 @@
 # Custom Game Launchers
 
-Status: current desktop script contract. The support-package files and saved installation must be
-configured locally; the current client does not provide a complete launcher configuration screen.
+Status: current desktop script contract. Launchers can be delivered in synchronized packages.
+The saved installation must use `CustomScript`; the client does not yet provide a complete launcher configuration screen.
 
 A game launcher can run an application JavaScript function before starting the game. The function
 can choose an executable, set its working directory and environment variables, or open a launcher URI.
@@ -12,11 +12,41 @@ It runs before the native engine attaches to the game.
 Two pieces must agree:
 
 1. The game's saved installation uses the `CustomScript` launch type.
-2. That game's local support package supplies an active launcher script.
+2. A selected synchronized package supplies a launcher script, or that game's local support store supplies one.
 
 A support package does not replace an installation's existing Steam launch action automatically.
-Support-package activation currently reads the local store described below. Ordinary trainer package
-uploads and synchronization do not install or activate these launcher files.
+Once an installation uses `CustomScript`, refreshing installed games preserves that choice and its
+selected paths and arguments while updating provider metadata.
+Refresh packages downloads and validates selected packages. A selected package's application script
+with `kind: "launcher"` is used from the session's applied package files. Exactly one selected launcher
+is allowed; launcher scripts in dependency-only packages are not selected automatically. Invalid or
+ambiguous synchronized launchers fail visibly. When no selected package declares a launcher, the host
+can use the older local store described below.
+
+For normal package upload and synchronization, declare the script in `package.json`:
+
+```json
+{
+  "id": "example.game-support",
+  "version": "1.0.0",
+  "dependencies": [],
+  "application": {
+    "scripts": [{
+      "id": "offline-launch",
+      "kind": "launcher",
+      "runtime": "js",
+      "entryFile": "launcher/launch.js",
+      "entrySymbol": "launch",
+      "capabilities": ["launcher.read", "launcher.launch"]
+    }]
+  }
+}
+```
+
+Publication requires the backend's game-support creator approval or first-party authorization for
+these capabilities. An ordinary creator cannot grant those permissions by adding manifest strings.
+The package must be selected through defaults or a subscription and refreshed before launch.
+Already installed, validated packages remain usable under the client's offline policy.
 
 The installation's `launch` value has this shape:
 
@@ -114,7 +144,7 @@ interpreting a batch command or changing the application's own working directory
 
 ## Return values and failures
 
-Export a function named `launch`. It must return `{ "status": "accepted" }` after Windows accepts
+Export the function named by `entrySymbol` (`launch` in these examples). It must return `{ "status": "accepted" }` after Windows accepts
 the launch; `processId` is optional. Returning the raw `hex.launcher.openExecutable` result is
 insufficient because it has `accepted`, rather than the required `status` field.
 

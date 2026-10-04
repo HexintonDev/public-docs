@@ -15,6 +15,11 @@ heartbeat with game identity, current pid when attached, and normalized installa
 finder returns `null` or an object containing a positive `pid`, with optional platform, build, and
 diagnostic fields.
 
+Cloud synchronization reads the finder entry file from the verified selected package's
+`application.scripts` declaration (`kind: "finder"`, `runtime: "js"`). A selected package may declare
+at most one finder. The declaration is retained in the local synchronization manifest for offline
+detection; no separate manually seeded finder file is required.
+
 Configured finder mode is authoritative for that tick. A null result does not fall back to loose
 executable-name matching. Finder scripts are observational and may use only `process.read`,
 `window.read`, and `filesystem.read`.
