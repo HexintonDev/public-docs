@@ -2,8 +2,10 @@
 
 Status: current public technical guide.
 
-Lua is the game-facing scripting runtime. It runs inside Hexinton Engine and provides
+Host Lua (`runtime: "lua"`) runs inside Hexinton Engine and provides
 process discovery, address resolution, memory access, scanning, symbols, timers, and assembly.
+
+[UE4SS Lua](ue4ss-runtime.md) executes inside Unreal games with separate reflection APIs. Keep host-Lua logic and use [declared dependency calls](dependency-runnable-api.md) when it needs a UE query, action or service; globals and UObject handles do not cross implicitly.
 
 ## Process Selection
 

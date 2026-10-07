@@ -5,6 +5,8 @@ Public documentation for Hexinton Mod and the Hexinton Engine scripting runtime.
 ## Start here
 
 * [Hexinton Engine technical Wiki](hexinton-engine-wiki/engine/)
+* [UE4SS runtime, availability and package authoring](en/hexinton-engine-wiki/engine/ue4ss-runtime.md)
+* [Host-Lua dependency queries, actions and services](en/hexinton-engine-wiki/engine/dependency-runnable-api.md)
 * [Public user guide](start-here/public-user-guide.md)
 * [Studio AI assistant and manual Apply](start-here/getting-started/studio-ai-assistant.md)
 * [Sample library](hexinton-engine-wiki/engine/samples/)

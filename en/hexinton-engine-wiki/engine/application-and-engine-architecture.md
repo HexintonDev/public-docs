@@ -11,7 +11,7 @@ communication boundary.
 | --- | --- | --- |
 | UI / WebView / React | Input drafts, rendering, focus, pending command presentation, surface interaction | Native memory, authoritative trainer values, session transitions |
 | Desktop application / C# | Game/session state, package sync, command routing, ViewModels, projections, feeds, WebView transport | Direct native memory operations and Lua state |
-| Hexinton Engine | Process sessions, Lua and Auto Assembler execution, addresses, memory, symbols, timers, cleanup | Product navigation, React state, visual layout |
+| Hexinton Engine | Process sessions, host Lua/Auto Assembler/UE4SS dispatch, addresses, memory, symbols, timers, cleanup | Product navigation, React state, visual layout |
 
 ## Session Flow
 
@@ -42,7 +42,7 @@ UI event
   -> GameSession enqueues the invocation on its serialized worker
   -> transaction executor prepares parameters and value/delta resolution
   -> session gateway validates Attached state, pid, session token, package, and runnable
-  -> runtime worker selects Lua or Auto Assembler
+  -> native runtime adapter selects host Lua, Auto Assembler or UE4SS
   -> native host executes the runnable under the pid context lock
   -> engine returns success JSON or structured error
   -> transaction executor returns typed outcome
@@ -64,6 +64,8 @@ The command-operation projection and session trainer projection are separate:
 
 A successful native result does not automatically mean that a changing game value has been
 observed. Service-backed values use the Service -> Feed -> ViewModel path.
+
+UE4SS changes the execution location inside that path, not the UI command shape. Its internal local bridge returns actual entrypoint completion or a correlated failure. Ordinary Lua can call declared UE providers through the [dependency API](dependency-runnable-api.md). Service starts retain provider event ownership and use existing feed/ViewModel declarations; wrappers do not remap events automatically. Read [runtime availability and cleanup](ue4ss-runtime.md) before treating the application framework delivery as complete.
 
 ## Package Boundary
 

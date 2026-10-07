@@ -5,6 +5,8 @@ Status: current public technical guide.
 HexMod loads scripts as packages. A package is the unit of validation, dependency resolution,
 execution, and cleanup.
 
+Runtime names `lua`, `aa` and `ue4ss` select execution of individual runnables. UE4SS uses the same five kinds and native lifecycle, with separate in-game Lua state. Read [UE4SS authoring](ue4ss-runtime.md) and [cross-runtime dependency calls](dependency-runnable-api.md) when combining Unreal access with existing host Lua.
+
 ## Minimal Layout
 
 ```text

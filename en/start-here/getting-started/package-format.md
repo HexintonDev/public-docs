@@ -8,6 +8,7 @@ Status: current public package-authoring reference.
 <package-id>/
   package.json
   lua/
+  ue4ss/
   aa/
   js/
   ui/
@@ -43,6 +44,8 @@ Only manifest-declared files are runtime inputs. Use package-relative paths and 
 ```
 
 Kinds are `enable`, `disable`, `action`, `query`, and `service`. Every package needs one functional enable and disable lifecycle entry. Auto Assembler is action-oriented. Application JavaScript is host-side and is not executed by the native engine runtime.
+
+The native runtime names are `lua`, `aa`, and `ue4ss`. UE4SS uses Lua source and requires `entrySymbol`, just like host Lua; `runtime: "ue4ss"` selects the in-game interpreter. A package can mix runtime declarations, while retaining one shared lifecycle/dependency graph. See the [UE4SS manifest and API](../../hexinton-engine-wiki/engine/ue4ss-runtime.md#manifest-and-entry-functions) and [complete two-package example](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md).
 
 ## Dependencies
 

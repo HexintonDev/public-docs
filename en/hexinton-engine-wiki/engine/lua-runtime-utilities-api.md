@@ -6,6 +6,8 @@ These globals execute on the Lua runtime worker. Timer callbacks are serialized 
 calls, and event publication detaches the payload before it is passed to the host publisher. Values
 returned from a runnable and values sent through `publishEvent` must be JSON-compatible Lua values.
 
+These are host-Lua APIs. For `hex.query`, `hex.action`, `hex.startService`, `hex.null` and `hex.array`, see the [dependency runnable reference](dependency-runnable-api.md). UE4SS packages instead use [managed game-thread helpers](ue4ss-runtime.md#managed-package-api), including `hex.every` and `hex.onCleanup`; ordinary host `createTimer` is not installed in the UE interpreter.
+
 ## `loadfile` and `dofile`
 
 ```lua

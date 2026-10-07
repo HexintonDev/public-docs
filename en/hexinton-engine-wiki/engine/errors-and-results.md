@@ -21,7 +21,7 @@ Every successful command has `ok: true`, a stable `status`, the command `pid`, p
 }
 ```
 
-Current statuses are `enabled`, `disabled`, `action_executed`, and `query_executed`. Query results
+Current statuses are `enabled`, `disabled`, `action_executed`, `query_executed`, and `service_started`. Query results
 are returned in `result`; enable/action commands may return `executedScripts`; disable commands may
 return `disabledScripts` and `wasEnabled`.
 
@@ -76,6 +76,8 @@ failures, invalid or missing manifests, missing lifecycle/runnables, invalid run
 missing files, dependency failures, runtime failures, and assembly failures. New codes may be added;
 clients must preserve unknown errors instead of assuming the list is exhaustive.
 
+Host-Lua dependency calls raise a [structured Lua error table](dependency-runnable-api.md#values-and-errors), retaining target identity through uncaught/rethrown errors. UE4SS codes include `ue4ss_unavailable`, `ue4ss_execution_failed` and `ue4ss_completion_unconfirmed`. Unconfirmed completion may already have changed the game; do not replay the operation automatically. Game-side exception text remains in the framework log, while the public error gives a safe reason and target IDs. Asynchronous connection-loss delivery uses hosted `ue4ss_disconnected`.
+
 ## Event Polling
 
 Engine events are ordered and drained separately from command results. A successful poll has
@@ -83,7 +85,7 @@ Engine events are ordered and drained separately from command results. A success
 monotonic `sequence`. A pid of `0` selects all process contexts; `max_events` of `0` drains all
 matching events. Queued events survive context destruction until drained.
 
-Current event types include `context_created`, `context_destroyed`, and `diagnostic`.
+Current event types include `context_created`, `context_destroyed`, `diagnostic`, `service_event`, and UE `runtime_failure`. Service startup success is not a later event or a health guarantee. See [UE4SS service failure and recovery](ue4ss-runtime.md#services-and-cleanup).
 
 ## Cleanup After Failure
 

@@ -4,6 +4,15 @@ Status: current public API reference for Hexinton Engine runnables.
 
 Function names are case-sensitive. Bare functions use the command's default process session.
 
+This index describes host Lua (`runtime: "lua"`). In-game Lua has the separate [UE4SS API](ue4ss-runtime.md#managed-package-api). Host Lua can call it through declared dependency runnables:
+
+| API | Contract |
+| --- | --- |
+| `hex.query(packageId, runnableId, parameters?)` | [Detached dependency query result](dependency-runnable-api.md#methods) |
+| `hex.action(packageId, runnableId, parameters?)` | [Dependency action completion](dependency-runnable-api.md#methods) |
+| `hex.startService(packageId, runnableId, parameters?)` | [Provider-owned service startup](dependency-runnable-api.md#services-and-package-ownership) |
+| `hex.null`, `hex.array(table)` | [Explicit null and array identity](dependency-runnable-api.md#values-and-errors) |
+
 The index is organized by function so a reader or assistant can open the exact contract instead of
 scanning a capability summary. Each linked entry provides prototype, parameters, return value,
 failure behavior, scope, and a focused example.

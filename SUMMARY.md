@@ -14,6 +14,8 @@
 
 * [Technical Wiki](hexinton-engine-wiki/engine/README.md)
   * [Runtime Model](hexinton-engine-wiki/engine/runtime-model.md)
+  * [UE4SS Runtime](en/hexinton-engine-wiki/engine/ue4ss-runtime.md)
+  * [Lua Dependency Runnable API](en/hexinton-engine-wiki/engine/dependency-runnable-api.md)
   * [Errors and Results](hexinton-engine-wiki/engine/errors-and-results.md)
   * [Application and Engine Architecture](hexinton-engine-wiki/engine/application-and-engine-architecture.md)
   * [Thread Model](hexinton-engine-wiki/engine/thread-model.md)
@@ -44,6 +46,7 @@
     * [Lua Modules](hexinton-engine-wiki/engine/samples/lua-multifile-require.md)
     * [Explicit Process Handles](hexinton-engine-wiki/engine/samples/process-explicit-handles.md)
     * [Service Timer Feed](hexinton-engine-wiki/engine/samples/service-timer-feed.md)
+    * [Unreal Player Location and Host-Lua Consumer](en/hexinton-engine-wiki/engine/samples/ue4ss-player-location.md)
     * [Auto Assembler Action Pair](hexinton-engine-wiki/engine/samples/aa-allocation-action-pair.md)
 * [Application Integration](hexinton-engine-wiki/application/README.md)
   * [Application JavaScript Host Capabilities](hexinton-engine-wiki/application/application-js-host-capabilities.md)

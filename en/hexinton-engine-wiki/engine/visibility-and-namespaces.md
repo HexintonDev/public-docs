@@ -5,6 +5,8 @@ Status: current public runtime behavior.
 This page defines what is visible between Lua files, packages, dependencies, Auto Assembler passes,
 and process sessions. Visibility is an ownership rule, not a convenience global namespace.
 
+These global/module examples describe host Lua. UE4SS has its own package environments and `ue4ss/` module root; host and game VMs do not share globals, handles or caches. Use the [dependency runnable API](dependency-runnable-api.md) for detached cross-runtime values. That API requires a direct dependency even where same-VM global visibility considers transitive dependencies.
+
 ## The Main Scopes
 
 | Scope | Owned by | Visible to | Lifetime |

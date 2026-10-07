@@ -1,14 +1,15 @@
 # Runtime Model
 
-Status: current public architecture reference for Hexinton Engine scripting.
+Status: current public architecture reference. UE4SS is an implemented integration whose framework-delivery and qualification limits are documented separately.
 
 ## Runtime Families
 
-Hexinton Engine has three distinct execution environments:
+The client has four distinct execution environments:
 
 | Runtime | Executes | Typical responsibility |
 | --- | --- | --- |
 | Lua | Native engine worker | Process discovery, address resolution, memory I/O, scans, symbols, timers, services |
+| UE4SS Lua | Attached Unreal game process | Reflected object/function access, managed hooks and game-thread observation |
 | Auto Assembler | Native engine assembly runtime | Allocations, labels, scans, jumps, and assembly actions |
 | Application JavaScript | Desktop host | Trainer UI logic, hosted surfaces, and capability-gated application behavior |
 
@@ -18,17 +19,20 @@ must call a declared command, query, view model, or state feed exposed by the ho
 ## Choosing a Runtime
 
 - Use Lua for game-facing logic and lifecycle-owned resources.
+- Use UE4SS for Unreal object/function operations, with a prepared framework. Ordinary Lua can consume its declared runnables through the [dependency API](dependency-runnable-api.md).
 - Use Auto Assembler for assembly actions declared in a package manifest.
 - Use application JavaScript only for presentation and host-authorized UI behavior.
 
 A package may expose multiple runnable types, but each runnable declares its runtime explicitly.
+
+Native Lua and UE4SS use separate VMs; neither implicitly receives the other's globals or object handles. They share the native planner, runnable kinds and ownership rules. Cross-runtime calls exchange detached JSON-compatible values. See [UE4SS runtime](ue4ss-runtime.md) for entrypoints, services, cleanup and loading limits.
 
 ## Boundaries
 
 The desktop application owns package discovery, session orchestration, and UI hosting. Hexinton
 Engine owns process sessions, script contexts, runtime execution, symbols, timers, and cleanup. The
 host passes structured command arguments into the engine and receives structured results, warnings,
-and errors back.
+and errors back. UE4SS execution crosses a local game-process bridge internally; that transport does not change the UI command contract. Queries confirm a returned observation, actions confirm entrypoint completion, and service startup is distinct from later feed delivery.
 
 ## Safe Rule
 

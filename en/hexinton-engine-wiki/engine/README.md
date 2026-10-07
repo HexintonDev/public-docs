@@ -27,6 +27,8 @@ Read the pages in this order:
 | Task                                           | Page                                                     |
 | ---------------------------------------------- | -------------------------------------------------------- |
 | Create a runnable script package               | [Script packages and lifecycle](script-packages.md)      |
+| Use Unreal objects/functions and managed services | [UE4SS runtime](ue4ss-runtime.md) |
+| Call a UE provider from ordinary Lua | [Dependency runnable API](dependency-runnable-api.md) |
 | Read or write a game value                     | [Memory and address resolution](memory-and-addresses.md) |
 | Find a stable address from bytes               | [AOB scanning](aob-scanning.md)                          |
 | Install a patch or hook                        | [Hooks and Auto Assembler](hooks-and-auto-assembler.md)  |
@@ -43,6 +45,9 @@ Read the pages in this order:
 
 * [Package format and runnable declarations](script-packages.md)
 * [Lua runtime API reference](lua-api-reference.md)
+* [UE4SS runtime, loading, cleanup and troubleshooting](ue4ss-runtime.md)
+* [Lua dependency query/action/service API](dependency-runnable-api.md)
+* [Unreal location and host-Lua consumer sample](samples/ue4ss-player-location.md)
 * [Lua process and address API](lua-process-and-address-api.md)
 * [Lua memory API](lua-memory-api.md)
 * [Lua scanning and assembly API](lua-scanning-and-assembly-api.md)
@@ -59,4 +64,4 @@ The sample library is a separate indexed section. Each sample has a stable topic
 
 ## Important Boundary
 
-Hexinton Engine executes Lua and Auto Assembler runnables. Application JavaScript is a separate, capability-gated runtime owned by the desktop host. Do not use JavaScript APIs in a native Lua runnable.
+Hexinton Engine dispatches host Lua, Auto Assembler and UE4SS runnables through the native package lifecycle. UE4SS Lua executes inside the game with separate APIs/state and requires a prepared framework; its guide labels remaining availability limits. Application JavaScript is a separate, capability-gated runtime owned by the desktop host. Do not use JavaScript APIs in a native Lua runnable.

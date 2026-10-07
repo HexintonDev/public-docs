@@ -17,10 +17,11 @@ WPF/WebView UI thread
 	-> native command bridge
 	-> EngineContextState lock per pid
 	-> Lua worker per pid, or synchronous Auto Assembler path
+	   or UE4SS connection -> game-thread entrypoint
 ```
 
 `gameId` identifies an application session. `pid` identifies the currently attached process. A
-JavaScript finder may run before a pid exists; Lua and Auto Assembler attached work require one.
+JavaScript finder may run before a pid exists; host Lua, Auto Assembler and UE4SS attached work require one.
 
 ## Application Session Lane
 
@@ -43,9 +44,7 @@ runtime worker queues.
 
 ## Managed Runtime Workers
 
-The desktop host schedules script execution through a process-lifetime `ScriptExecutor`. The current
-model has one dedicated managed worker per runtime type (`js`, `lua`, and `aa`). This keeps script
-execution off the WPF dispatcher, but it does not make every command independently concurrent.
+The desktop host schedules script execution through a process-lifetime `ScriptExecutor`. In the UE4SS integration build, the native adapter aliases `lua`, `aa` and `ue4ss` to one managed worker; application JavaScript has its own adapter. This keeps script execution off the WPF dispatcher, but native per-PID concurrency does not establish independent managed admission across games.
 
 The managed Lua and AA adapters are not the same as the native Lua worker. They admit work to the
 native boundary; native Lua then queues the operation onto its per-pid Lua thread.
@@ -76,6 +75,14 @@ AA managed worker
 An AA action therefore occupies its managed AA worker and its target pid lock until it returns. It
 must not contain an unbounded wait or an infinite loop. `createThread(address)` starts target code
 from the assembly directive, but the package still owns the code and its cleanup responsibility.
+
+## UE4SS and Cross-Runtime Calls
+
+UE4SS runs in the game process. The connection serializes one request at a time for that PID and waits for a correlated completion. Package entrypoints and `hex.every` callbacks execute on the game thread. Wrapped hooks retain their upstream callback context; use managed `ExecuteInGameThread` for thread-sensitive work. Keep callbacks finite and services nonblocking. See [UE4SS lifecycle and scheduling](ue4ss-runtime.md).
+
+A foreground host-Lua dependency call borrows the command's native transaction. Same host-VM nested calls run inline on their owning Lua worker. A host timer uses nonblocking transaction admission: contention raises `runtime_busy` rather than waiting behind a command that might itself be waiting for that Lua worker. No actions are queued/replayed. See [dependency execution](dependency-runnable-api.md#foreground-and-timer-execution).
+
+UE event files are consumed into the native in-memory queue; the hosted pump then returns delivery to the session lane and checks the attachment token. Package generations reject old callback faults. Connection shutdown stops/joins the pump; heartbeat lease expiry handles lost-host cleanup without unloading the game DLL.
 
 ## Application JavaScript and Jint
 

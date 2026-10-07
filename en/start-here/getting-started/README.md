@@ -51,9 +51,7 @@ not automatically enabled. Actions and queries can enable their owning package. 
 1. Declare every file and runnable in the manifest.
 2. Validate process, address, scan, and architecture assumptions.
 3. Make `enable` and `disable` idempotent.
-4. Return serializable query/action values.
+4. Return serializable query values; action completion does not expose an entrypoint return value.
 5. Test missing targets, ambiguous scans, repeated enable, action failure, and disable cleanup.
 
-Choose Lua for attached process work, Auto Assembler for assembly actions, and application
-JavaScript for capability-gated host tasks. See [runtime selection](runtimes.md) and [package
-format](package-format.md).
+Choose host Lua for process memory, UE4SS Lua for Unreal reflection, Auto Assembler for assembly actions, and application JavaScript for capability-gated host tasks. See [runtime selection](runtimes.md), [package format](package-format.md), and the [UE4SS/host-Lua sample](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md). UE4SS requires a prepared framework and is not automatically provisioned by Apply yet.

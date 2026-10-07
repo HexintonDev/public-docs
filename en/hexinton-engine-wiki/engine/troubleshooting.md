@@ -33,6 +33,10 @@ Use an expected-byte check, verify AOB uniqueness, preserve displaced instructio
 original bytes available for restoration. Allocation alone is not a hook. After a partial enable,
 run cleanup and confirm symbols, allocations, patches, and timers are gone.
 
+## UE4SS Runtime
+
+For UE packages, first use the [UE4SS troubleshooting table](ue4ss-runtime.md#results-transport-and-troubleshooting). Verify the framework exists in the actual applied scripts root; a package source file alone is insufficient. Inspect the framework log for reflected-entry/callback errors. Distinguish a valid null pawn from execution failure. Release all owners before recovering a package fault; reattach for connection failure, and restart the game after uncertain loading. Never replay an unconfirmed action automatically.
+
 ## What to Collect
 
 Record package ID/version, runnable ID, target process/build, structured error code, warning code,

@@ -15,6 +15,7 @@ addresses, and AOB patterns are illustrative unless a sample explicitly says oth
 | [`process/explicit-handles`](process-explicit-handles.md) | Process handles | Default versus explicit processes, typed I/O, process discovery, and windows |
 | [`service/timer-feed`](service-timer-feed.md) | Services | Initial event, recurring timer, parameter schema, and cleanup |
 | [`aa/allocation-action-pair`](aa-allocation-action-pair.md) | Auto Assembler | Separate allocation/release AA actions for a named cave |
+| [`ue4ss/player-location`](ue4ss-player-location.md) | Unreal + host Lua | UE query/action/service, explicit null, revalidated objects, managed cleanup and ordinary Lua dependency calls |
 
 ## Using a Sample
 

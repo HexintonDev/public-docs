@@ -38,6 +38,12 @@ The repository includes fake process, memory integration, Lua runtime, address r
 `AssemblyScript`, package host, dependency, and lifecycle tests. Use those tests as behavioral
 examples when adding a new runtime feature.
 
+## UE4SS Packages
+
+Verify framework provisioning, on-demand load, finite entrypoints, serializable results, managed cleanup, service events and structured failures. Then test in an active game world: local-player selection, missing pawn, respawn, travel/save loading, repeated enable/disable and detach. The [location sample](samples/ue4ss-player-location.md) provides a bounded query/action/service exercise.
+
+Native bridge fixtures inject a test DLL and run actual transport/lifecycle code with mocked reflection. They do not prove a game's APIs or complete client provisioning. The ordinary application does not yet automatically deliver the framework bundle. Studio test declarations accept `lua`, `js` and `command`; no `ue4ss` case runtime was added. Test pure host transformations with Lua cases and qualify Unreal operations through the prepared runtime/live attachment. Do not assume copied Studio test snapshots contain the framework.
+
 ## Package test declaration
 
 Create `tests/studio.tests.json` inside the package. This is a separate test declaration; do not add
