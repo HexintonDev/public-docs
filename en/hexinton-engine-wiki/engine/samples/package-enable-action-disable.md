@@ -5,6 +5,11 @@ Sample ID: `package/enable-action-disable`
 This sample shows two complete packages. The player package declares a dependency, enables after the
 shared package, exposes one Lua action, and removes everything it owns during disable.
 
+The engine prepares a package and its dependencies before running an action or query when needed.
+Keep preparation in `enable` and an explicitly selected gameplay change in the action. A state
+query must not accidentally activate a feature while a trainer control is being displayed. The
+example below allocates an owned demonstration buffer during preparation, without changing game state.
+
 ## File Tree
 
 ```text
@@ -77,7 +82,7 @@ Create `example.player/package.json`:
 	"version": "1.0.0",
 	"displayName": "Example Player",
 	"dependencies": [
-		{ "id": "example.shared", "version": "^1.0.0" }
+		{ "id": "example.shared", "compatible": "^1.0.0", "tested": "1.0.0" }
 	],
 	"runtime": {
 		"runnables": [
@@ -163,14 +168,16 @@ Invoke `give-runes` with:
 { "amount": 25 }
 ```
 
-The command result is:
+The native command reports completion with status `action_executed`. It does not return the Lua
+function's `{ ok, amount, dependencyBonus }` table: action return values are discarded. Use a query
+when callers need a detached result value, and raise an error when an action cannot complete.
+Returning `false` or `{ ok = false }` from an action does not report a failed command.
 
-```json
-{ "ok": true, "amount": 25, "dependencyBonus": 42 }
-```
-
-The action also writes `25` to the allocated `exampleRuneBuffer`. Disable the player package and
+The action writes `25` to the allocated `exampleRuneBuffer`. Disable the player package and
 verify that `example_action_amount`, `exampleRuneBuffer`, and `example_shared_enabled` are gone.
+
+The native resolver uses `compatible`; `tested` records the version required by the cloud
+publication metadata contract and is ignored by native dependency resolution.
 
 ## Replace Before Use
 

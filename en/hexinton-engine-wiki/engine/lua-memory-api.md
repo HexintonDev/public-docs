@@ -313,8 +313,11 @@ writeBytes(address, 0x90, 0x90, 0x90, 0x90)
 return before
 ```
 
-Memory functions do not save original bytes, create a rollback record, change protection
-automatically, or publish UI state. A package that writes memory must validate attachment and
+Memory functions do not save original bytes, create a rollback record, or publish UI state.
+`writeBytes` uses temporary page-protection handling in the engine and restores the previous
+protection after the write. Calling `fullAccess` first is a separate persistent protection change;
+restoring the edited bytes does not reverse that change. Neither API supplies byte rollback or
+patch ownership. A package that writes memory must validate attachment and
 address resolution first, match width, signedness, encoding, and architecture, and restore or
 release its changes from `disable`. Use a query result for a one-shot value and a service/feed for
 changing state. Explicit process handles are opaque session-bound values; after runtime/session

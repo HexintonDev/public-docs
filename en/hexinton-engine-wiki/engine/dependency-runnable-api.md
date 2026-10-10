@@ -22,7 +22,7 @@ The shared schema validator supports object `required`/`properties`, array `item
 
 ```json
 {
-  "dependencies": [{"id":"unreal.player","version":"^1.0.0"}]
+  "dependencies": [{"id":"unreal.player","compatible":"^1.0.0","tested":"1.0.0"}]
 }
 ```
 

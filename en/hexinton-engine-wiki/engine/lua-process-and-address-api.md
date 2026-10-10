@@ -7,6 +7,20 @@ the aliases listed below. Discovery functions inspect Windows processes and wind
 symbol, and memory functions use the command's default process unless called through an explicit
 process handle.
 
+## Build checks and unsupported Cheat Engine helpers
+
+This is the registered HexMod API, not every Cheat Engine Lua global. In particular, the native
+Lua runtime does not provide `getFileVersion`, `enumModules` or `getModuleBase`. Use the documented
+address resolver for module expressions; it does not report a running executable's file version.
+Finding the expected process name or a matching instruction at a module-relative offset establishes
+only that local precondition. It does not establish the whole executable build.
+
+When converting a source that requires an exact build/version check, preserve that requirement with
+an available equivalent observation. If no such capability is available, leave the feature unsupported
+or refuse the operation before writing. A hardcoded version string, a caller's supplied version, or
+a narrower expected-byte check is not an equivalent observed build check. Disclosing the downgrade
+does not make it equivalent. Static or fixture tests also do not identify the running game build.
+
 ## `findProcess`
 
 ```lua
@@ -177,8 +191,9 @@ gone or the userdata has been invalidated.
 
 Handle integer reads do not expose the global `signed?` argument. The process-handle byte reader
 follows the global byte reader's return shape: without `true` it returns one integer per byte, and
-with `true` it returns a 1-based table. A handle is session-bound and does not provide rollback,
-automatic protection changes, or automatic cleanup of memory writes.
+with `true` it returns a 1-based table. A handle is session-bound and does not provide rollback or
+automatic cleanup of memory writes. Byte writes use the engine's temporary page-protection handling;
+this does not supply byte rollback or patch ownership.
 
 ```lua
 local target = openProcess(findProcess("game.exe"))

@@ -201,6 +201,30 @@ failure.
 
 Never continue a write after compatibility validation has failed.
 
+## Assertions that establish the feature contract
+
+Import and exercise the same production operation that the runtime calls. Seed an integration
+fixture from independently recovered source values, not the package's own expected-byte constants.
+For an encoded branch, check its decoded target against an independent source address as well as
+checking the full instruction bytes. Test the entire edited width and sentinel bytes on both sides.
+
+Exercise null/missing targets, original-byte mismatches, a pre-existing foreign patch, repeated
+enable/disable, ownership loss, and failures after only part of a write. A failure test must inspect
+the memory afterward: an exception or an `owned=false` flag alone does not prove restoration. Check
+that owned partial changes are restored or retained as a recoverable failure, foreign changes are
+not overwritten, and cleanup errors are propagated rather than returned as successful actions.
+
+Keep source build prerequisites in the tests. A test that supplies the same hardcoded version as
+the implementation, or only verifies a small expected byte sequence, cannot establish that production
+code observes the exact running build required by the source. An unavailable prerequisite is an
+unsupported feature, not a passed compatibility check.
+
+Testing an address-accepting helper against fixture memory does not also test its production resolver,
+package lifecycle or UI bindings. Add separate coverage for those contracts. In particular, the engine
+can prepare a package before its first query/action: initial control reads must not apply a gameplay
+toggle, and both action IDs must route to the intended production operations. Keep a meaningful state
+query separate from action completion. A fixture test never establishes real-game compatibility.
+
 ## Safe Development Loop
 
 ```text

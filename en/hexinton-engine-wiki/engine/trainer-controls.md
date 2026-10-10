@@ -17,6 +17,88 @@ path is explained in [View Models and State Feeds](view-models-and-feeds.md).
 Use an `action` for a button, toggle write, patch, or explicit refresh. Use a `query` for a
 one-shot search or read. Use a `service` when the value can change without the current UI action.
 
+## Complete hosted toggle
+
+Create `example.toggle/package.json`:
+
+```json
+{
+  "id": "example.toggle",
+  "version": "1.0.0",
+  "displayName": "Example Toggle",
+  "runtime": {
+    "files": [{ "path": "lua/main.lua", "runtime": "lua" }],
+    "runnables": [
+      { "id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable" },
+      { "id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable" },
+      { "id": "turn-on", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "turnOn" },
+      { "id": "turn-off", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "turnOff" },
+      { "id": "state", "kind": "query", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "readState" }
+    ]
+  },
+  "frontend": {
+    "hosted": {
+      "schemaVersion": 1,
+      "groups": [{
+        "id": "player",
+        "label": "Player",
+        "widgets": [{
+          "id": "example-mode",
+          "kind": "toggle",
+          "label": "Example Mode",
+          "description": "Demonstrates a control and package state; it has no gameplay effect.",
+          "write": { "enableAction": "turn-on", "disableAction": "turn-off" },
+          "read": { "query": "state", "resultPointer": "/enabled" },
+          "tags": [{ "id": "example", "label": "Example" }]
+        }]
+      }]
+    }
+  }
+}
+```
+
+Create `example.toggle/lua/main.lua`:
+
+```lua
+local state = { enabled = false }
+
+function enable()
+    -- Prepare package resources only; displaying or reading this control must not turn it on.
+end
+
+function turnOn()
+    state.enabled = true
+end
+
+function turnOff()
+    state.enabled = false
+end
+
+function readState()
+    return { enabled = state.enabled }
+end
+
+function disable()
+    turnOff()
+end
+```
+
+The write IDs must name `action` runnables, not the package's `enable`/`disable` hooks. The read
+ID must name a `query`. Package preparation happens before an action or query when needed:
+put a user-selected gameplay change in the action, because even the initial state query can
+prepare the package. Keep cleanup of owned resources in the lifecycle `disable` hook.
+
+A Lua query must return exactly one detached JSON-compatible value; objects and arrays are
+supported. Here that value is `{ "enabled": false }`. Native transport wraps it in a `result`
+field, but the hosted `resultPointer` is relative to the query value, so use `/enabled`, not
+`/result/enabled`. Use an empty pointer when reading a scalar query value.
+
+An action's Lua return values are discarded. Returning `false` or `{ ok = false }` does not
+fail the command. Raise an error when a required check or cleanup fails; otherwise a toggle
+may commit the requested state despite an unsuccessful operation. For a non-service-backed
+toggle, command success can commit that requested boolean; it does not establish an independently
+observed game value. Use a service/feed when other code can change the actual state.
+
 ## Groups and control tags
 
 Author groups live in `frontend.hosted.groups`. Each group has a stable `id`, a readable `label`,
