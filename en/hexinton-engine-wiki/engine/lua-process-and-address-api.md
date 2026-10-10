@@ -7,6 +7,26 @@ the aliases listed below. Discovery functions inspect Windows processes and wind
 symbol, and memory functions use the command's default process unless called through an explicit
 process handle.
 
+## `process` (main module name)
+
+```lua
+process -> string
+```
+
+The runtime initializes this Lua global to the command/default session's main-module
+filename, such as `game.exe`. It is available to scripts without defining a replacement
+global. The module name can be passed to the native address resolver:
+
+```lua
+local mainModuleName = process
+local imageBase = getAddress(mainModuleName)
+```
+
+The value belongs to the default session. Opening an explicit process handle does not
+change it; resolve other processes through that handle. A script can shadow this Lua
+global, so preserve the runtime value instead of replacing it in shared helpers.
+The name does not supply an executable path, file version or build identity.
+
 ## Build checks and unsupported Cheat Engine helpers
 
 This is the registered HexMod API, not every Cheat Engine Lua global. In particular, the native

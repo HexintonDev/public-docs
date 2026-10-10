@@ -19,6 +19,11 @@ failure behavior, scope, and a focused example.
 
 ## Process Discovery
 
+The runtime also supplies the default-session value
+[`process`](lua-process-and-address-api.md#process-main-module-name): the attached main-module
+filename as a string. It can be resolved with `getAddress(process)` and is distinct from
+a process handle or a running-build observation.
+
 | Function | Detailed contract |
 | --- | --- |
 | [`findProcess`](lua-process-and-address-api.md#findprocess) | First matching process ID, or `nil` |
