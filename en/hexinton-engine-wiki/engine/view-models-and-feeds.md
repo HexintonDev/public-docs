@@ -2,6 +2,8 @@
 
 Status: current public trainer integration reference.
 
+For the capability/player payloads consumed by the Map tab, see [live map reader packages](game-map-readers.md). They use these same services, feeds and compiled commands.
+
 This page answers one practical question: **how does a value in the target process become the value
 shown by a trainer control?** Read the terms below in execution order. They are different objects and
 must not be used interchangeably.

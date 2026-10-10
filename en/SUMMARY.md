@@ -20,6 +20,7 @@
   * [Application and Engine Architecture](hexinton-engine-wiki/engine/application-and-engine-architecture.md)
   * [Thread Model](hexinton-engine-wiki/engine/thread-model.md)
   * [View Models and State Feeds](hexinton-engine-wiki/engine/view-models-and-feeds.md)
+  * [Live Map Reader Packages](hexinton-engine-wiki/engine/game-map-readers.md)
   * [Script Packages](hexinton-engine-wiki/engine/script-packages.md)
   * [Visibility and Namespaces](hexinton-engine-wiki/engine/visibility-and-namespaces.md)
   * [Lua Scripting](hexinton-engine-wiki/engine/lua-scripting.md)

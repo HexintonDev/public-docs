@@ -85,6 +85,11 @@ contract instead of relying on accidental global names.
 Dependencies are enabled before the dependent package. Do not consume another package's private
 labels, allocations, timers, or hooks. Duplicate visible symbols fail as ambiguous.
 
+The current native resolver uses `compatible` (or the legacy alternative `version`) and ignores
+`tested`. Cloud package publication currently requires both `compatible` and a valid `tested`
+version within that range, so retain the shape above for packages intended for upload. Passing
+local dependency validation alone does not establish acceptance by cloud publication.
+
 ## Validation Checklist
 
 Before execution, the host validates strict JSON, declared files, unique runnable IDs, runtime and

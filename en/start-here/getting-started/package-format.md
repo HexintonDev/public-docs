@@ -59,6 +59,10 @@ The native runtime names are `lua`, `aa`, and `ue4ss`. UE4SS uses Lua source and
 
 Dependencies enable before dependents and disable in reverse order. Consume only declared public values; private labels, allocations, timers, and hooks are not dependency API.
 
+Native execution currently resolves `compatible` and ignores `tested`; cloud publication requires
+both fields and verifies that the tested version satisfies the range. Retain both fields for an
+uploadable package. See [script package dependencies](../../hexinton-engine-wiki/engine/script-packages.md#dependencies).
+
 ## Validation
 
 The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md).

@@ -17,6 +17,24 @@ path is explained in [View Models and State Feeds](view-models-and-feeds.md).
 Use an `action` for a button, toggle write, patch, or explicit refresh. Use a `query` for a
 one-shot search or read. Use a `service` when the value can change without the current UI action.
 
+## Groups and control tags
+
+Author groups live in `frontend.hosted.groups`. Each group has a stable `id`, a readable `label`,
+and `widgets`. Choose groups around the user's task, such as Player, Combat or Inventory. Group
+IDs must not change when labels are translated.
+
+Each widget can additionally declare an optional `tags` array:
+
+```json
+"tags": [{ "id": "health", "label": "Health" }, { "id": "survival", "label": "Survival" }]
+```
+
+This is a fragment inside a widget, not a top-level manifest field. The current compiler accepts
+at most 32 tags per widget, with unique IDs and IDs/labels no longer than 64 characters. Repeated
+tag IDs across widgets in one package must use the same label. The host prefixes tag identity
+with the package ID. These control tags are separate from the backend package page's string tags.
+Personal trainer organization may override layout without rewriting the author manifest.
+
 An action result answers “did this operation finish?”. It is not a live value and does not replace a
 later Service observation. If another source can change the value, display the ViewModel updated by
 the Service rather than the last value returned by the action.

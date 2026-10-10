@@ -37,6 +37,7 @@ Read the pages in this order:
 | Find an API function                           | [Lua API reference](lua-api-reference.md)                |
 | Use Auto Assembler directives                  | [Auto Assembler API](auto-assembler-api.md)              |
 | Publish live values to a UI                    | [Lua scripting](lua-scripting.md)                        |
+| Publish a live map location and teleport command | [Live map reader packages](game-map-readers.md) |
 | Understand command, session, and feed boundaries | [Application and Engine Architecture](application-and-engine-architecture.md) |
 | Understand workers, locks, and cleanup         | [Thread Model](thread-model.md)                          |
 | Verify a script and diagnose errors            | [Testing and failure handling](testing.md)               |
@@ -54,6 +55,7 @@ Read the pages in this order:
 * [Lua runtime utilities API](lua-runtime-utilities-api.md)
 * [Auto Assembler API](auto-assembler-api.md)
 * [View Models and State Feeds](view-models-and-feeds.md)
+* [Live map reader packages](game-map-readers.md)
 * [Application integration](../application/README.md)
 * [Trainer controls and UI bindings](trainer-controls.md)
 * [Testing and failure handling](testing.md)
