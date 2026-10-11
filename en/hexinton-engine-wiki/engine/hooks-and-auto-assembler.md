@@ -37,8 +37,9 @@ dealloc(newmem)
 end
 ```
 
-Use `autoAssemble(text, targetself?, disableInfo?)` from Lua. Always check its result and make the
-disable path symmetric with enable.
+Use `autoAssemble(text)` from Lua. It returns `true` or `false, errorMessage`; check that result
+and provide the matching explicit disable operation. CE's `targetself=true` and `disableInfo`
+behaviors are unsupported. See the [Lua assembly API](lua-scanning-and-assembly-api.md#autoassemble).
 
 ## Scan-Driven Hook Shape
 

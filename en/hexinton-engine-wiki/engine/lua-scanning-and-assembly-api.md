@@ -108,9 +108,7 @@ Lua array iterator, a `pairs` contract, process writes, or an automatic patch/ro
 
 ```lua
 autoAssemble(text) -> true
-autoAssemble(text, targetself) -> true
-autoAssemble(text, targetself, disableInfo) -> true
-autoAssemble(text, ...) -> false, errorMessage
+autoAssemble(text) -> false, errorMessage
 ```
 
 Executes Auto Assembler text synchronously in the current script/session context. On success it

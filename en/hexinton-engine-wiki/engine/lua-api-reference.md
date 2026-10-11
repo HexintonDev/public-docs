@@ -121,7 +121,7 @@ attached, valid process session.
 | [`AOBScanUnique(pattern)`](lua-scanning-and-assembly-api.md#aobscanunique) | Require one matching address |
 | [`AOBScanModule(module, pattern)`](lua-scanning-and-assembly-api.md#aobscanmodule) | Scan one module |
 | [`AOBScanModuleUnique(module, pattern)`](lua-scanning-and-assembly-api.md#aobscanmoduleunique) | Require one match in one module |
-| [`autoAssemble(text, targetself?, disableInfo?)`](lua-scanning-and-assembly-api.md#autoassemble) | Execute Auto Assembler text |
+| [`autoAssemble(text)`](lua-scanning-and-assembly-api.md#autoassemble) | Execute AA; returns `true` or `false, error`; CE self-target/disable records are unsupported |
 | [`fullAccess(address, size)`](lua-scanning-and-assembly-api.md#fullaccess) | Change access for a range |
 | [`targetIs64Bit()`](lua-scanning-and-assembly-api.md#targetis64bit) | Check target architecture |
 

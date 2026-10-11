@@ -18,29 +18,42 @@ const auto record = session->applyPatch({
 });
 ```
 
-For package scripts, the equivalent lifecycle is expressed with an Auto Assembler action:
+For package scripts, write the replacement through an Auto Assembler action at the resolved site:
 
 ```asm
-assert(injection, 89 54 24 10)
-db 90 90 90 90
+game.exe+0x1234:
+  nop
+  nop
+  nop
+  nop
 ```
 
-Restore the patch from the native host:
+This writes the same four NOP bytes, but does not create the native named patch record or
+automatically preserve its precondition. `assert(...)` is not an AA directive. If an operation
+requires an expected-byte check, use a source-qualified AOB/address check or the supported Lua
+memory APIs before the write.
+
+Restore the named patch from the native host:
 
 ```cpp
 session->restorePatch("player.hp");
 ```
 
-Or restore the package-owned assembly site with its disable action.
+For a package, its explicit off action restores the original instruction. In this example the
+original four bytes encode:
 
-```lua
-local address = getAddressSafe("game.exe+0x1234")
-if not address then error("patch site unavailable") end
+```asm
+game.exe+0x1234:
+  mov dword ptr [rsp+0x10], edx
 ```
 
-The patch service reads current bytes, verifies the optional precondition, temporarily changes page
+The native patch service reads current bytes, verifies the optional precondition, temporarily changes page
 protection when needed, writes replacement bytes, and stores the original bytes. NOP patches are a
 common special case, but the same ownership and restore rules apply.
+
+AA uses the AsmTK dialect. For raw replacement bytes, `.db 0x90, 0x90, 0x90, 0x90` also emits the
+four NOPs; CE's unprefixed `db 90 90 90 90` is not equivalent syntax. See the
+[assembler syntax notes](auto-assembler-api.md#instruction-and-data-syntax).
 
 ## Scope and Limitations
 

@@ -18,6 +18,42 @@ Directive names are case-insensitive. Names and expressions are resolved in the 
 session context. The instruction dialect is x86/x64 AsmJit/AsmTK syntax; this page documents engine
 behavior, not every instruction available in that assembler.
 
+## Instruction and Data Syntax
+
+CE assembly text needs syntax adaptation. The current AsmTK parser uses explicit integer literals
+and comma-separated, dot-prefixed data directives:
+
+```asm
+game.exe+0x1234:
+  .db 0x90, 0x90, 0x90, 0x90, 0x90
+```
+
+Five `nop` instructions emit those same five bytes. `.db`, `.dw`, `.dd`, and `.dq` embed unsigned
+integer values as little-endian 1-, 2-, 4-, and 8-byte data. For example, `.dq 0` initializes an
+eight-byte pointer slot. These are assembler data statements, separate from the 11 engine
+directives listed below. CE `db 90 90`, unprefixed `dq`, and GNU `.byte` are not accepted by this
+parser. Use hexadecimal `0x...` literals rather than assuming CE's implicit hexadecimal notation.
+
+Module-plus-offset expressions resolve as target headers, but do not assume they parse as
+instruction operands. Bind a simple label at the resolved destination when needed:
+
+```asm
+label(originalCall)
+game.exe+0x4801e0:
+originalCall:
+
+game.exe+0x4948ae:
+  call originalCall
+```
+
+This writes the call at the second address without writing instructions at `originalCall`.
+A Lua-resolved numeric operand is another option when the operation already requires Lua.
+The addresses are illustrative; source evidence supplies the actual site and destination.
+
+AA files execute one operation. Split CE `[ENABLE]` and `[DISABLE]` sections into separate entries;
+embedded `{$lua}` sections are not AA instructions. Move required Lua behavior to a Lua entry or
+invoke AA from that entry, rather than inventing unsupported CE directives.
+
 ## Directive Reference
 
 The engine implements the following 11 directives. Directive names are case-insensitive, and
