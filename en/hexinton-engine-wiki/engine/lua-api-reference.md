@@ -142,5 +142,5 @@ the package and must stop or become inactive during `disable`.
 ## Return Values and Errors
 
 Runnable functions may return JSON-compatible values: `nil`, booleans, numbers, strings, and tables
-containing compatible values. Raise an error when compatibility checks fail. Do not continue with a
+containing compatible values. Raise an error when a required check fails. Do not continue with a
 write after an unresolved address, missing scan result, stale attachment, or invalid argument.

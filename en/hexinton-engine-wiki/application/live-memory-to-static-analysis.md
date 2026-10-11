@@ -82,8 +82,9 @@ until the underlying representation and update behavior are established.
 
 Use Studio's writable-package preparation, real API contracts and a resolver that
 checks pointers and refreshes them per command. Record the tested executable/build
-and any signature/RVA assumptions. Write both unit and integration suites importing
-production code, then run `validate_package` and `run_package_tests`.
+and any signature/RVA assumptions in the package's notes (not as a runtime version gate). Write an
+integration test that runs the production action, plus unit tests for pure logic, then run
+`validate_package` and `run_package_tests`.
 
 Controlled test fixtures and mocks verify specific behavior; they do not establish
 compatibility with the analyzed game. Apply and run the package only within the

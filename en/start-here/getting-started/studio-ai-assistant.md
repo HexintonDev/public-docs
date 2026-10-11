@@ -29,9 +29,10 @@ local copies are writable after the assistant prepares its editing target.
 2. It prepares a writable target or creates a local package, then edits files with its coding tools.
 3. Saved edits refresh the Files tree and mark the game pending Apply. Open a changed file from the
    conversation to review it in the code editor. Keep/Undo are review actions, not runtime activation.
-4. The assistant is instructed to always write/update meaningful unit **and** integration tests for
-   every package creation or change, including UI and metadata changes, then run static validation
-   and both suites. It reports actual results and blocked coverage. Ordinary editing leaves pending Apply.
+4. The assistant runs static validation and tests the behavior it changed: usually one integration
+   case that runs the real action against the controlled target, plus unit cases when there is pure
+   logic. Metadata/UI-only changes get static validation. It reports actual results and anything left
+   untested. Ordinary editing leaves pending Apply.
 5. Select **Apply package changes**, or explicitly ask the assistant to Apply. Apply updates the
    complete game's graph, including other saved package changes.
 6. Enable the feature or run its action/query using the trainer, a binding, or an explicit assistant
@@ -173,9 +174,9 @@ concurrently; a second run for the same game/package is rejected while the first
 History keeps the latest 20 runs per game for the app lifetime. Results obtained by the assistant
 appear inline in its tool activity without switching the output tab; they also remain in chat history.
 
-Both suites are mandatory in assistant instructions. Missing unit or integration cases produce
-`not_run` and an **Incomplete** run, never a green empty suite. This policy guides the model; it
-does not prove the model wrote adequate tests. Review assertions and coverage. Unavailable tooling
+The assistant writes tests in proportion to the change and runs the kinds it declared (a `kind="all"`
+run reports a missing unit or integration suite as `not_run` and **Incomplete**, never a green empty
+suite). This guides the model; it does not prove the model wrote adequate tests. Review assertions and coverage. Unavailable tooling
 or a game-specific prerequisite must be reported with its actual reason, rather than faked coverage.
 Save does not automatically run behavioral tests; on-save static diagnostics remain separate.
 

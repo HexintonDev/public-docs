@@ -38,7 +38,7 @@ Auto Assembler labels and allocations must have an explicit lifecycle. A success
 
 HexMod AA resembles CE but uses the AsmTK instruction/data dialect. Check the
 [syntax differences](../../hexinton-engine-wiki/engine/auto-assembler-api.md#instruction-and-data-syntax)
-before copying a script. Static validation does not assemble AA; exercise the actual operation in
+before copying a script, and follow the [Auto Assembler rules](../../hexinton-engine-wiki/engine/engine-essentials.md#auto-assembler-rules). Static validation does not assemble AA; exercise the actual operation in
 a controlled integration target and distinguish that result from real-game compatibility.
 
 See [Application JavaScript capabilities](../../hexinton-engine-wiki/application/application-js-host-capabilities.md), [Lua API reference](../../hexinton-engine-wiki/engine/lua-api-reference.md), and [Auto Assembler examples](../../hexinton-engine-wiki/engine/assembly-api-examples.md).

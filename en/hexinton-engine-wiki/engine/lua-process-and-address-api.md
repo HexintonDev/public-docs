@@ -23,19 +23,17 @@ resolve other processes through that handle. A script can shadow the Lua global,
 so preserve the runtime value in shared helpers. The name does not supply an
 executable path, file version or build identity.
 
-## Build checks and unsupported Cheat Engine helpers
+## Game versions and unsupported Cheat Engine helpers
 
-This is the registered HexMod API, not every Cheat Engine Lua global. In particular, the native
-Lua runtime does not provide `getFileVersion`, `enumModules` or `getModuleBase`. Use the documented
-address resolver for module expressions; it does not report a running executable's file version.
-Finding the expected process name or a matching instruction at a module-relative offset establishes
-only that local precondition. It does not establish the whole executable build.
+This is the registered HexMod API, not every Cheat Engine Lua global. The native Lua runtime does not
+provide `getFileVersion`, `enumModules` or `getModuleBase`. Use the documented address resolver for
+module expressions such as `game.exe+0x1234`.
 
-When converting a source that requires an exact build/version check, preserve that requirement with
-an available equivalent observation. If no such capability is available, leave the feature unsupported
-or refuse the operation before writing. A hardcoded version string, a caller's supplied version, or
-a narrower expected-byte check is not an equivalent observed build check. Disclosing the downgrade
-does not make it equivalent. Static or fixture tests also do not identify the running game build.
+HexMod packages are not version-gated. When porting a script that compares the game's file version
+before acting, drop that comparison instead of rebuilding it, and record the targeted build in the
+package's `docs/` notes. A package may still check something it directly depends on, such as the
+original bytes at a patch site, before writing. See
+[game versions](engine-essentials.md#game-versions).
 
 ## `findProcess`
 

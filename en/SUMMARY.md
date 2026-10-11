@@ -13,6 +13,7 @@
 ## Hexinton Engine Wiki
 
 * [Technical Wiki](hexinton-engine-wiki/engine/README.md)
+  * [Engine Essentials](hexinton-engine-wiki/engine/engine-essentials.md)
   * [Runtime Model](hexinton-engine-wiki/engine/runtime-model.md)
   * [UE4SS Runtime](hexinton-engine-wiki/engine/ue4ss-runtime.md)
   * [Lua Dependency Runnable API](hexinton-engine-wiki/engine/dependency-runnable-api.md)

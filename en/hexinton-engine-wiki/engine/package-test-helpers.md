@@ -258,5 +258,5 @@ or enforce coverage. Generated helper files are not navigation targets in the sa
 runner terminates its owned worker/target tree and removes disposable files; it does not promise
 Lua/JS finally callbacks in a killed process. External side effects outside the owned target still
 need their own recovery. Unit mocks are not an integration check, and fixture tests are not a
-real-game compatibility check. Keep meaningful unit and integration suites and report blocked
+real-game compatibility check. Keep tests meaningful and proportional, and report blocked
 prerequisites accurately.

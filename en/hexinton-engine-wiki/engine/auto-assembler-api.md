@@ -52,7 +52,8 @@ The addresses are illustrative; source evidence supplies the actual site and des
 
 AA files execute one operation. Split CE `[ENABLE]` and `[DISABLE]` sections into separate entries;
 embedded `{$lua}` sections are not AA instructions. Move required Lua behavior to a Lua entry or
-invoke AA from that entry, rather than inventing unsupported CE directives.
+invoke AA from that entry, rather than inventing unsupported CE directives. The binding rules for numbers, data and
+labels are summarized in [Engine Essentials](engine-essentials.md#auto-assembler-rules).
 
 ## Directive Reference
 

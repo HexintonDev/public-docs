@@ -99,7 +99,8 @@ Auto Assembler runtime and should not be used as an ownership strategy.
 ## Reuse Rules
 
 - Declare Auto Assembler runnables with `runtime: "aa"` and an `entryFile`.
-- Declare Lua lifecycle runnables because Auto Assembler is action-oriented in this package model.
-- Do not use Auto Assembler for `enable`, `disable`, or a continuously running service.
+- Lifecycle `enable`/`disable` may be Lua or AA. This sample uses empty Lua lifecycle entries; an AA
+  `disable` file is fine when it can run safely even if the actions never ran.
+- Do not use Auto Assembler for queries or a continuously running service; use Lua.
 - Pair every `alloc` with a deterministic `dealloc` action or a Lua `disable` cleanup path.
 - Build real hooks on top of validated scans and restoration logic; allocation alone is not a hook.

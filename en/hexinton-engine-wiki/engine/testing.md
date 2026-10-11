@@ -5,7 +5,7 @@ Status: current public technical guide.
 Scripts that read or modify another process should be tested against a controlled target before use
 with a real game.
 
-## Minimum Test Cases
+## Static checks and test runs
 
 Studio's **Problems → Validate game** and the assistant's `validate_package` use shared static
 checks without Apply or code execution. Reports include manifest, entries, hosted binding, native
@@ -21,18 +21,28 @@ Test declaration discovery is also performed by the test runner. A package can p
 validation while `tests/studio.tests.json` references a missing test file; run the tests and inspect
 their discovery result before treating the suite as verified.
 
-Verify each package with:
+## What to test
 
-1. valid `enable` and `disable` execution;
-2. action arguments, including missing and malformed values;
-3. missing AOB patterns and ambiguous matches;
-4. invalid address and pointer expressions;
-5. read/write width and signedness;
-6. dependency-first enable and reverse cleanup;
-7. timer and service shutdown;
-8. stale or detached process sessions;
-9. failed enable rollback;
-10. failed disable reporting.
+Test the operations your package actually performs, in proportion to its size. For most trainer
+features one integration case is enough: run the production action against the controlled target,
+check the bytes or value it wrote, then run the off/disable path and check the original state is
+back. Add a unit case when the package has pure logic worth checking on its own (conversions,
+clamping, parsing). A metadata- or UI-only change needs `validate_package`, not invented tests.
+
+Add the checks below only when the package has the matching behavior:
+
+| If the package... | Also check |
+| --- | --- |
+| takes action arguments | a valid value and one malformed value |
+| scans for an AOB | the scan finds the seeded pattern; a missing pattern fails the action |
+| follows a pointer chain | the resolved field; an unreadable pointer fails the action |
+| installs a hook | the jump/cave bytes, and that off restores the original instruction |
+| runs a timer or service | it stops and is destroyed on off/disable |
+| depends on another package | the dependency's declared API, not its private names |
+| has cleanup that can run before "on" | disable succeeds when the feature was never turned on |
+
+Do not build test suites for situations the package does not handle (partial writes, foreign
+patches, detach races) or add recovery code just so there is something to test.
 
 The repository includes fake process, memory integration, Lua runtime, address resolver,
 `AssemblyScript`, package host, dependency, and lifecycle tests. Use those tests as behavioral
@@ -187,10 +197,10 @@ including the fixture/command children. Worker startup errors are text failures,
 dialogs. Shutdown cancels and waits for active tests before disposing workspace services.
 
 The default `all` run requires both unit and integration cases. Missing coverage is `not_run`, with
-overall `incomplete`; blocked/empty suites are never passing. Hex Assistant is instructed to always
-write both suites for every package change, including metadata/UI changes, run static validation and
-the suites, fix failures and disclose actual blocked coverage. Adequate assertions remain a review
-responsibility. Tests execute saved copies; Save's automatic static checks do not run these suites.
+overall `incomplete`; blocked/empty suites are never passing. A package with no pure logic declares
+only integration cases and runs `run_package_tests(packageId, kind="integration")`. Hex Assistant
+runs static validation and the suites that apply to the change, fixes failures and reports what was
+not covered. Adequate assertions remain a review responsibility. Tests execute saved copies; Save's automatic static checks do not run these suites.
 
 ## Failure Rules
 
@@ -199,31 +209,24 @@ than one match for a unique pattern, unresolved address or pointer chain, missin
 ambiguous symbol, unsupported runtime, invalid manifest, stale attachment, and assembly or memory
 failure.
 
-Never continue a write after compatibility validation has failed.
+Never continue a write after a check the package performs (scan, pointer, expected bytes) has failed.
 
 ## Assertions that establish the feature contract
 
-Import and exercise the same production operation that the runtime calls. Seed an integration
-fixture from independently recovered source values, not the package's own expected-byte constants.
-For an encoded branch, check its decoded target against an independent source address as well as
-checking the full instruction bytes. Test the entire edited width and sentinel bytes on both sides.
+Import and exercise the same production operation that the runtime calls, not a copy of its logic.
+Seed the fixture from the source's values (the original instruction bytes, the source's offsets),
+not from constants copied out of the package under test. For an encoded branch or call, also check
+the decoded destination. Inspect memory after a failure test: an exception alone does not show
+whether anything was written.
 
-Exercise null/missing targets, original-byte mismatches, a pre-existing foreign patch, repeated
-enable/disable, ownership loss, and failures after only part of a write. A failure test must inspect
-the memory afterward: an exception or an `owned=false` flag alone does not prove restoration. Check
-that owned partial changes are restored or retained as a recoverable failure, foreign changes are
-not overwritten, and cleanup errors are propagated rather than returned as successful actions.
+Testing an address-accepting helper against fixture memory does not also test its production
+resolver, package lifecycle or UI bindings. The engine can prepare a package before its first
+query/action, so initial control reads must not apply a gameplay toggle, and both action IDs must
+route to the intended operations.
 
-Keep source build prerequisites in the tests. A test that supplies the same hardcoded version as
-the implementation, or only verifies a small expected byte sequence, cannot establish that production
-code observes the exact running build required by the source. An unavailable prerequisite is an
-unsupported feature, not a passed compatibility check.
-
-Testing an address-accepting helper against fixture memory does not also test its production resolver,
-package lifecycle or UI bindings. Add separate coverage for those contracts. In particular, the engine
-can prepare a package before its first query/action: initial control reads must not apply a gameplay
-toggle, and both action IDs must route to the intended production operations. Keep a meaningful state
-query separate from action completion. A fixture test never establishes real-game compatibility.
+Fixture tests cannot identify the running game build, and packages are not expected to. Record the
+build a package was written or tested against in its `docs/` notes; do not gate operations on a
+version check. See [game versions](engine-essentials.md#game-versions).
 
 ## Safe Development Loop
 
