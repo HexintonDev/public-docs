@@ -202,6 +202,9 @@ engine tests. Another Lua/WASM interpreter with mocked host functions cannot est
 compatibility. Test a small assembly or game-call case on the real engine before investigating its
 internals. When runtime and interface files have separate owners, build them in parallel and run
 the combined check after both are ready.
+When delegating a hook smoke test, give the helper the complete [verified test example](#example-hook-with-inline-data),
+including byte reads and relative-jump/data-operand calculations, not only the runtime assembly.
+Adapt its actual instruction layout rather than guessing offsets.
 
 For a custom interface, one focused UI smoke check should run the authored HTML/entry module with
 the supplied SDK: edit/select an input, submit it, and check readiness, suspension and failure
