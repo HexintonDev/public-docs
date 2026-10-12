@@ -211,6 +211,14 @@ package's original offsets and pointer traversal. Use host `toggle` steps for th
 and host `action` steps for input/button controls; both use the app's actual bindings and parameter
 object. Repeat an explicit input action with the same value to prove it remains repeatable. Use
 `cleanup` for lifecycle disable.
+Compute fixture sizes with the shell, and cover the source offset plus the accessed byte width.
+For example, PowerShell `0x19B8900 / 1MB` is about 25.72 MiB; a 32 MiB module
+(`size: 33554432`) can cover an eight-byte pointer at that offset. Keep that root at
+`module.base + 0x19B8900`, and seed intermediate pointer cells at nonoverlapping positions relative
+to `module.dataAddress`, allowing for each hop and field width. Never replace a production offset
+with a smaller test address. If a reported allocation limit really prevents the source address,
+record the test limitation instead of changing what the package patches.
+
 Lua steps seed or inspect memory. A passing test proves the actual actions assemble and write what
 they should; it does not prove the addresses match a given game build.
 
