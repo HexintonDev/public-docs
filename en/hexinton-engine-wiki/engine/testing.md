@@ -318,7 +318,7 @@ A command case can run an existing unit or integration framework:
   "kind": "unit",
   "runtime": "command",
   "command": "node",
-  "arguments": ["--test", "tests/frontend.test.mjs"],
+  "arguments": ["--test", "--test-reporter=tap", "tests/frontend.test.mjs"],
   "timeoutMs": 30000
 }
 ```
@@ -330,6 +330,8 @@ The last placeholder is a JSON **context file**, also available in `HEXMOD_TEST_
 `fixture` field contains integration metadata. Required tools/dependencies must already exist or
 be prepared explicitly. Exit zero passes; nonzero exit preserves the exit code and stdout/stderr.
 Output is bounded to the last 16000 characters with an explicit truncation notice.
+For Node's test runner, `--test-reporter=tap` keeps captured results readable without Unicode
+status symbols. Use the existing prepared test dependencies rather than installing them per package.
 
 ## Results and limits
 

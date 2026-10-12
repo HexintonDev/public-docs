@@ -61,6 +61,13 @@ pending requests, errors or subscriptions. The host injects the UI kit. The same
 the conversion worker and the in-client authoring agent. Read the
 [custom interface quickstart](../application/custom-interface-quickstart.md#reuse-the-supplied-sdk).
 
+Player-facing labels, progress and errors describe the game operation in plain language. Use
+"Waiting to enable mods..." or "Item spawning is paused.", not "Waiting for the host" or
+"Surface paused". An inactive SDK alone does not establish that the game is absent; say
+"Waiting for the game" only when the authoritative game state says so. Show a useful task-level
+failure and preserve the player's draft; put API names, error codes and exception text in
+diagnostics or optional technical details. Follow the client's existing language conventions.
+
 ## Choosing an input control
 
 Setting a value and repeating a command are different interactions. An ordinary number/text

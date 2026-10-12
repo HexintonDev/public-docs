@@ -214,7 +214,7 @@ Create `example.health-surface/ui/health.html`:
   <main class="hm-card hm-stack">
     <h1 class="hm-heading">Health</h1>
     <div id="value" class="hm-heading" aria-live="polite">-- / --</div>
-    <div id="status" class="hm-status" role="status" aria-live="polite">Waiting for the host...</div>
+    <div id="status" class="hm-status" role="status" aria-live="polite">Waiting to enable health controls...</div>
     <div class="hm-cluster">
       <label for="health">Set health</label>
       <input id="health" class="hm-input" type="number" min="0" max="100" value="50">
@@ -269,7 +269,7 @@ Create `example.health-surface/ui/health.html`:
         lifecycle = state;
         if (state === "active" && !unsubscribeHealth) {
           acceptedRevision = 0;
-          statusElement.textContent = "Connected. Waiting for health...";
+          statusElement.textContent = "Reading health...";
           unsubscribeHealth = sdk.viewModels.subscribe("health.current", observeHealth);
         } else if (state !== "active") {
           unsubscribeHealth?.();
