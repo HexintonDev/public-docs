@@ -35,7 +35,8 @@ game, open their own windows, or manage sessions.
 | Behavior | Usually fits |
 | --- | --- |
 | Fixed byte patch, AOB patch, code-cave hook | AA files, one per operation |
-| Hook whose "off" must not run before "on", or a hook plus a flag | AA text run from a short Lua file that checks the hook site's bytes |
+| Prepared hook with a flag initially zero; actions only write fixed flag values | AA prepare/on/off/cleanup files; prepare keeps the gameplay effect inactive |
+| Hook whose "off" needs resources created by "on", or an operation needing an explicit condition | Short Lua orchestration when the chosen AA lifecycle cannot express that behavior |
 | Pointer or value write, calculation, condition | Host Lua |
 | Repeating write or check, frozen value | Host Lua repeating timer |
 | Hook captures a pointer that a parameterized action uses | AA hook plus Lua action |

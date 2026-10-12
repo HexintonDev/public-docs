@@ -70,8 +70,9 @@ an unsupported `tests` field to `package.json`. Example:
 ```
 
 Each case has a unique `id`, `kind` (`unit` or `integration`), `runtime` (`lua`, `js`, or `command`)
-and optional `timeoutMs` (default 10000; allowed 100–120000). Lua/JS cases require an existing
-package-relative `entryFile`; `entrySymbol` defaults to `runTest`. JS `capabilities` optionally
+and optional `timeoutMs` (default 10000; allowed 100–120000). Ordinary Lua/JS cases require an existing
+package-relative `entryFile`; `entrySymbol` defaults to `runTest`. An integration Lua case with
+ordered `steps` does not need a case-level `entryFile`. JS `capabilities` optionally
 declare the existing application runtime capabilities the test uses. Entries may not escape the
 package. Declarations are limited to 100 cases and 128 KiB.
 
@@ -157,12 +158,80 @@ end
 ```
 
 Import dependencies explicitly from `ctx.scriptsRoot`. Lua uses the native runtime attached to the
-owned target (unit Lua attaches only to its own worker). The runner does not automatically call
-the production package's enable/disable hooks. A lifecycle test must invoke the actual hooks and
-assert their effects and cleanup itself. Test pure address-independent logic separately, replacing
+owned target (unit Lua attaches only to its own worker). Ordinary entry-file cases do not automatically
+call the production package's enable/disable hooks. Use the host-driven control steps below to test
+the player's real toggle, or explicitly invoke hooks when testing a module's own exports.
+Assert the effects and cleanup. Test pure address-independent logic separately, replacing
 host/dependency functions where needed. Fixture tests cannot establish that real-game AOBs or
-offsets are correct. Arbitrary target layouts, game emulation and automatic AA/.NET framework
-discovery are not included; use command adapters or an explicit game test for those prerequisites.
+offsets are correct. Named test modules support the bounded layouts below; game behavior and
+automatic AA/.NET framework discovery are not emulated.
+
+## Named game memory and real toggle steps
+
+An integration `lua` or `command` case may declare `fixture.modules`. The owned target reserves
+real Win32 memory under these module names. The engine resolves `game.exe+offset` and
+`aobScanModule(..., game.exe, ...)` against that memory, so production addresses and scans can stay
+unchanged. This does not load the game's executable or emulate its gameplay.
+
+```json
+{
+  "fixture": {
+    "modules": [
+      { "name": "game.exe", "size": 65536 },
+      { "name": "DarkSoulsIII.exe", "size": 83886080,
+        "committedRanges": [{ "offset": 74874880, "size": 8192 }] }
+    ]
+  }
+}
+```
+
+`size` reserves the module's address span. Without `committedRanges`, the whole module is allocated;
+modules larger than 16 MiB require explicit ranges, so a high game offset need not allocate the
+whole span. Each `{offset, size}` range allocates the covering pages, must fit inside the module,
+and has positive size. Use page-aligned ranges for a clear layout. At most 32 modules and 1024
+ranges per module are supported; names are unique file names, case-insensitively, and sizes are
+positive integers up to 1 TiB. Named memory is not currently supported by JavaScript test cases.
+
+The returned context contains an array `ctx.fixture.modules` with `{name, base, size}` for each
+module, in declaration order. For example, seed an AOB with
+`writeBytes(ctx.fixture.modules[1].base + 0x80, 0x8B, 0x00, 0x41, 0x54, 0x90, 0x90)`.
+Place every pointer cell and destination in allocated pages; pointer values must describe the
+source's exact chain. Keep MaxHP and HP separate when the source uses separate fields.
+
+For the player's actual toggle, declare an integration Lua case with ordered steps:
+
+```json
+{
+  "id": "player-toggle", "kind": "integration", "runtime": "lua",
+  "fixture": { "modules": [{ "name": "game.exe", "size": 65536 }] },
+  "steps": [
+    { "kind": "lua", "entryFile": "tests/setup.lua" },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": true },
+    { "kind": "lua", "entryFile": "tests/check-on.lua" },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": false },
+    { "kind": "lua", "entryFile": "tests/check-off.lua" },
+    { "kind": "cleanup" },
+    { "kind": "lua", "entryFile": "tests/check-cleanup.lua" }
+  ]
+}
+```
+
+The case allows 1–100 steps. A `lua` step uses a package-relative `entryFile` and optional
+`entrySymbol` (default `runTest`), with the same context and owned target throughout the case.
+Lua seeds or asserts memory, then returns to the host. A `toggle` step uses the compiled
+`frontend.hosted` widget identified by `package-id/widget-id`, selects its declared on/off action,
+and executes the actual manifest runnable through the same command builder as the app. It supplies
+the app's empty parameter object `{}`; fixture addresses are not action arguments. A Lua action
+therefore receives its normal single parameter table, not a positional test address. A `cleanup`
+step runs the package's declared lifecycle disable through the host with `{}`. Check the resulting
+memory afterward; calling cleanup alone is not an assertion.
+
+Use named memory and these steps to keep the production resolver and invocation unchanged. Do not
+add a scan-scope parameter, replace production addresses, or call a different function signature
+just to make a fixture test pass. Direct `dofile` calls or `autoAssemble` of a production file can
+check its implementation, but do not by themselves verify the player's command path. Step evidence
+records the selected widget, runnable, parameters and cleanup; assertions still decide whether the
+feature's effects match its source.
 
 ## External framework commands
 
