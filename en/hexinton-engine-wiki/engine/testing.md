@@ -247,6 +247,36 @@ The complete [input/button example](trainer-controls.md#input-with-an-explicit-b
 repeated-value integration case. This host check does not exercise browser typing, blur or keyboard
 events; those interaction checks belong to frontend tests and a rendered UI inspection.
 
+### Custom surface command steps
+
+For a custom HTML interface, use `surfaceCommand` instead of calling its Lua entry directly from
+a test. This step resolves the surface's compiled command alias using the same resolver as the
+player's command and invokes the real manifest action with the supplied JSON object:
+
+```json
+{
+  "kind": "surfaceCommand",
+  "surfaceId": "example.item-spawner/inventory",
+  "commandAlias": "giveItem",
+  "arguments": { "itemId": "00061A80", "quantity": 30 }
+}
+```
+
+`surfaceId` is the host's complete `package-id/surface-id`, while `commandAlias` is the local
+binding name under that surface's `bindings`. It must expose a `command`; a query alias or a raw
+runnable ID cannot bypass the declared binding. `arguments` is required and must be an object;
+use `{}` for an action with no arguments. The engine performs the action's normal parameter checks.
+Use exactly the object the interface sends through `sdk.commands.execute`, without adding fixture
+addresses or test-only parameters.
+
+Lua steps still seed and inspect the owned memory target. Each surface command uses the normal
+package invocation, so repeated actions retain the package's ordinary Lua state and preparation.
+Results include `surfaceActions` with `surfaceId`, `commandAlias`, `runnableId` and `parameters`.
+Assert the resulting memory or function-call evidence, then use `cleanup` for lifecycle disable.
+This step checks command resolution and runtime behavior; it does not render HTML or exercise the
+MessagePort transport. A frontend test or host inspection separately checks the control sends the
+same object and uses the supplied SDK correctly.
+
 Use named memory and these steps to keep the production resolver and invocation unchanged. Do not
 add a scan-scope parameter, replace production addresses, or call a different function signature
 just to make a fixture test pass. Direct `dofile` calls or `autoAssemble` of a production file can
