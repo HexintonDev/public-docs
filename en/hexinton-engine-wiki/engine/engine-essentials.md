@@ -53,6 +53,14 @@ destination lists are data: extract and preserve their IDs and names instead of 
 code. Use ordinary controls for simple features; use a custom searchable interface when the task
 needs a catalogue, several related inputs or richer results.
 
+For a custom HTML interface, reuse the supplied `surface-sdk.js` module and the public `hm-*` UI
+kit. The installed author-reference folder contains `_code/surface-sdk.js`,
+`_code/surface-ui-kit.css` and an internal `_code/surface-sdk.manifest.json` with source hashes.
+Copy/import the module with ordinary file tools; do not rewrite MessagePort request routing,
+pending requests, errors or subscriptions. The host injects the UI kit. The same SDK is supplied to
+the conversion worker and the in-client authoring agent. Read the
+[custom interface quickstart](../application/custom-interface-quickstart.md#reuse-the-supplied-sdk).
+
 ## Choosing an input control
 
 Setting a value and repeating a command are different interactions. An ordinary number/text

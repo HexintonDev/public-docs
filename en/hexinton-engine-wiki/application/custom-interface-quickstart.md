@@ -10,6 +10,44 @@ For a package that can be copied without assembling snippets from this page, use
 manifest, Lua runtime file, HTML surface, expected message flow, and cleanup steps. The snippets below
 explain the same package section by section.
 
+## Reuse the supplied SDK
+
+The client and worker author-reference bundles provide these files under `docs/_code/`:
+
+- `surface-sdk.js`: the existing host-tested `SurfaceSdkClient` bundled as a browser ES module.
+- `surface-ui-kit.css`: the existing public `hm-*` design classes, also injected by the host.
+- `surface-sdk.manifest.json`: internal build/source hashes; keep this metadata outside your package.
+
+Copy `surface-sdk.js` into the package's UI directory using ordinary file tools, then import its
+exports. This reuses the client that owns request IDs, pending replies, errors and subscriptions;
+do not implement another MessagePort client. The conversion worker's `get_engine_info` reports the
+module path. The in-client agent reads the same files from its installed reference bundle.
+
+```js
+import { SurfaceSdkClient, isSurfaceBootstrapMessageV1 } from "./surface-sdk.js";
+
+let sdk;
+window.addEventListener("message", event => {
+  if (sdk || !isSurfaceBootstrapMessageV1(event.data) || !event.ports[0]) return;
+  sdk = new SurfaceSdkClient(event.ports[0], event.data.payload);
+  sdk.lifecycle.onStateChange(state => {
+    document.getElementById("set-health").disabled = state !== "active";
+  });
+  sdk.lifecycle.ready();
+});
+window.addEventListener("pagehide", () => sdk?.dispose(), { once: true });
+```
+
+Start the button disabled and run `sdk.commands.execute("setHealth", { health: 100 })` only after
+the host reports `active`. The alias `setHealth` is the declared surface binding below; the page does
+not call a Lua symbol. Handle command failure in the UI and keep the entered value for another try.
+Use `sdk.queries.execute` for queries and `sdk.viewModels.subscribe` for live values.
+
+Use `hm-surface`, `hm-input`, `hm-button`, `hm-cluster`, `hm-list-row` and the other provided classes
+for the layout. The stylesheet is available for standalone previews; installed surfaces receive it
+from the host. A copied custom CSP that blocks package-relative modules will also block this SDK;
+use the host-owned asset policy rather than copying an older inline-only CSP example.
+
 ## 1. Decide What the Control Needs
 
 Use a `command` when the user requests one operation. Use a `query` when the user requests one
