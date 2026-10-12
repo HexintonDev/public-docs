@@ -60,6 +60,10 @@ Copy/import the module with ordinary file tools; do not rewrite MessagePort requ
 pending requests, errors or subscriptions. The host injects the UI kit. The same SDK is supplied to
 the conversion worker and the in-client authoring agent. Read the
 [custom interface quickstart](../application/custom-interface-quickstart.md#reuse-the-supplied-sdk).
+Keep the embedded document, main container and form background transparent; the host owns the page
+background. Use the kit's control sizing, colors, spacing, focus and selected-state classes, without
+an arbitrary page-wide card or custom theme. Top-align form fields and keep optional helper text
+below its control; see the [aligned form example](../application/custom-interface-quickstart.md#transparent-documents-and-aligned-fields).
 
 Player-facing labels, progress and errors describe the game operation in plain language. Use
 "Waiting to enable mods..." or "Item spawning is paused.", not "Waiting for the host" or

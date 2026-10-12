@@ -211,7 +211,7 @@ Create `example.health-surface/ui/health.html`:
   </style>
 </head>
 <body class="hm-surface">
-  <main class="hm-card hm-stack">
+  <main class="hm-stack">
     <h1 class="hm-heading">Health</h1>
     <div id="value" class="hm-heading" aria-live="polite">-- / --</div>
     <div id="status" class="hm-status" role="status" aria-live="polite">Waiting to enable health controls...</div>

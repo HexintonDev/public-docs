@@ -48,6 +48,46 @@ for the layout. The stylesheet is available for standalone previews; installed s
 from the host. A copied custom CSP that blocks package-relative modules will also block this SDK;
 use the host-owned asset policy rather than copying an older inline-only CSP example.
 
+## Transparent documents and aligned fields
+
+The host supplies the page background. Keep the document, main container and form transparent;
+`hm-surface` already does this. Use `hm-stack` for the page rather than wrapping everything in
+`hm-card`. A card is for a purposeful subsection, not an extra page background.
+
+Use the kit's input, select, button, label and description classes for their colors, size and focus
+states. Inherit the placement's control sizing and use its spacing tokens; keep custom CSS to the
+layout the task needs. This layout-only example uses the kit's responsive two-column grid:
+
+```html
+<style>
+  .item-fields { align-items: start; }
+</style>
+<body class="hm-surface">
+  <main class="hm-stack">
+    <div class="hm-grid hm-grid-2 item-fields">
+      <div class="hm-stack-sm">
+        <label class="hm-label" for="item-id">Item ID (hex)</label>
+        <input id="item-id" class="hm-input" type="text" value="00061A80"
+               aria-describedby="item-name">
+        <span id="item-name" class="hm-description">Standard Arrow</span>
+      </div>
+      <div class="hm-stack-sm">
+        <label class="hm-label" for="quantity">Quantity</label>
+        <input id="quantity" class="hm-input" type="number" min="1" step="1" value="30">
+      </div>
+    </div>
+    <div class="hm-cluster">
+      <button id="spawn" class="hm-button hm-button-primary" type="button" disabled>Spawn Item</button>
+    </div>
+  </main>
+</body>
+```
+
+`hm-stack-sm` keeps each field's contents at the top, so optional helper text below one input does
+not stretch a neighbouring label row or move its control down. `hm-grid-2` collapses to one column
+on a narrow surface. Do not replace these field stacks with stretching automatic grid rows.
+The button still waits for the SDK's active lifecycle before it can execute a declared command.
+
 ## 1. Decide What the Control Needs
 
 Use a `command` when the user requests one operation. Use a `query` when the user requests one
