@@ -144,10 +144,12 @@ integration case is usually enough: run the production "on" operation against th
 target, check the bytes or value it wrote, run "off" and check the original state is back. Add unit
 cases only for real logic. See [testing](testing.md) and [test helpers](package-test-helpers.md).
 
-To land a module-relative address in the test target, register the module name as a symbol in the
-test before assembling. Never change the package's real offsets to fit the test target. A passing
-test proves the operation assembles and writes what it should; it does not prove the address matches
-a given game build.
+Declare named game memory with `fixture.modules`. The test target loads real modules, so setup
+seeds `ctx.fixture.modules[index].base + sourceOffset` for module-relative addresses. Keep the
+package's original offsets and pointer traversal. Use host `toggle` steps for the declared control
+and `cleanup` for lifecycle disable; they call the manifest runnables with the app's `{}` parameters.
+Lua steps seed or inspect memory. A passing test proves the actual actions assemble and write what
+they should; it does not prove the addresses match a given game build.
 
 ## Verified examples
 
@@ -208,31 +210,40 @@ Game.exe+0x4948ae:
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  local site = ctx.fixture.baseAddress + 192
-  local function run(path)
-    local file = assert(io.open(ctx.packageRoot .. path, "rb"))
-    local text = file:read("*a"); file:close()
-    local ok, message = autoAssemble(text); assert(ok, message)
-  end
-  h.withMemory({ { address = site, size = 5 } }, function()
-    registerSymbol("Game.exe", site - 0x4948ae) -- test-only address substitution
-    run("/aa/on.aa")
-    for _, byte in ipairs(readBytes(site, 5, true)) do h.equal(byte, 0x90) end
-    run("/aa/off.aa")
-    h.equal(readBytes(site, 1), 0xE8)
-    h.equal(site + 5 + readInteger(site + 1, true), getAddress("Game.exe+0x4801e0"))
-  end)
+local ORIGINAL = {0xE8, 0x2D, 0xB9, 0xFE, 0xFF}
+local function site(ctx) return ctx.fixture.modules[1].base + 0x4948AE end
+local function check(ctx, expected)
+  local actual = readBytes(site(ctx), 5, true)
+  for index, byte in ipairs(expected) do assert(actual[index] == byte) end
 end
+return {
+  setup = function(ctx) writeBytes(site(ctx), ORIGINAL) end,
+  on = function(ctx) check(ctx, {0x90, 0x90, 0x90, 0x90, 0x90}) end,
+  off = function(ctx)
+    check(ctx, ORIGINAL)
+    assert(site(ctx) + 5 + readInteger(site(ctx) + 1, true)
+      == ctx.fixture.modules[1].base + 0x4801E0)
+  end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 5242880}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": true},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
 ```
 {% endcode %}
 
@@ -314,32 +325,46 @@ function disable() turnOff() end
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  dofile(ctx.packageRoot .. "/lua/main.lua")
-  local site = ctx.fixture.baseAddress + 200
-  local original = { 0x0F, 0x28, 0xB1, 0x70, 0x01, 0x00, 0x00 }
-  h.withMemory({ { address = site, size = 7 } }, function()
-    registerSymbol("Game.exe", site - 0x9C83CA) -- test-only address substitution
-    writeBytes(site, original)
-    turnOff() -- safe before "on"
-    for _ = 1, 2 do
-      turnOn()
-      turnOn() -- already on: no second hook
-      h.equal(readBytes(site, 1), 0xE9)
-      turnOff()
-      for index, byte in ipairs(readBytes(site, 7, true)) do h.equal(byte, original[index]) end
-    end
-  end)
-end
+local ORIGINAL = {0x0F, 0x28, 0xB1, 0x70, 0x01, 0x00, 0x00}
+local function site(ctx) return ctx.fixture.modules[1].base + 0x9C83CA end
+return {
+  setup = function(ctx) writeBytes(site(ctx), ORIGINAL) end,
+  on = function(ctx)
+    local hook = site(ctx)
+    assert(readBytes(hook, 1) == 0xE9)
+    local cave = hook + 5 + readInteger(hook + 1, true)
+    local bytes = readBytes(cave, 2, true)
+    assert(bytes[1] == 0x0F and bytes[2] == 0x10, "movups in cave")
+    local vector = cave + 7 + readInteger(cave + 3, true)
+    assert(readFloat(vector) == 0 and readFloat(vector + 4) == -2000)
+    assert(readFloat(vector + 8) == 0 and readFloat(vector + 12) == 1)
+  end,
+  off = function(ctx)
+    local actual = readBytes(site(ctx), 7, true)
+    for index, byte in ipairs(ORIGINAL) do assert(actual[index] == byte) end
+  end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 16777216}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": false},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
 ```
 {% endcode %}
 
@@ -384,26 +409,32 @@ function disable() end
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  dofile(ctx.packageRoot .. "/lua/main.lua")
-  -- The test target holds a pointer to the player at signature+16 and to stats at player+0x20.
-  registerSymbol("Game.exe", ctx.fixture.signatureAddress + 16 - 0x4768E78) -- test-only substitution
-  local value = ctx.fixture.statsAddress + 4
-  h.withMemory({ { address = value, size = 4 } }, function()
-    turnOn()
-    h.equal(readInteger(value), 999)
-    turnOff()
-    h.equal(readInteger(value), 100)
-  end)
-end
+return {
+  setup = function(ctx)
+    writeQword(ctx.fixture.modules[1].base + 0x4768E78, ctx.fixture.playerAddress)
+    writeQword(ctx.fixture.playerAddress + 0x20, ctx.fixture.statsAddress)
+    writeInteger(ctx.fixture.statsAddress + 4, 100)
+  end,
+  on = function(ctx) assert(readInteger(ctx.fixture.statsAddress + 4) == 999) end,
+  off = function(ctx) assert(readInteger(ctx.fixture.statsAddress + 4) == 100) end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 83886080}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.pointer-write/pointer", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.pointer-write/pointer", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
 ```
 {% endcode %}
