@@ -34,6 +34,7 @@ Add the checks below only when the package has the matching behavior:
 | If the package... | Also check |
 | --- | --- |
 | takes action arguments | a valid value and one malformed value |
+| exposes an explicit input/button action | submit through the declared widget; repeat the same value and inspect both results |
 | scans for an AOB | the scan finds the seeded pattern; a missing pattern fails the action |
 | follows a pointer chain | the resolved field; an unreadable pointer fails the action |
 | installs a hook | the jump/cave bytes, and that off restores the original instruction |
@@ -166,7 +167,7 @@ host/dependency functions where needed. Fixture tests cannot establish that real
 offsets are correct. Named test modules support the bounded layouts below; game behavior and
 automatic AA/.NET framework discovery are not emulated.
 
-## Named game memory and real toggle steps
+## Named game memory and real control steps
 
 An integration `lua` or `command` case may declare `fixture.modules`. The owned target loads a
 small data-only test DLL using each requested game filename. Windows lists these as real modules;
@@ -228,6 +229,23 @@ the app's empty parameter object `{}`; fixture addresses are not action argument
 therefore receives its normal single parameter table, not a positional test address. A `cleanup`
 step runs the package's declared lifecycle disable through the host with `{}`. Check the resulting
 memory afterward; calling cleanup alone is not an assertion.
+
+An `action` step uses a non-toggle widget's compiled write binding. A number control takes a numeric
+`value`; text takes a string. A select takes the option's label string, which the host resolves to
+its declared value. The host puts the result under `write.valueParameter`. An ordinary button
+omits `value` and sends `{}`. For example:
+
+```json
+{ "kind": "action", "widgetId": "example.add-currency/add-currency", "value": 500 }
+```
+
+With `write: { "action": "add-currency", "valueParameter": "amount" }`, this invokes the manifest
+action with `{ "amount": 500 }`. Repeat that step to check a repeatable command; a test-only direct
+call such as `addCurrency(500)` would use the wrong signature. Step evidence contains the actual
+selected widget, runnable and parameter object. Check that evidence alongside the memory assertions.
+The complete [input/button example](trainer-controls.md#input-with-an-explicit-button) includes a
+repeated-value integration case. This host check does not exercise browser typing, blur or keyboard
+events; those interaction checks belong to frontend tests and a rendered UI inspection.
 
 Use named memory and these steps to keep the production resolver and invocation unchanged. Do not
 add a scan-scope parameter, replace production addresses, or call a different function signature
@@ -297,7 +315,7 @@ query/action, so initial control reads must not apply a gameplay toggle, and bot
 route to the intended operations.
 
 Fixture tests cannot identify the running game build, and packages are not expected to. Record the
-build a package was written or tested against in its `docs/` notes; do not gate operations on a
+build a package was written or tested against in separate research/publication records; do not gate operations on a
 version check. See [game versions](engine-essentials.md#game-versions).
 
 ## Safe Development Loop

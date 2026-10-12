@@ -27,7 +27,9 @@ game, open their own windows, or manage sessions.
   player's change happens in an `action`. `disable` cleans up and must work even when the feature
   was never turned on.
 - A hosted toggle uses `write.enableAction` / `write.disableAction` (action IDs). A number widget
-  uses `write.action` plus `valueParameter`. See [trainer controls](trainer-controls.md).
+  uses `write.action` plus `valueParameter`. Lua actions receive one JSON parameter object, for
+  example `function addCurrency(params)` reads `params.amount`; they do not receive positional
+  amounts, addresses or scan strings. See [trainer controls](trainer-controls.md).
 - Lua action return values are discarded. An action fails only by raising `error(...)`.
 
 ## Choosing a runtime
@@ -44,6 +46,34 @@ game, open their own windows, or manage sessions.
 
 Pick the smallest fit. A five-byte patch is two tiny AA files and a toggle, not a Lua framework.
 See [runtime selection](../../start-here/getting-started/runtimes.md).
+
+Reuse a shared helper when several features need the same table lookup, item spawning or restoration
+logic. Implement the needed operations once and keep the feature actions small. Large item or
+destination lists are data: extract and preserve their IDs and names instead of rewriting them as
+code. Use ordinary controls for simple features; use a custom searchable interface when the task
+needs a catalogue, several related inputs or richer results.
+
+## Choosing an input control
+
+Setting a value and repeating a command are different interactions. An ordinary number/text
+control submits an edited value according to its normal commit behavior. For Add Money, Grant XP,
+Add Souls or a similar repeatable action, use **one row with a separate input and button**:
+
+```json
+{
+  "id": "add-currency", "kind": "number", "label": "Add currency", "valueType": "integer",
+  "constraints": { "minimum": 1, "maximum": 1000000, "step": 1 },
+  "presentation": { "submitMode": "explicit", "buttonLabel": "Add", "defaultValue": 500 },
+  "write": { "action": "add-currency", "valueParameter": "amount" }
+}
+```
+
+The input and button have separate boundaries and a gap; they still belong to one widget and action.
+In explicit mode, typing and blur do not execute anything. Clicking the button or pressing Enter
+sends the current value once. Repeating either with an unchanged value repeats the command. The
+action receives `{ "amount": 500 }`. Do not add a second amount-storage widget or make `enable`
+perform the command. Omitting `submitMode` preserves the existing control behavior.
+See the complete [input and button example](trainer-controls.md#input-with-an-explicit-button).
 
 ## Auto Assembler rules
 
@@ -131,8 +161,9 @@ symbols. `dealloc` alone does not restore the hook site.
 
 ## Game versions
 
-Packages are not version-gated. Record the game build a package was written or tested for in its
-`docs/` notes. Do not refuse an operation because the running build cannot be identified, and do not
+Packages are not version-gated unless the user requests a gate. Record game-build and verification
+information in research or publication records outside the generated runtime package. Do not refuse
+an operation because the running build cannot be identified, and do not
 add a version reader. A package may still check something it directly depends on, such as the
 original bytes at a patch site before writing. A wrong address shows up as a failed scan, a failed
 action or no effect, and is fixed by updating the package.
@@ -147,9 +178,23 @@ cases only for real logic. See [testing](testing.md) and [test helpers](package-
 Declare named game memory with `fixture.modules`. The test target loads real modules, so setup
 seeds `ctx.fixture.modules[index].base + sourceOffset` for module-relative addresses. Keep the
 package's original offsets and pointer traversal. Use host `toggle` steps for the declared control
-and `cleanup` for lifecycle disable; they call the manifest runnables with the app's `{}` parameters.
+and host `action` steps for input/button controls; both use the app's actual bindings and parameter
+object. Repeat an explicit input action with the same value to prove it remains repeatable. Use
+`cleanup` for lifecycle disable.
 Lua steps seed or inspect memory. A passing test proves the actual actions assemble and write what
 they should; it does not prove the addresses match a given game build.
+
+## Generated code and reference use
+
+Keep comments technical: explain field widths, pointer layouts, patch behavior or cleanup. Keep
+credits, source headers, table entry IDs, license notices and provenance in separate research or
+publication records, not in newly generated runtime files or package documentation. Preserve the
+original acquired resources separately.
+
+Read the exact installed API contract and use its examples. Do not invent a host function because
+another tool provides one. If a requested feature needs an unavailable capability, explain the
+specific missing operation instead of inserting an unconditional error into a supposed working
+action. A smoke test establishes only the behavior it actually exercised.
 
 ## Verified examples
 
