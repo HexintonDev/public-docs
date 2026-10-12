@@ -150,7 +150,9 @@ aobScanModule(name, module, pattern)
 ```
 
 Scans only the named loaded module and binds the first match to `name`. The directive accepts exactly
-three arguments: result name, module expression/name, and AOB pattern. Invalid module or pattern
+three arguments: result name, module name, and AOB pattern. The module name may be unquoted or
+enclosed in double quotes; both `Tactics Ogre Reborn.exe` and `"Tactics Ogre Reborn.exe"` name the
+same module, including its spaces. Invalid module or pattern
 input, scan failure, zero matches, invalid name, or label conflict is an error.
 
 Module scoping reduces accidental matches but does not guarantee uniqueness. Confirm the selected

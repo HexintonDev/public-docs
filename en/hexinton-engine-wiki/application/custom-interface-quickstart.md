@@ -31,7 +31,7 @@ window.addEventListener("message", event => {
   if (sdk || !isSurfaceBootstrapMessageV1(event.data) || !event.ports[0]) return;
   sdk = new SurfaceSdkClient(event.ports[0], event.data.payload);
   sdk.lifecycle.onStateChange(state => {
-    document.getElementById("set-health").disabled = state !== "active";
+    document.getElementById("apply").disabled = state !== "active";
   });
   sdk.lifecycle.ready();
 });

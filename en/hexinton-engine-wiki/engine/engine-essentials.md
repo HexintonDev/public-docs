@@ -116,6 +116,9 @@ The engine handles `alloc(name[, size[, near]])`, `globalAlloc`, `dealloc(name)`
 `fullAccess` and `createThread`. Names are case-insensitive. Signatures and failure behavior are in
 the [Auto Assembler API](auto-assembler-api.md).
 
+`aobScanModule` accepts module names with spaces, either unquoted or enclosed in double quotes,
+for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`.
+
 Not part of HexMod AA: `define`, `readmem`, `assert`, `{$lua}`/`{$asm}` blocks, `{$try}`,
 `reassemble`, `loadlibrary`, `struct`, anonymous `@@` labels and `[ENABLE]`/`[DISABLE]` sections.
 Instead:
@@ -177,6 +180,13 @@ original bytes at a patch site before writing. A wrong address shows up as a fai
 action or no effect, and is fixed by updating the package.
 
 ## Testing
+
+Create a minimal manifest and smoke-test declaration early when delegating runtime work. Give a
+runtime helper the agreed runnable IDs and actual parameter object, and let it use the supplied
+engine tests. Another Lua/WASM interpreter with mocked host functions cannot establish HexMod
+compatibility. Test a small assembly or game-call case on the real engine before investigating its
+internals. When runtime and interface files have separate owners, build them in parallel and run
+the combined check after both are ready.
 
 Static validation checks the manifest, bindings and Lua syntax; it does not assemble AA. One
 integration case is usually enough: run the production "on" operation against the controlled test
