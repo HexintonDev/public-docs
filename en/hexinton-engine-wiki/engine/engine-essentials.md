@@ -148,6 +148,12 @@ Instead:
   code, undeclared.
 - Allocation and symbol names persist between a package's operations, so "off" can refer to what
   "on" created. That is all the state most hooks need.
+- Bound labels, allocations and visible symbols work directly in memory operands: `mov dword ptr
+  [flag], 1`, `lea rax, [flag]` and `mov rax, qword ptr [flag]`. A declared data label in a later
+  chunk resolves before the earlier code chunk is written. Preserve these symbolic operands.
+  On x64, nearby data can use RIP-relative addressing; for an address too far for that instruction,
+  use `mov rax, distantData` followed by `mov dword ptr [rax], 1`. See the
+  [cross-chunk data example](auto-assembler-api.md#instruction-and-data-syntax).
 - A bound label stays resolvable after `unregisterSymbol` and `dealloc`, so `getAddressSafe(name)`
   cannot tell whether a hook is installed. Read the hook site's bytes instead, as the hook example
   below does.
@@ -459,6 +465,7 @@ pointer in the chain is unreadable, which fails the action as it should.
 ```
 {% endcode %}
 
+
 {% code title="lua/main.lua" %}
 ```lua
 local TARGET = "[[Game.exe+0x4768E78]+0x20]+0x4"
@@ -499,5 +506,131 @@ return {
     {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
   ]
 }] }
+```
+{% endcode %}
+
+### Example: game call with separate code and data
+
+This small package demonstrates the part used by an item spawner: prepare one code allocation and
+one data allocation, pass an input to a target function, and repeat the same command. It is an
+illustrative call convention, not a signature for a real game. The test seeds an executable target
+function and invokes the unchanged package through its actual input/button binding.
+
+For data in another allocation, loading its address into a register and using `[register+offset]`
+is a straightforward x64 form. The test waits for the target thread to finish before cleanup.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.game-call", "version": "1.0.0", "displayName": "Game call",
+  "runtime": {
+    "files": [{"path": "lua/main.lua", "runtime": "lua"}],
+    "runnables": [
+      {"id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable"},
+      {"id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable"},
+      {"id": "grant", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "grant"}
+    ]
+  },
+  "frontend": {"hosted": {"schemaVersion": 1, "groups": [{
+    "id": "resources", "label": "Resources", "widgets": [{
+      "id": "grant", "kind": "number", "label": "Grant", "valueType": "integer",
+      "constraints": {"minimum": 1, "maximum": 1000000, "step": 1},
+      "presentation": {"submitMode": "explicit", "buttonLabel": "Give", "defaultValue": 500},
+      "write": {"action": "grant", "valueParameter": "amount"}
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+local PREPARE = [[
+aobScanModule(grantCall, "Game.exe", 01 11 49 B8 ?? ?? ?? ?? ?? ?? ?? ??)
+alloc(grantCode, 0x1000, grantCall)
+alloc(grantData, 0x1000, grantCall)
+registerSymbol(grantCode)
+registerSymbol(grantData)
+grantData:
+  .dd 0, 0, 0
+grantCode:
+  sub rsp, 0x28
+  mov rcx, grantData
+  mov edx, [rcx+4]
+  mov rax, grantCall
+  call rax
+  mov rcx, grantData
+  add dword ptr [rcx+8], 1
+  add rsp, 0x28
+  ret
+]]
+
+local function assemble(text)
+  local ok, message = autoAssemble(text)
+  if not ok then error(message) end
+end
+
+function enable() assemble(PREPARE) end
+function grant(params)
+  writeInteger(getAddress("grantData") + 4, params.amount)
+  assemble("createThread(grantCode)")
+end
+function disable()
+  assemble("unregisterSymbol(grantData)\nunregisterSymbol(grantCode)\ndealloc(grantData)\ndealloc(grantCode)")
+end
+```
+{% endcode %}
+
+{% code title="tests/integration.lua" %}
+```lua
+local function waitForCall(ctx, count, expected)
+  for attempt = 1, 100 do
+    local data = readQword(ctx.fixture.statsAddress + 8)
+    if data ~= 0 and readInteger(data + 8) == count then
+      assert(readInteger(data) == expected, "target function received the requested amount")
+      return
+    end
+    sleep(10)
+  end
+  error("target function did not complete")
+end
+
+return {
+  setup = function(ctx)
+    local target = ctx.fixture.modules[1].dataAddress
+    fullAccess(target, 0x1000)
+    writeQword(ctx.fixture.statsAddress + 8, 0)
+    -- Observe the real call's data pointer without reaching into another package's symbols.
+    local code = string.format([[
+0x%X:
+  add dword ptr [rcx], edx
+  mov r8, 0x%X
+  mov qword ptr [r8+8], rcx
+  xor eax, eax
+  ret
+]], target, ctx.fixture.statsAddress)
+    local ok, message = autoAssemble(code)
+    assert(ok, message)
+  end,
+  first = function(ctx) waitForCall(ctx, 1, 500) end,
+  second = function(ctx) waitForCall(ctx, 2, 1000) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{"schemaVersion": 1, "cases": [{
+  "id": "repeated-call", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 65536}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first"},
+    {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second"},
+    {"kind": "cleanup"}
+  ]
+}]}
 ```
 {% endcode %}
