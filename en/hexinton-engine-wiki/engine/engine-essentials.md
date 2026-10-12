@@ -216,6 +216,8 @@ Static validation checks the manifest, bindings and Lua syntax; it does not asse
 integration case is usually enough: run the production "on" operation against the controlled test
 target, check the bytes or value it wrote, run "off" and check the original state is back. Add unit
 cases only for real logic. See [testing](testing.md) and [test helpers](package-test-helpers.md).
+Reuse passing receipts while the tested source files, manifest, tests and engine are unchanged;
+rerun after relevant edits or a new concern about the result.
 
 Declare named game memory with `fixture.modules`. The test target loads real modules, so setup
 seeds `ctx.fixture.modules[index].base + sourceOffset` for module-relative addresses. Keep the
