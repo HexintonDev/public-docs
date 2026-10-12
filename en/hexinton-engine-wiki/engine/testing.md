@@ -168,10 +168,10 @@ automatic AA/.NET framework discovery are not emulated.
 
 ## Named game memory and real toggle steps
 
-An integration `lua` or `command` case may declare `fixture.modules`. The owned target reserves
-real Win32 memory under these module names. The engine resolves `game.exe+offset` and
-`aobScanModule(..., game.exe, ...)` against that memory, so production addresses and scans can stay
-unchanged. This does not load the game's executable or emulate its gameplay.
+An integration `lua` or `command` case may declare `fixture.modules`. The owned target loads a
+small data-only test DLL using each requested game filename. Windows lists these as real modules;
+the ordinary engine module lookup, AOB scanner, reads and writes run unchanged. These are test
+modules, not the game's executable or gameplay.
 
 ```json
 {
@@ -185,18 +185,21 @@ unchanged. This does not load the game's executable or emulate its gameplay.
 }
 ```
 
-`size` reserves the module's address span. Without `committedRanges`, the whole module is allocated;
-modules larger than 16 MiB require explicit ranges, so a high game offset need not allocate the
-whole span. Each `{offset, size}` range allocates the covering pages, must fit inside the module,
-and has positive size. Use page-aligned ranges for a clear layout. At most 32 modules and 1024
-ranges per module are supported; names are unique file names, case-insensitively, and sizes are
-positive integers up to 1 TiB. Named memory is not currently supported by JavaScript test cases.
+`size` selects a test DLL with enough space: the small template has 64 KiB of zero-filled data,
+and the large template has 128 MiB. Each file is only 2.5 KiB on disk; Windows supplies zero-filled
+memory as it is used. Sizes must be positive and at most 128 MiB. The returned image size may be
+larger than the requested size. Optional `committedRanges` is retained for compatibility and
+selects pages made writable; it no longer allocates a separate fake module. Ranges must be positive
+and inside the requested span. At most 32 unique module names and 1024 ranges are supported.
+Named memory is not currently supported by JavaScript test cases.
 
-The returned context contains an array `ctx.fixture.modules` with `{name, base, size}` for each
-module, in declaration order. For example, seed an AOB with
-`writeBytes(ctx.fixture.modules[1].base + 0x80, 0x8B, 0x00, 0x41, 0x54, 0x90, 0x90)`.
-Place every pointer cell and destination in allocated pages; pointer values must describe the
-source's exact chain. Keep MaxHP and HP separate when the source uses separate fields.
+`ctx.fixture.modules` contains `{name, base, size, dataAddress, dataSize}` in declaration order.
+Use `base + sourceOffset` for an original module-relative address. Place AOB sample bytes inside
+`dataAddress .. dataAddress + dataSize`, for example
+`writeBytes(ctx.fixture.modules[1].dataAddress + 0x80, 0x8B, 0x00, 0x41, 0x54, 0x90, 0x90)`.
+The area at the image base contains real DLL headers; do not overwrite those when seeding a scan.
+Pointer values must describe the source's exact chain. Keep MaxHP and HP separate when the source
+uses separate fields.
 
 For the player's actual toggle, declare an integration Lua case with ordered steps:
 
