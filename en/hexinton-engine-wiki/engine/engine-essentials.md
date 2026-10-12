@@ -194,6 +194,12 @@ compatibility. Test a small assembly or game-call case on the real engine before
 internals. When runtime and interface files have separate owners, build them in parallel and run
 the combined check after both are ready.
 
+For a custom interface, one focused UI smoke check should run the authored HTML/entry module with
+the supplied SDK: edit/select an input, submit it, and check readiness, suspension and failure
+handling. Testing an argument helper and the SDK separately does not exercise the interface's own
+event handlers. Pair this with a `surfaceCommand` integration step through the declared alias and
+actual JSON arguments; see [custom-interface testing](testing.md#custom-surface-command-steps).
+
 Static validation checks the manifest, bindings and Lua syntax; it does not assemble AA. One
 integration case is usually enough: run the production "on" operation against the controlled test
 target, check the bytes or value it wrote, run "off" and check the original state is back. Add unit
