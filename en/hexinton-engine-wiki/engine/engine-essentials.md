@@ -148,6 +148,8 @@ Instead:
   code, undeclared.
 - Allocation and symbol names persist between a package's operations, so "off" can refer to what
   "on" created. That is all the state most hooks need.
+  Independent hooks in one package need distinct persistent names (`healthCave`, `manaCave`); each
+  hook's on/off reuse its names. Local labels within one chunk and intentionally shared setup need no prefixes.
 - Bound labels, allocations and visible symbols work directly in memory operands: `mov dword ptr
   [flag], 1`, `lea rax, [flag]` and `mov rax, qword ptr [flag]`. A declared data label in a later
   chunk resolves before the earlier code chunk is written. Preserve these symbolic operands.
@@ -211,6 +213,10 @@ package's original offsets and pointer traversal. Use host `toggle` steps for th
 and host `action` steps for input/button controls; both use the app's actual bindings and parameter
 object. Repeat an explicit input action with the same value to prove it remains repeatable. Use
 `cleanup` for lifecycle disable.
+Match the source's bitness: `fixture.architecture` accepts `"x86"` or `"x64"` (default). An available
+x86 fixture is a real 32-bit process with matching modules. A byte check in an x64 fixture does not
+prove x86 execution. If the installed test build lacks that target, report the test limitation;
+it does not establish that the production engine cannot implement the feature.
 Compute fixture sizes with the shell, and cover the source offset plus the accessed byte width.
 For example, PowerShell `0x19B8900 / 1MB` is about 25.72 MiB; a 32 MiB module
 (`size: 33554432`) can cover an eight-byte pointer at that offset. Keep that root at

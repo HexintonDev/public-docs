@@ -126,6 +126,30 @@ automatic lifecycle runner.
 
 ## Controlled integration target
 
+An integration case can select the target architecture inside `fixture`:
+
+```json
+"fixture": { "architecture": "x86", "modules": [{ "name": "game.dll", "size": 65536 }] }
+```
+
+`architecture` accepts `"x86"` or `"x64"`; omission defaults to x64. `null` and other values are
+invalid. An x86 case launches a real 32-bit process and loads matching 32-bit named modules;
+the module declarations and action steps otherwise keep their existing format. The x86 context
+reports `architecture: "x86"` and `pointerSize: 4`, and `targetIs64Bit()` returns false.
+
+Choose the source game's bitness when the installed runner provides it. Testing literal x86 bytes
+in an x64 process can check those bytes and restoration, but does not test the x86 assembler mode,
+calling convention or execution. Do not change production registers or instruction encodings to
+make a test for another architecture pass.
+
+Prepared builds support x86 when they include `studio_test_target_x86.exe`,
+`ce_test_module_fixture_x86.dll` and `ce_test_module_large_fixture_x86.dll`. Older builds may provide
+only x64. The conversion worker's `get_engine_info` reports `test_fixture_architectures`; it adds x86
+only when all three files are present. That worker rejects an unavailable x86 request with
+`fixture_architecture_unavailable` before starting a native test process. It never silently uses
+x64. A missing test target is a fixture limitation, not proof that the production engine lacks the
+gameplay capability. Prepare a matching runner and test the same package again.
+
 Every integration case receives a fresh owned target process, never the actual game. Its 256-byte
 allocation contains the 16-byte ASCII signature `HEXMODTESTPLAYER`, a pointer at
 `signatureAddress + 16` to the player, and a pointer at `playerAddress + 32` to stats.
