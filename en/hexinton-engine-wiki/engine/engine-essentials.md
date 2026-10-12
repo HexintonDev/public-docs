@@ -67,6 +67,9 @@ Player-facing labels, progress and errors describe the game operation in plain l
 "Waiting for the game" only when the authoritative game state says so. Show a useful task-level
 failure and preserve the player's draft; put API names, error codes and exception text in
 diagnostics or optional technical details. Follow the client's existing language conventions.
+Give cause-specific advice only when the actual error or authoritative state supports it. A missing
+byte pattern in an attached game does not mean the game is absent: show a task failure and optional
+technical details without telling the player to launch it or inventing another remedy.
 
 ## Choosing an input control
 
