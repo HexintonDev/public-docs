@@ -97,6 +97,14 @@ action receives `{ "amount": 500 }`. Do not add a second amount-storage widget o
 perform the command. Omitting `submitMode` preserves the existing control behavior.
 See the complete [input and button example](trainer-controls.md#input-with-an-explicit-button).
 
+Continuous movement that the source drives with held keys (fly mode with Fly Up / Fly Down, noclip,
+free camera, a held speed boost) is **one toggle** with script-owned
+[native hotkeys](native-hotkeys.md): declare them in `runtime.hotkeys` with mode `hold` and a
+default chord (for example `Space` up, `Control` down), list them in the toggle's `nativeHotkeys`,
+call `hotkeys.activate` in the "on" action and read `hotkeys.isDown` from a timer. Never make
+separate up/down action widgets for the player to bind. Ordinary features keep using UI hotkeys,
+which the player binds in the client. Native hotkeys need a desktop client with the `hotkeys` API.
+
 ## Auto Assembler rules
 
 HexMod AA is its own dialect: AsmTK instruction syntax plus a small set of engine directives. Follow

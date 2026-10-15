@@ -271,6 +271,17 @@ The complete [input/button example](trainer-controls.md#input-with-an-explicit-b
 repeated-value integration case. This host check does not exercise browser typing, blur or keyboard
 events; those interaction checks belong to frontend tests and a rendered UI inspection.
 
+A `hotkey` step holds or releases one of the package's declared native hotkeys in the owned test
+process, then waits so the engine samples it and package timers run:
+
+```json
+{ "kind": "hotkey", "hotkeyId": "fly-up", "state": "down", "waitMs": 300 }
+```
+
+`state` is `down` or `up` and `waitMs` is 0–5000 (default 100). Turn the owning toggle on first,
+assert the held effect with a Lua step, then release the key. See
+[native hotkeys](native-hotkeys.md#testing).
+
 ### Custom surface command steps
 
 For a custom HTML interface, use `surfaceCommand` instead of calling its Lua entry directly from

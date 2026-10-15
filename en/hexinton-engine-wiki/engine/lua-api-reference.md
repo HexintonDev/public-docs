@@ -136,6 +136,8 @@ Use `??` for a wildcard byte in an AOB pattern. Check scan results before readin
 | [`process`](lua-runtime-utilities-api.md#process) | Attached process main module name |
 | [`publishEvent(event, value)`](lua-runtime-utilities-api.md#publishevent) | Publish service state to a declared feed |
 
+Package environments also have a [`hotkeys`](native-hotkeys.md#lua-api) table (`activate`, `deactivate`, `isDown`, `isActive`) for keys declared in `runtime.hotkeys`.
+
 Timer callbacks are serialized with script execution. Timers and published service state belong to
 the package and must stop or become inactive during `disable`.
 

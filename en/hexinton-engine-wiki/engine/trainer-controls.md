@@ -329,6 +329,11 @@ value, a query for transient results, and a read-only ViewModel value for the cu
 Service. Keep local draft input separate from the committed ViewModel value. A delta is only the
 transport message that changes the ViewModel; it is not the ViewModel itself.
 
+Continuous movement (fly mode with up/down keys, noclip, free camera, a held speed boost) is one
+toggle that owns script-read [native hotkeys](native-hotkeys.md) through `nativeHotkeys`, with
+default keys. Do not add separate "Fly Up"/"Fly Down" actions for the player to bind as UI
+hotkeys; UI hotkeys are for ordinary toggles, inputs and actions.
+
 For an item catalogue or several related parameters, consider a custom searchable surface instead
 of a long collection of unrelated inputs. Keep IDs and names as data and send one parameter object
 to the declared action. A native input/button is sufficient for a single amount.

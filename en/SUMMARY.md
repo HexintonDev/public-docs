@@ -30,6 +30,7 @@
   * [AOB Scanning](hexinton-engine-wiki/engine/aob-scanning.md)
   * [Hooks and Auto Assembler](hexinton-engine-wiki/engine/hooks-and-auto-assembler.md)
   * [Trainer Controls](hexinton-engine-wiki/engine/trainer-controls.md)
+  * [Native Hotkeys](hexinton-engine-wiki/engine/native-hotkeys.md)
   * [Lua API Reference](hexinton-engine-wiki/engine/lua-api-reference.md)
   * [Lua Process and Address API](hexinton-engine-wiki/engine/lua-process-and-address-api.md)
   * [Lua Memory API](hexinton-engine-wiki/engine/lua-memory-api.md)
