@@ -84,6 +84,22 @@ Each case uses its own copied files and fresh process, including between two cas
 The runner never Applies, enables, or changes the user's live game session. Test code and custom
 commands retain their normal tool access; this mechanism is not an operating-system sandbox.
 
+While fixing a failure, the assistant can rerun specific cases with
+`run_package_tests(packageId, kind="all", caseIds=["case-id", ...])`. `caseIds` takes 1–100 unique
+case IDs and selects them from the captured declaration in memory; `tests/studio.tests.json` is not
+changed. The run reports only the selected cases, adds no missing-suite entries, and is marked
+`partial: true` with its `caseIds` in the tool result and in test history, so a partial pass is never
+the package's full result. Unknown IDs fail with `test_case_unknown`, listing the declared IDs, and
+nothing runs; an ID whose kind does not match a `unit` or `integration` filter fails with
+`test_case_kind_mismatch`. Run the full suite without `caseIds` before reporting the package done.
+
+Tool calls in one assistant turn run concurrently, so write files and run tests in separate turns.
+An assistant run first waits until the saved package closure is unchanged across two reads about one
+second apart (at most about 10 seconds; otherwise `test_inputs_unsettled` and nothing runs). If a
+saved input changes while cases execute, the run is `incomplete` with `test_inputs_changed`: its
+case results are withheld and only `withheldResults` reports how many there were. Rerun after the
+writes finish.
+
 The context passed to tests contains:
 
 | Field | Meaning |
@@ -312,6 +328,48 @@ This step checks command resolution and runtime behavior; it does not render HTM
 MessagePort transport. A frontend test or host inspection separately checks the control sends the
 same object and uses the supplied SDK correctly.
 
+### Expected failures, companion packages and step timings
+
+A `toggle`, `action` or `surfaceCommand` step can assert that the production runnable rejects the request:
+
+```json
+{ "kind": "action", "widgetId": "example.add-currency/add-currency", "value": -5,
+  "expectError": { "messageContains": "amount must be positive" } }
+```
+
+`expectError.messageContains` (1–500 characters) must occur, case-sensitively, in the step's own
+failure message; the step then counts as passed and the case continues. A step that succeeds fails
+the case with `test_expected_error_missing`; a different message fails with
+`test_expected_error_mismatch`. Only the runnable's or control's own rejection can satisfy the
+expectation. An invalid test, such as an unknown widget, still fails the case. `expectError` is
+accepted on `toggle`, `action` and `surfaceCommand` steps, not on `lua`, `hotkey` or `cleanup` steps.
+
+A step case can load other installed packages beside the package under test with case-level
+`companionPackages`:
+
+```json
+{
+  "id": "uses-shared-hotkeys", "kind": "integration", "runtime": "lua",
+  "companionPackages": ["example.shared-hotkeys"],
+  "steps": [
+    { "kind": "toggle", "widgetId": "example.shared-hotkeys/enable", "enabled": true },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": true },
+    { "kind": "cleanup" }
+  ]
+}
+```
+
+List 1–16 unique package IDs; the package under test cannot be its own companion. Each companion is
+captured with its dependency closure and loaded as a separate top-level package in its own script
+context, as in the trainer. Companions are enabled in order before the first step, their widgets
+can be driven by `toggle` and `action` steps, and `cleanup` disables the package under test, then the
+companions in reverse order. Every context is destroyed when the case ends. `companionPackages` is
+accepted only on step cases.
+
+Each step case result contains `steps[]` with one entry per executed step: `index` (1-based),
+`kind`, `status` (`passed` or `failed`; a matched `expectError` is `passed`), `durationMs`, and, when
+present, `widgetId` and the step's `errorMessage`. Steps after the failing step are not listed.
+
 Use named memory and these steps to keep the production resolver and invocation unchanged. Do not
 add a scan-scope parameter, replace production addresses, or call a different function signature
 just to make a fixture test pass. Direct `dofile` calls or `autoAssemble` of a production file can
@@ -354,7 +412,8 @@ including the fixture/command children. Worker startup errors are text failures,
 dialogs. Shutdown cancels and waits for active tests before disposing workspace services.
 
 The default `all` run requires both unit and integration cases. Missing coverage is `not_run`, with
-overall `incomplete`; blocked/empty suites are never passing. A package with no pure logic declares
+overall `incomplete`; blocked/empty suites are never passing. A `partial` run covers only its
+`caseIds` and never establishes the package result. A package with no pure logic declares
 only integration cases and runs `run_package_tests(packageId, kind="integration")`. Hex Assistant
 runs static validation and the suites that apply to the change, fixes failures and reports what was
 not covered. Adequate assertions remain a review responsibility. Tests execute saved copies; Save's automatic static checks do not run these suites.
