@@ -59,6 +59,11 @@ the `lua_State` directly.
 Lua therefore has two serialization points: the native per-pid context lock and the Lua runtime
 worker queue. Timer callbacks run on the Lua worker, not on the UI thread.
 
+`synchronize(fn)` calls `fn` directly on that worker, and `queue(fn)` runs it on a later worker
+turn. `executeCode` and `executeCodeEx` run the game function on a new remote thread in the game
+and keep the Lua worker waiting until it returns or the timeout expires, so pass bounded timeouts.
+See [game calls and worker helpers](lua-game-calls-and-worker-api.md#how-a-game-call-runs).
+
 ## Auto Assembler Runtime
 
 Auto Assembler currently has no dedicated native runtime worker. The managed AA worker invokes the

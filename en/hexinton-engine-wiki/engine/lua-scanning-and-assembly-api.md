@@ -168,4 +168,5 @@ Pair `alloc` with `dealloc`, and `registersymbol` with `unregistersymbol`. Resto
 and release allocations from the package disable path. Destroy scan list handles once their address
 candidates have been copied or used. `createThread` is an Auto Assembler directive whose thread
 and resource lifecycle must be handled by the assembly author; there is no Lua `createThread`
-global. A successful scan or assembly action never proves that a patch is compatible or reversible.
+global. To call a game function from Lua and receive its result, use
+[`executeCode` or `executeCodeEx`](lua-game-calls-and-worker-api.md). A successful scan or assembly action never proves that a patch is compatible or reversible.

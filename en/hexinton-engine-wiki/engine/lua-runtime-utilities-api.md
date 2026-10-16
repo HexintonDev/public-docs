@@ -30,6 +30,9 @@ Unicode package root. This does not change filename handling for other stock Lua
 as `io.open`, `os.rename` or native-library loaders. The host's JSON protocol accepts ordinary
 UTF-8 text and `\uXXXX` escapes, including valid surrogate pairs; malformed pairs are parse errors.
 
+Game calls, target allocation and the CE worker helpers `synchronize` and `queue` are in
+[Lua game calls and worker helpers](lua-game-calls-and-worker-api.md).
+
 ## `createTimer`
 
 ```lua

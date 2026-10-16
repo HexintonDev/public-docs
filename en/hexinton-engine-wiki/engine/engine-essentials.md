@@ -42,6 +42,7 @@ game, open their own windows, or manage sessions.
 | Pointer or value write, calculation, condition | Host Lua |
 | Repeating write or check, frozen value | Host Lua repeating timer |
 | Hook captures a pointer that a parameterized action uses | AA hook plus Lua action |
+| Call a game function: item spawner, warp, NPC spawn, event or menu | Lua action with `executeCode`/`executeCodeEx`; AA prepares any call stub |
 | Unreal reflection | `ue4ss` runtime, when its prerequisites are available |
 
 Pick the smallest fit. A five-byte patch is two tiny AA files and a toggle, not a Lua framework.
@@ -196,6 +197,15 @@ symbols. `dealloc` alone does not restore the hook site.
   unreadable. `getAddressSafe` returns `nil` instead.
 - `createTimer(false)` makes a disabled repeating timer: set `Interval` and `OnTimer`, then
   `Enabled = true`. Destroy timers in the "off" action and in `disable`.
+- `executeCode(address, parameter?, timeout?)` and `executeCodeEx(callmethod, timeout, address, ...)`
+  call a game function on a new thread and wait for it. They return the integer result, or
+  `nil, message` on failure or timeout; check it and raise. Pass a bounded timeout. `allocateMemory`
+  buffers are caller-owned: release them with `deAlloc` in `disable`. See
+  [game calls](lua-game-calls-and-worker-api.md) and
+  [converting CE game-call scripts](converting-ce-game-calls.md).
+- `synchronize(fn, ...)` calls `fn` directly and `queue(fn, ...)` runs it on a later worker turn.
+  There is no `createNativeThread`: run the body in the action, use `createTimer(ms, fn)` for a
+  one-shot delay, or a repeating timer for a loop.
 - The host Lua API is the registered set in the [Lua API reference](lua-api-reference.md). There are
   no UI forms, address lists, file-version or module-enumeration functions. Do not assume a function
   exists because another tool has one.
@@ -675,6 +685,126 @@ return {
     {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
     {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first"},
     {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second"},
+    {"kind": "cleanup"}
+  ]
+}]}
+```
+{% endcode %}
+
+### Example: game call with executeCode
+
+This package shows the shape of a converted CE item spawner: find the game's give-item function,
+fill a caller-owned request buffer and call the function with `executeCode`. The call is
+synchronous, so the action has finished the game call when it returns. On timeout the buffer is
+abandoned rather than freed, because the call may still read it. The test seeds a stand-in function
+that records the request, then runs the unchanged action twice through its input/button binding.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.item-call", "version": "1.0.0", "displayName": "Item call",
+  "runtime": {
+    "files": [{"path": "lua/main.lua", "runtime": "lua"}],
+    "runnables": [
+      {"id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable"},
+      {"id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable"},
+      {"id": "give", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "give"}
+    ]
+  },
+  "frontend": {"hosted": {"schemaVersion": 1, "groups": [{
+    "id": "items", "label": "Items", "widgets": [{
+      "id": "give", "kind": "number", "label": "Item ID", "valueType": "integer",
+      "constraints": {"minimum": 1, "maximum": 999999, "step": 1},
+      "presentation": {"submitMode": "explicit", "buttonLabel": "Give", "defaultValue": 7},
+      "write": {"action": "give", "valueParameter": "itemId"}
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+-- The game's give-item function takes one pointer to {int32 itemId, int32 quantity}.
+local giveItem
+local request
+
+local function prepare()
+  giveItem = giveItem or AOBScanModuleUnique("Game.exe", "8B 01 03 41 04 49 BB")
+  if not giveItem then error("give-item function not found") end
+  if not request then
+    local address, message = allocateMemory(0x1000)
+    if not address then error(message) end
+    request = address
+  end
+end
+
+function enable() prepare() end
+
+function give(params)
+  prepare()
+  writeInteger(request, params.itemId)
+  writeInteger(request + 4, 1)
+  -- A bounded timeout keeps the Lua worker responsive if the game function never returns.
+  local result, message = executeCode(giveItem, request, 1000)
+  if result == nil then
+    -- A timed-out call may still read the request, so abandon that buffer instead of freeing it.
+    if message == "Execution timeout" then request = nil end
+    error(message or "give-item call failed")
+  end
+end
+
+function disable()
+  if request then deAlloc(request) end
+  request = nil
+  giveItem = nil
+end
+```
+{% endcode %}
+
+{% code title="tests/integration.lua" %}
+```lua
+local function expectCall(ctx, count, itemId)
+  local stats = ctx.fixture.statsAddress
+  assert(readInteger(stats + 12) == count, "give-item function ran once per action")
+  assert(readInteger(stats + 8) == itemId + 1, "give-item function read the request struct")
+end
+
+return {
+  setup = function(ctx)
+    local target = ctx.fixture.modules[1].dataAddress
+    fullAccess(target, 0x1000)
+    writeQword(ctx.fixture.statsAddress + 8, 0)
+    -- A stand-in give-item function: returns itemId + quantity and records the call.
+    local code = string.format([[
+0x%X:
+  mov eax, [rcx]
+  add eax, [rcx+4]
+  mov r11, 0x%X
+  mov [r11+8], eax
+  inc dword ptr [r11+12]
+  ret
+]], target, ctx.fixture.statsAddress)
+    local ok, message = autoAssemble(code)
+    assert(ok, message)
+  end,
+  first = function(ctx) expectCall(ctx, 1, 7) end,
+  second = function(ctx) expectCall(ctx, 2, 7) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{"schemaVersion": 1, "cases": [{
+  "id": "repeated-call", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 65536}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "action", "widgetId": "example.item-call/give", "value": 7},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first"},
+    {"kind": "action", "widgetId": "example.item-call/give", "value": 7},
     {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second"},
     {"kind": "cleanup"}
   ]
