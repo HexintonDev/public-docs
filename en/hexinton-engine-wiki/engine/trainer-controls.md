@@ -201,7 +201,7 @@ update.
         "id": "health-panel",
         "kind": "web-inline",
         "label": "Health",
-        "entry": "frontend/health/index.html",
+        "entry": "frontend/health-panel/index.html",
         "presentation": { "mode": "panel", "size": "large" },
         "bindings": {
           "health": { "type": "viewModel", "viewModel": "health" },

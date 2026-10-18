@@ -42,8 +42,11 @@ ViewModel or one-shot command; it does not expose Lua or native memory.
 
 ## Entry document and folder
 
-Each surface owns one folder, `frontend/<surface-id>/`, and `entry` names the single HTML file in it,
-normally `frontend/<surface-id>/index.html`. Two surfaces never share a folder.
+Each surface owns one folder, `frontend/<surface-id>/`, and its `entry` must be exactly
+`frontend/<surface-id>/index.html`: the folder name equals the surface `id`, and the single HTML
+file in that folder is always `index.html`, the surface's stable entrance. An entry such as
+`frontend/<surface-id>/main.html`, or a folder named differently from the `id`, is rejected. Two
+surfaces never share a folder.
 
 - The host maps only the entry's folder into the surface frame. Scripts, styles, images, fonts and
   catalogue modules the page uses must be inside that folder; the page cannot read `lua/`, `data/`
