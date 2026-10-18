@@ -19,7 +19,7 @@ their declaration scope.
         "id": "health-panel",
         "kind": "web-inline",
         "label": "Health",
-        "entry": "ui/health.html",
+        "entry": "frontend/health-panel/index.html",
         "presentation": { "mode": "panel", "size": "large" },
         "bindings": {
           "health": { "type": "viewModel", "viewModel": "health" },
@@ -39,6 +39,28 @@ ViewModel or one-shot command; it does not expose Lua or native memory.
 `frontend.hosted.groups` describes host-owned trainer widgets. It is separate from
 `frontend.surfaces`, which describes a package-owned HTML document. Do not put a surface entry under
 `frontend.hosted`.
+
+## Entry document and folder
+
+Each surface owns one folder, `frontend/<surface-id>/`, and its `entry` must be exactly
+`frontend/<surface-id>/index.html`: the folder name equals the surface `id`, and the single HTML
+file in that folder is always `index.html`, the surface's stable entrance. An entry such as
+`frontend/<surface-id>/main.html`, or a folder named differently from the `id`, is rejected. Two
+surfaces never share a folder.
+
+- The host maps only the entry's folder into the surface frame. Scripts, styles, images, fonts and
+  catalogue modules the page uses must be inside that folder; the page cannot read `lua/`, `data/`
+  or another surface's folder.
+- The document is UTF-8, at most 1 MiB, and begins with an optional `<!doctype html>`, an optional
+  `<html>`, then `<head>`. The host inserts its content security policy at the start of `<head>`
+  and replaces a document without one with an error page.
+- References are plain relative paths inside the folder. Inline event handlers (`onclick=`),
+  `<base>`, `<iframe>`, `<object>`, `<embed>`, `srcset` and CSS `@import` are not supported. Use
+  `addEventListener` and one static stylesheet.
+- `presentation.size` is one of `control`, `small`, `medium`, `large`, `standard` or `wide`.
+
+Package publication applies the same folder and document rules, so a package that breaks them
+cannot be published even if a local build happens to load it.
 
 Keep package identity and native runnable declarations in the main package manifest. UI metadata
 selects presentation; it does not grant native capabilities by itself.

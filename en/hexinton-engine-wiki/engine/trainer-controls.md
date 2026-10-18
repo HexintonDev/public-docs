@@ -157,8 +157,7 @@ Command that changes it:
     },
     "health.set": {
       "type": "command",
-      "action": "set-health",
-      "executionPolicy": "write"
+      "action": "set-health"
     }
   }
 }
@@ -202,11 +201,11 @@ update.
         "id": "health-panel",
         "kind": "web-inline",
         "label": "Health",
-        "entry": "frontend/health/index.html",
+        "entry": "frontend/health-panel/index.html",
         "presentation": { "mode": "panel", "size": "large" },
         "bindings": {
           "health": { "type": "viewModel", "viewModel": "health" },
-          "setHealth": { "type": "command", "action": "set-health", "executionPolicy": "write" }
+          "setHealth": { "type": "command", "action": "set-health" }
         }
       }
     ]

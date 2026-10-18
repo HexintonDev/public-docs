@@ -52,14 +52,13 @@ example linked above when creating a package:
         "id": "health-panel",
         "kind": "web-inline",
         "label": "Health",
-        "entry": "ui/health.html",
+        "entry": "frontend/health-panel/index.html",
         "presentation": { "mode": "panel", "size": "large" },
         "bindings": {
           "health": { "type": "viewModel", "viewModel": "health" },
           "setHealth": {
             "type": "command",
-            "action": "set-health",
-            "executionPolicy": "write"
+            "action": "set-health"
           }
         }
       }
@@ -68,7 +67,7 @@ example linked above when creating a package:
 }
 ```
 
-The `ui/health.html` file is the package-relative entry document for the surface. Its binding names
+The `frontend/health-panel/index.html` file is the package-relative entry document for the surface. Its binding names
 are capabilities supplied by the host: `health` is a current ViewModel projection and `setHealth`
 is a one-shot Command. The page does not call Lua functions directly.
 
