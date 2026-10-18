@@ -23,7 +23,7 @@ For a package with ID `example.world-map`, this fragment declares the two servic
       "id": "map-actions",
       "label": "Map actions",
       "kind": "web-inline",
-      "entry": "frontend/map.html",
+      "entry": "frontend/map-actions/index.html",
       "presentation": { "mode": "panel", "size": "standard" },
       "bindings": {
         "tracking.start": { "type": "command", "action": "start", "executionPolicy": "continuous" },

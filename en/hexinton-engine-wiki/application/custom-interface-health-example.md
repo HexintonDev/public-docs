@@ -32,7 +32,7 @@ update before treating the displayed health as the latest observed game value.
 example.health-surface/
   package.json
   lua/main.lua
-  ui/health.html
+  frontend/health-panel/index.html
 ```
 
 ## Complete Files
@@ -110,7 +110,7 @@ Create `example.health-surface/package.json`:
         "label": "Health",
         "description": "Observe and set the example health value.",
         "order": 10,
-        "entry": "ui/health.html",
+        "entry": "frontend/health-panel/index.html",
         "presentation": {
           "mode": "panel",
           "size": "large"
@@ -189,7 +189,7 @@ function watchHealth(parameters)
 end
 ```
 
-Create `example.health-surface/ui/health.html`:
+Create `example.health-surface/frontend/health-panel/index.html`:
 
 ```html
 <!doctype html>
