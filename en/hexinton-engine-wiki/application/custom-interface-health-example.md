@@ -122,8 +122,7 @@ Create `example.health-surface/package.json`:
           },
           "health.set": {
             "type": "command",
-            "action": "set-health",
-            "executionPolicy": "write"
+            "action": "set-health"
           }
         }
       }

@@ -249,8 +249,7 @@ A hosted surface binds to the declared ViewModel, not to Lua:
     },
     "health.set": {
       "type": "command",
-      "action": "set-health",
-      "executionPolicy": "write"
+      "action": "set-health"
     }
   }
 }

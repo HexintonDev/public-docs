@@ -58,8 +58,7 @@ example linked above when creating a package:
           "health": { "type": "viewModel", "viewModel": "health" },
           "setHealth": {
             "type": "command",
-            "action": "set-health",
-            "executionPolicy": "write"
+            "action": "set-health"
           }
         }
       }

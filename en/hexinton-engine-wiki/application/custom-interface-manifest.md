@@ -55,8 +55,6 @@ normally `frontend/<surface-id>/index.html`. Two surfaces never share a folder.
   `<base>`, `<iframe>`, `<object>`, `<embed>`, `srcset` and CSS `@import` are not supported. Use
   `addEventListener` and one static stylesheet.
 - `presentation.size` is one of `control`, `small`, `medium`, `large`, `standard` or `wide`.
-- `executionPolicy` on a command binding is `write`, `continuous` or `destructive`. Omit it on
-  queries and view models.
 
 Package publication applies the same folder and document rules, so a package that breaks them
 cannot be published even if a local build happens to load it.

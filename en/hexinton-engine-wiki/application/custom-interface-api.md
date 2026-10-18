@@ -91,8 +91,7 @@ Suppose the manifest contains this binding:
   "bindings": {
     "health.set": {
       "type": "command",
-      "action": "set-health",
-      "executionPolicy": "write"
+      "action": "set-health"
     }
   }
 }
