@@ -27,7 +27,9 @@ game, open their own windows, or manage sessions.
   player's change happens in an `action`. `disable` cleans up and must work even when the feature
   was never turned on.
 - A hosted toggle uses `write.enableAction` / `write.disableAction` (action IDs). A number widget
-  uses `write.action` plus `valueParameter`. See [trainer controls](trainer-controls.md).
+  uses `write.action` plus `valueParameter`. Lua actions receive one JSON parameter object, for
+  example `function addCurrency(params)` reads `params.amount`; they do not receive positional
+  amounts, addresses or scan strings. See [trainer controls](trainer-controls.md).
 - Lua action return values are discarded. An action fails only by raising `error(...)`.
 
 ## Choosing a runtime
@@ -35,14 +37,74 @@ game, open their own windows, or manage sessions.
 | Behavior | Usually fits |
 | --- | --- |
 | Fixed byte patch, AOB patch, code-cave hook | AA files, one per operation |
-| Hook whose "off" must not run before "on", or a hook plus a flag | AA text run from a short Lua file that checks the hook site's bytes |
+| Prepared hook with a flag initially zero; actions only write fixed flag values | AA prepare/on/off/cleanup files; prepare keeps the gameplay effect inactive |
+| Hook whose "off" needs resources created by "on", or an operation needing an explicit condition | Short Lua orchestration when the chosen AA lifecycle cannot express that behavior |
 | Pointer or value write, calculation, condition | Host Lua |
 | Repeating write or check, frozen value | Host Lua repeating timer |
 | Hook captures a pointer that a parameterized action uses | AA hook plus Lua action |
+| Call a game function: item spawner, warp, NPC spawn, event or menu | Lua action with `executeCode`/`executeCodeEx`; AA prepares any call stub |
 | Unreal reflection | `ue4ss` runtime, when its prerequisites are available |
 
 Pick the smallest fit. A five-byte patch is two tiny AA files and a toggle, not a Lua framework.
 See [runtime selection](../../start-here/getting-started/runtimes.md).
+
+Reuse a shared helper when several features need the same table lookup, item spawning or restoration
+logic. Implement the needed operations once and keep the feature actions small. Large item or
+destination lists are data: extract and preserve their IDs and names instead of rewriting them as
+code. Use ordinary controls for simple features; use a custom searchable interface when the task
+needs a catalogue, several related inputs or richer results.
+
+For a custom HTML interface, reuse the supplied `surface-sdk.js` module and the public `hm-*` UI
+kit. The installed author-reference folder contains `_code/surface-sdk.js`,
+`_code/surface-ui-kit.css` and an internal `_code/surface-sdk.manifest.json` with source hashes.
+Copy/import the module with ordinary file tools; do not rewrite MessagePort request routing,
+pending requests, errors or subscriptions. The host injects the UI kit. The same SDK is supplied to
+the conversion worker and the in-client authoring agent. Read the
+[custom interface quickstart](../application/custom-interface-quickstart.md#reuse-the-supplied-sdk).
+Keep the embedded document, main container and form background transparent; the host owns the page
+background. Use the kit's control sizing, colors, spacing, focus and selected-state classes, without
+an arbitrary page-wide card or custom theme. Top-align form fields and keep optional helper text
+below its control; see the [aligned form example](../application/custom-interface-quickstart.md#transparent-documents-and-aligned-fields).
+
+Player-facing labels, progress and errors describe the game operation in plain language. Use
+"Waiting to enable mods..." or "Item spawning is paused.", not "Waiting for the host" or
+"Surface paused". An inactive SDK alone does not establish that the game is absent; say
+"Waiting for the game" only when the authoritative game state says so. Show a useful task-level
+failure and preserve the player's draft; put API names, error codes and exception text in
+diagnostics or optional technical details. Follow the client's existing language conventions.
+Give cause-specific advice only when the actual error or authoritative state supports it. A missing
+byte pattern in an attached game does not mean the game is absent: show a task failure and optional
+technical details without telling the player to launch it or inventing another remedy.
+
+## Choosing an input control
+
+Setting a value and repeating a command are different interactions. An ordinary number/text
+control submits an edited value according to its normal commit behavior. For Add Money, Grant XP,
+Add Souls or a similar repeatable action, use **one row with a separate input and button**:
+
+```json
+{
+  "id": "add-currency", "kind": "number", "label": "Add currency", "valueType": "integer",
+  "constraints": { "minimum": 1, "maximum": 1000000, "step": 1 },
+  "presentation": { "submitMode": "explicit", "buttonLabel": "Add", "defaultValue": 500 },
+  "write": { "action": "add-currency", "valueParameter": "amount" }
+}
+```
+
+The input and button have separate boundaries and a gap; they still belong to one widget and action.
+In explicit mode, typing and blur do not execute anything. Clicking the button or pressing Enter
+sends the current value once. Repeating either with an unchanged value repeats the command. The
+action receives `{ "amount": 500 }`. Do not add a second amount-storage widget or make `enable`
+perform the command. Omitting `submitMode` preserves the existing control behavior.
+See the complete [input and button example](trainer-controls.md#input-with-an-explicit-button).
+
+Continuous movement that the source drives with held keys (fly mode with Fly Up / Fly Down, noclip,
+free camera, a held speed boost) is **one toggle** with script-owned
+[native hotkeys](native-hotkeys.md): declare them in `runtime.hotkeys` with mode `hold` and a
+default chord (for example `Space` up, `Control` down), list them in the toggle's `nativeHotkeys`,
+call `hotkeys.activate` in the "on" action and read `hotkeys.isDown` from a timer. Never make
+separate up/down action widgets for the player to bind. Ordinary features keep using UI hotkeys,
+which the player binds in the client. Native hotkeys need a desktop client with the `hotkeys` API.
 
 ## Auto Assembler rules
 
@@ -77,6 +139,9 @@ The engine handles `alloc(name[, size[, near]])`, `globalAlloc`, `dealloc(name)`
 `fullAccess` and `createThread`. Names are case-insensitive. Signatures and failure behavior are in
 the [Auto Assembler API](auto-assembler-api.md).
 
+`aobScanModule` accepts module names with spaces, either unquoted or enclosed in double quotes,
+for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`.
+
 Not part of HexMod AA: `define`, `readmem`, `assert`, `{$lua}`/`{$asm}` blocks, `{$try}`,
 `reassemble`, `loadlibrary`, `struct`, anonymous `@@` labels and `[ENABLE]`/`[DISABLE]` sections.
 Instead:
@@ -106,6 +171,14 @@ Instead:
   code, undeclared.
 - Allocation and symbol names persist between a package's operations, so "off" can refer to what
   "on" created. That is all the state most hooks need.
+  Independent hooks in one package need distinct persistent names (`healthCave`, `manaCave`); each
+  hook's on/off reuse its names. Local labels within one chunk and intentionally shared setup need no prefixes.
+- Bound labels, allocations and visible symbols work directly in memory operands: `mov dword ptr
+  [flag], 1`, `lea rax, [flag]` and `mov rax, qword ptr [flag]`. A declared data label in a later
+  chunk resolves before the earlier code chunk is written. Preserve these symbolic operands.
+  On x64, nearby data can use RIP-relative addressing; for an address too far for that instruction,
+  use `mov rax, distantData` followed by `mov dword ptr [rax], 1`. See the
+  [cross-chunk data example](auto-assembler-api.md#instruction-and-data-syntax).
 - A bound label stays resolvable after `unregisterSymbol` and `dealloc`, so `getAddressSafe(name)`
   cannot tell whether a hook is installed. Read the hook site's bytes instead, as the hook example
   below does.
@@ -124,29 +197,85 @@ symbols. `dealloc` alone does not restore the hook site.
   unreadable. `getAddressSafe` returns `nil` instead.
 - `createTimer(false)` makes a disabled repeating timer: set `Interval` and `OnTimer`, then
   `Enabled = true`. Destroy timers in the "off" action and in `disable`.
+- `executeCode(address, parameter?, timeout?)` and `executeCodeEx(callmethod, timeout, address, ...)`
+  call a game function on a new thread and wait for it. They return the integer result, or
+  `nil, message` on failure or timeout; check it and raise. Pass a bounded timeout. `allocateMemory`
+  buffers are caller-owned: release them with `deAlloc` in `disable`. See
+  [game calls](lua-game-calls-and-worker-api.md) and
+  [converting CE game-call scripts](converting-ce-game-calls.md).
+- `synchronize(fn, ...)` calls `fn` directly and `queue(fn, ...)` runs it on a later worker turn.
+  There is no `createNativeThread`: run the body in the action, use `createTimer(ms, fn)` for a
+  one-shot delay, or a repeating timer for a loop.
 - The host Lua API is the registered set in the [Lua API reference](lua-api-reference.md). There are
   no UI forms, address lists, file-version or module-enumeration functions. Do not assume a function
   exists because another tool has one.
 
 ## Game versions
 
-Packages are not version-gated. Record the game build a package was written or tested for in its
-`docs/` notes. Do not refuse an operation because the running build cannot be identified, and do not
+Packages are not version-gated unless the user requests a gate. Record game-build and verification
+information in research or publication records outside the generated runtime package. Do not refuse
+an operation because the running build cannot be identified, and do not
 add a version reader. A package may still check something it directly depends on, such as the
 original bytes at a patch site before writing. A wrong address shows up as a failed scan, a failed
 action or no effect, and is fixed by updating the package.
 
 ## Testing
 
+Create a minimal manifest and smoke-test declaration early when delegating runtime work. Give a
+runtime helper the agreed runnable IDs and actual parameter object, and let it use the supplied
+engine tests. Another Lua/WASM interpreter with mocked host functions cannot establish HexMod
+compatibility. Test a small assembly or game-call case on the real engine before investigating its
+internals. When runtime and interface files have separate owners, build them in parallel and run
+the combined check after both are ready.
+When delegating a hook smoke test, give the helper the complete [verified test example](#example-hook-with-inline-data),
+including byte reads and relative-jump/data-operand calculations, not only the runtime assembly.
+Adapt its actual instruction layout rather than guessing offsets.
+
+For a custom interface, one focused UI smoke check should run the authored HTML/entry module with
+the supplied SDK: edit/select an input, submit it, and check readiness, suspension and failure
+handling. Testing an argument helper and the SDK separately does not exercise the interface's own
+event handlers. Pair this with a `surfaceCommand` integration step through the declared alias and
+actual JSON arguments; see [custom-interface testing](testing.md#custom-surface-command-steps).
+
 Static validation checks the manifest, bindings and Lua syntax; it does not assemble AA. One
 integration case is usually enough: run the production "on" operation against the controlled test
 target, check the bytes or value it wrote, run "off" and check the original state is back. Add unit
 cases only for real logic. See [testing](testing.md) and [test helpers](package-test-helpers.md).
+Reuse passing receipts while the tested source files, manifest, tests and engine are unchanged;
+rerun after relevant edits or a new concern about the result.
 
-To land a module-relative address in the test target, register the module name as a symbol in the
-test before assembling. Never change the package's real offsets to fit the test target. A passing
-test proves the operation assembles and writes what it should; it does not prove the address matches
-a given game build.
+Declare named game memory with `fixture.modules`. The test target loads real modules, so setup
+seeds `ctx.fixture.modules[index].base + sourceOffset` for module-relative addresses. Keep the
+package's original offsets and pointer traversal. Use host `toggle` steps for the declared control
+and host `action` steps for input/button controls; both use the app's actual bindings and parameter
+object. Repeat an explicit input action with the same value to prove it remains repeatable. Use
+`cleanup` for lifecycle disable.
+Match the source's bitness: `fixture.architecture` accepts `"x86"` or `"x64"` (default). An available
+x86 fixture is a real 32-bit process with matching modules. A byte check in an x64 fixture does not
+prove x86 execution. If the installed test build lacks that target, report the test limitation;
+it does not establish that the production engine cannot implement the feature.
+Compute fixture sizes with the shell, and cover the source offset plus the accessed byte width.
+For example, PowerShell `0x19B8900 / 1MB` is about 25.72 MiB; a 32 MiB module
+(`size: 33554432`) can cover an eight-byte pointer at that offset. Keep that root at
+`module.base + 0x19B8900`, and seed intermediate pointer cells at nonoverlapping positions relative
+to `module.dataAddress`, allowing for each hop and field width. Never replace a production offset
+with a smaller test address. If a reported allocation limit really prevents the source address,
+record the test limitation instead of changing what the package patches.
+
+Lua steps seed or inspect memory. A passing test proves the actual actions assemble and write what
+they should; it does not prove the addresses match a given game build.
+
+## Generated code and reference use
+
+Keep comments technical: explain field widths, pointer layouts, patch behavior or cleanup. Keep
+credits, source headers, table entry IDs, license notices and provenance in separate research or
+publication records, not in newly generated runtime files or package documentation. Preserve the
+original acquired resources separately.
+
+Read the exact installed API contract and use its examples. Do not invent a host function because
+another tool provides one. If a requested feature needs an unavailable capability, explain the
+specific missing operation instead of inserting an unconditional error into a supposed working
+action. A smoke test establishes only the behavior it actually exercised.
 
 ## Verified examples
 
@@ -207,31 +336,40 @@ Game.exe+0x4948ae:
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  local site = ctx.fixture.baseAddress + 192
-  local function run(path)
-    local file = assert(io.open(ctx.packageRoot .. path, "rb"))
-    local text = file:read("*a"); file:close()
-    local ok, message = autoAssemble(text); assert(ok, message)
-  end
-  h.withMemory({ { address = site, size = 5 } }, function()
-    registerSymbol("Game.exe", site - 0x4948ae) -- test-only address substitution
-    run("/aa/on.aa")
-    for _, byte in ipairs(readBytes(site, 5, true)) do h.equal(byte, 0x90) end
-    run("/aa/off.aa")
-    h.equal(readBytes(site, 1), 0xE8)
-    h.equal(site + 5 + readInteger(site + 1, true), getAddress("Game.exe+0x4801e0"))
-  end)
+local ORIGINAL = {0xE8, 0x2D, 0xB9, 0xFE, 0xFF}
+local function site(ctx) return ctx.fixture.modules[1].base + 0x4948AE end
+local function check(ctx, expected)
+  local actual = readBytes(site(ctx), 5, true)
+  for index, byte in ipairs(expected) do assert(actual[index] == byte) end
 end
+return {
+  setup = function(ctx) writeBytes(site(ctx), ORIGINAL) end,
+  on = function(ctx) check(ctx, {0x90, 0x90, 0x90, 0x90, 0x90}) end,
+  off = function(ctx)
+    check(ctx, ORIGINAL)
+    assert(site(ctx) + 5 + readInteger(site(ctx) + 1, true)
+      == ctx.fixture.modules[1].base + 0x4801E0)
+  end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 5242880}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "toggle", "widgetId": "example.fixed-patch/fixed-patch", "enabled": true},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
 ```
 {% endcode %}
 
@@ -313,32 +451,46 @@ function disable() turnOff() end
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  dofile(ctx.packageRoot .. "/lua/main.lua")
-  local site = ctx.fixture.baseAddress + 200
-  local original = { 0x0F, 0x28, 0xB1, 0x70, 0x01, 0x00, 0x00 }
-  h.withMemory({ { address = site, size = 7 } }, function()
-    registerSymbol("Game.exe", site - 0x9C83CA) -- test-only address substitution
-    writeBytes(site, original)
-    turnOff() -- safe before "on"
-    for _ = 1, 2 do
-      turnOn()
-      turnOn() -- already on: no second hook
-      h.equal(readBytes(site, 1), 0xE9)
-      turnOff()
-      for index, byte in ipairs(readBytes(site, 7, true)) do h.equal(byte, original[index]) end
-    end
-  end)
-end
+local ORIGINAL = {0x0F, 0x28, 0xB1, 0x70, 0x01, 0x00, 0x00}
+local function site(ctx) return ctx.fixture.modules[1].base + 0x9C83CA end
+return {
+  setup = function(ctx) writeBytes(site(ctx), ORIGINAL) end,
+  on = function(ctx)
+    local hook = site(ctx)
+    assert(readBytes(hook, 1) == 0xE9)
+    local cave = hook + 5 + readInteger(hook + 1, true)
+    local bytes = readBytes(cave, 2, true)
+    assert(bytes[1] == 0x0F and bytes[2] == 0x10, "movups in cave")
+    local vector = cave + 7 + readInteger(cave + 3, true)
+    assert(readFloat(vector) == 0 and readFloat(vector + 4) == -2000)
+    assert(readFloat(vector + 8) == 0 and readFloat(vector + 12) == 1)
+  end,
+  off = function(ctx)
+    local actual = readBytes(site(ctx), 7, true)
+    for index, byte in ipairs(ORIGINAL) do assert(actual[index] == byte) end
+  end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 16777216}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": false},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "toggle", "widgetId": "example.hook-inline-data/hook", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
 ```
 {% endcode %}
 
@@ -370,6 +522,7 @@ pointer in the chain is unreadable, which fails the action as it should.
 ```
 {% endcode %}
 
+
 {% code title="lua/main.lua" %}
 ```lua
 local TARGET = "[[Game.exe+0x4768E78]+0x20]+0x4"
@@ -383,26 +536,278 @@ function disable() end
 
 {% code title="tests/integration.lua" %}
 ```lua
-return function(ctx)
-  local h = dofile(ctx.helpers.luaFile)
-  dofile(ctx.packageRoot .. "/lua/main.lua")
-  -- The test target holds a pointer to the player at signature+16 and to stats at player+0x20.
-  registerSymbol("Game.exe", ctx.fixture.signatureAddress + 16 - 0x4768E78) -- test-only substitution
-  local value = ctx.fixture.statsAddress + 4
-  h.withMemory({ { address = value, size = 4 } }, function()
-    turnOn()
-    h.equal(readInteger(value), 999)
-    turnOff()
-    h.equal(readInteger(value), 100)
-  end)
-end
+return {
+  setup = function(ctx)
+    writeQword(ctx.fixture.modules[1].base + 0x4768E78, ctx.fixture.playerAddress)
+    writeQword(ctx.fixture.playerAddress + 0x20, ctx.fixture.statsAddress)
+    writeInteger(ctx.fixture.statsAddress + 4, 100)
+  end,
+  on = function(ctx) assert(readInteger(ctx.fixture.statsAddress + 4) == 999) end,
+  off = function(ctx) assert(readInteger(ctx.fixture.statsAddress + 4) == 100) end,
+}
 ```
 {% endcode %}
 
 {% code title="tests/studio.tests.json" %}
 ```json
-{ "schemaVersion": 1, "cases": [
-  { "id": "on-off", "kind": "integration", "runtime": "lua", "entryFile": "tests/integration.lua", "timeoutMs": 15000 }
-] }
+{ "schemaVersion": 1, "cases": [{
+  "id": "on-off", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 83886080}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "toggle", "widgetId": "example.pointer-write/pointer", "enabled": true},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "on"},
+    {"kind": "toggle", "widgetId": "example.pointer-write/pointer", "enabled": false},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"},
+    {"kind": "cleanup"},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "off"}
+  ]
+}] }
+```
+{% endcode %}
+
+### Example: game call with separate code and data
+
+This small package demonstrates the part used by an item spawner: prepare one code allocation and
+one data allocation, pass an input to a target function, and repeat the same command. It is an
+illustrative call convention, not a signature for a real game. The test seeds an executable target
+function and invokes the unchanged package through its actual input/button binding.
+
+For data in another allocation, loading its address into a register and using `[register+offset]`
+is a straightforward x64 form. The test waits for the target thread to finish before cleanup.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.game-call", "version": "1.0.0", "displayName": "Game call",
+  "runtime": {
+    "files": [{"path": "lua/main.lua", "runtime": "lua"}],
+    "runnables": [
+      {"id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable"},
+      {"id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable"},
+      {"id": "grant", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "grant"}
+    ]
+  },
+  "frontend": {"hosted": {"schemaVersion": 1, "groups": [{
+    "id": "resources", "label": "Resources", "widgets": [{
+      "id": "grant", "kind": "number", "label": "Grant", "valueType": "integer",
+      "constraints": {"minimum": 1, "maximum": 1000000, "step": 1},
+      "presentation": {"submitMode": "explicit", "buttonLabel": "Give", "defaultValue": 500},
+      "write": {"action": "grant", "valueParameter": "amount"}
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+local PREPARE = [[
+aobScanModule(grantCall, "Game.exe", 01 11 49 B8 ?? ?? ?? ?? ?? ?? ?? ??)
+alloc(grantCode, 0x1000, grantCall)
+alloc(grantData, 0x1000, grantCall)
+registerSymbol(grantCode)
+registerSymbol(grantData)
+grantData:
+  .dd 0, 0, 0
+grantCode:
+  sub rsp, 0x28
+  mov rcx, grantData
+  mov edx, [rcx+4]
+  mov rax, grantCall
+  call rax
+  mov rcx, grantData
+  add dword ptr [rcx+8], 1
+  add rsp, 0x28
+  ret
+]]
+
+local function assemble(text)
+  local ok, message = autoAssemble(text)
+  if not ok then error(message) end
+end
+
+function enable() assemble(PREPARE) end
+function grant(params)
+  writeInteger(getAddress("grantData") + 4, params.amount)
+  assemble("createThread(grantCode)")
+end
+function disable()
+  assemble("unregisterSymbol(grantData)\nunregisterSymbol(grantCode)\ndealloc(grantData)\ndealloc(grantCode)")
+end
+```
+{% endcode %}
+
+{% code title="tests/integration.lua" %}
+```lua
+local function waitForCall(ctx, count, expected)
+  for attempt = 1, 100 do
+    local data = readQword(ctx.fixture.statsAddress + 8)
+    if data ~= 0 and readInteger(data + 8) == count then
+      assert(readInteger(data) == expected, "target function received the requested amount")
+      return
+    end
+    sleep(10)
+  end
+  error("target function did not complete")
+end
+
+return {
+  setup = function(ctx)
+    local target = ctx.fixture.modules[1].dataAddress
+    fullAccess(target, 0x1000)
+    writeQword(ctx.fixture.statsAddress + 8, 0)
+    -- Observe the real call's data pointer without reaching into another package's symbols.
+    local code = string.format([[
+0x%X:
+  add dword ptr [rcx], edx
+  mov r8, 0x%X
+  mov qword ptr [r8+8], rcx
+  xor eax, eax
+  ret
+]], target, ctx.fixture.statsAddress)
+    local ok, message = autoAssemble(code)
+    assert(ok, message)
+  end,
+  first = function(ctx) waitForCall(ctx, 1, 500) end,
+  second = function(ctx) waitForCall(ctx, 2, 1000) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{"schemaVersion": 1, "cases": [{
+  "id": "repeated-call", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 65536}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first"},
+    {"kind": "action", "widgetId": "example.game-call/grant", "value": 500},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second"},
+    {"kind": "cleanup"}
+  ]
+}]}
+```
+{% endcode %}
+
+### Example: game call with executeCode
+
+This package shows the shape of a converted CE item spawner: find the game's give-item function,
+fill a caller-owned request buffer and call the function with `executeCode`. The call is
+synchronous, so the action has finished the game call when it returns. On timeout the buffer is
+abandoned rather than freed, because the call may still read it. The test seeds a stand-in function
+that records the request, then runs the unchanged action twice through its input/button binding.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.item-call", "version": "1.0.0", "displayName": "Item call",
+  "runtime": {
+    "files": [{"path": "lua/main.lua", "runtime": "lua"}],
+    "runnables": [
+      {"id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable"},
+      {"id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable"},
+      {"id": "give", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "give"}
+    ]
+  },
+  "frontend": {"hosted": {"schemaVersion": 1, "groups": [{
+    "id": "items", "label": "Items", "widgets": [{
+      "id": "give", "kind": "number", "label": "Item ID", "valueType": "integer",
+      "constraints": {"minimum": 1, "maximum": 999999, "step": 1},
+      "presentation": {"submitMode": "explicit", "buttonLabel": "Give", "defaultValue": 7},
+      "write": {"action": "give", "valueParameter": "itemId"}
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+-- The game's give-item function takes one pointer to {int32 itemId, int32 quantity}.
+local giveItem
+local request
+
+local function prepare()
+  giveItem = giveItem or AOBScanModuleUnique("Game.exe", "8B 01 03 41 04 49 BB")
+  if not giveItem then error("give-item function not found") end
+  if not request then
+    local address, message = allocateMemory(0x1000)
+    if not address then error(message) end
+    request = address
+  end
+end
+
+function enable() prepare() end
+
+function give(params)
+  prepare()
+  writeInteger(request, params.itemId)
+  writeInteger(request + 4, 1)
+  -- A bounded timeout keeps the Lua worker responsive if the game function never returns.
+  local result, message = executeCode(giveItem, request, 1000)
+  if result == nil then
+    -- A timed-out call may still read the request, so abandon that buffer instead of freeing it.
+    if message == "Execution timeout" then request = nil end
+    error(message or "give-item call failed")
+  end
+end
+
+function disable()
+  if request then deAlloc(request) end
+  request = nil
+  giveItem = nil
+end
+```
+{% endcode %}
+
+{% code title="tests/integration.lua" %}
+```lua
+local function expectCall(ctx, count, itemId)
+  local stats = ctx.fixture.statsAddress
+  assert(readInteger(stats + 12) == count, "give-item function ran once per action")
+  assert(readInteger(stats + 8) == itemId + 1, "give-item function read the request struct")
+end
+
+return {
+  setup = function(ctx)
+    local target = ctx.fixture.modules[1].dataAddress
+    fullAccess(target, 0x1000)
+    writeQword(ctx.fixture.statsAddress + 8, 0)
+    -- A stand-in give-item function: returns itemId + quantity and records the call.
+    local code = string.format([[
+0x%X:
+  mov eax, [rcx]
+  add eax, [rcx+4]
+  mov r11, 0x%X
+  mov [r11+8], eax
+  inc dword ptr [r11+12]
+  ret
+]], target, ctx.fixture.statsAddress)
+    local ok, message = autoAssemble(code)
+    assert(ok, message)
+  end,
+  first = function(ctx) expectCall(ctx, 1, 7) end,
+  second = function(ctx) expectCall(ctx, 2, 7) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{"schemaVersion": 1, "cases": [{
+  "id": "repeated-call", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": {"modules": [{"name": "Game.exe", "size": 65536}]},
+  "steps": [
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup"},
+    {"kind": "action", "widgetId": "example.item-call/give", "value": 7},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first"},
+    {"kind": "action", "widgetId": "example.item-call/give", "value": 7},
+    {"kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second"},
+    {"kind": "cleanup"}
+  ]
+}]}
 ```
 {% endcode %}

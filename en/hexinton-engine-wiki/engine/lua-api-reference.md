@@ -127,6 +127,19 @@ attached, valid process session.
 
 Use `??` for a wildcard byte in an AOB pattern. Check scan results before reading or writing them.
 
+## Game Calls and Allocation
+
+| Function | Purpose |
+| --- | --- |
+| [`executeCode(address, parameter?, timeout?)`](lua-game-calls-and-worker-api.md#executecode) | Call a game function with one argument; `nil, message` on failure or timeout |
+| [`executeCodeEx(callmethod, timeout, address, ...)`](lua-game-calls-and-worker-api.md#executecodeex) | Call with integer, float and string arguments |
+| [`allocateMemory(size, base?, protection?)`](lua-game-calls-and-worker-api.md#allocatememory) | Allocate caller-owned target memory |
+| [`deAlloc(address, size?)`](lua-game-calls-and-worker-api.md#dealloc) | Release an allocation |
+| [`readByte(address)`](lua-game-calls-and-worker-api.md#readbyte-and-writebyte) | Read one byte |
+| [`writeByte(address, value)`](lua-game-calls-and-worker-api.md#readbyte-and-writebyte) | Write one byte |
+
+For CE item spawners, warps and event calls, see [converting CE game-call scripts](converting-ce-game-calls.md).
+
 ## Runtime Utilities
 
 | Function | Purpose |
@@ -135,6 +148,11 @@ Use `??` for a wildcard byte in an AOB pattern. Check scan results before readin
 | [`sleep(milliseconds)`](lua-runtime-utilities-api.md#sleep) | Pause the current script |
 | [`process`](lua-runtime-utilities-api.md#process) | Attached process main module name |
 | [`publishEvent(event, value)`](lua-runtime-utilities-api.md#publishevent) | Publish service state to a declared feed |
+| [`synchronize(fn, ...)`](lua-game-calls-and-worker-api.md#synchronize) | Call `fn` now on the Lua worker and return its results |
+| [`queue(fn, ...)`](lua-game-calls-and-worker-api.md#queue) | Run `fn` on a later Lua worker turn |
+| [`isKeyPressed(vkey)`](lua-game-calls-and-worker-api.md#iskeypressed) | Current global key state; prefer native hotkeys for player input |
+
+Package environments also have a [`hotkeys`](native-hotkeys.md#lua-api) table (`activate`, `deactivate`, `isDown`, `isActive`) for keys declared in `runtime.hotkeys`.
 
 Timer callbacks are serialized with script execution. Timers and published service state belong to
 the package and must stop or become inactive during `disable`.

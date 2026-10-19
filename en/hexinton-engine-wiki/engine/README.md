@@ -34,6 +34,8 @@ Read the pages in this order:
 | Install a patch or hook                        | [Hooks and Auto Assembler](hooks-and-auto-assembler.md)  |
 | Understand labels, symbols, and package visibility | [Visibility and Namespaces](visibility-and-namespaces.md) |
 | Configure trainer controls and custom surfaces | [Trainer controls and UI bindings](trainer-controls.md)  |
+| Read held keys for fly, noclip or other continuous movement | [Native hotkeys](native-hotkeys.md) |
+| Call a game function: item spawner, warp, NPC spawn, event | [Converting CE game-call scripts](converting-ce-game-calls.md) |
 | Find an API function                           | [Lua API reference](lua-api-reference.md)                |
 | Use Auto Assembler directives                  | [Auto Assembler API](auto-assembler-api.md)              |
 | Publish live values to a UI                    | [Lua scripting](lua-scripting.md)                        |
@@ -53,11 +55,14 @@ Read the pages in this order:
 * [Lua memory API](lua-memory-api.md)
 * [Lua scanning and assembly API](lua-scanning-and-assembly-api.md)
 * [Lua runtime utilities API](lua-runtime-utilities-api.md)
+* [Lua game calls, allocation and worker helpers API](lua-game-calls-and-worker-api.md)
+* [Converting CE game-call scripts](converting-ce-game-calls.md)
 * [Auto Assembler API](auto-assembler-api.md)
 * [View Models and State Feeds](view-models-and-feeds.md)
 * [Live map reader packages](game-map-readers.md)
 * [Application integration](../application/README.md)
 * [Trainer controls and UI bindings](trainer-controls.md)
+* [Native hotkeys for continuous input](native-hotkeys.md)
 * [Testing and failure handling](testing.md)
 
 ## Sample Library

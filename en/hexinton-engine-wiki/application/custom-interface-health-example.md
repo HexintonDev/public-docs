@@ -33,6 +33,7 @@ example.health-surface/
   package.json
   lua/main.lua
   frontend/health-panel/index.html
+  frontend/health-panel/surface-sdk.js
 ```
 
 ## Complete Files
@@ -188,6 +189,11 @@ function watchHealth(parameters)
 end
 ```
 
+Copy the supplied `docs/_code/surface-sdk.js` from the installed author-reference bundle to
+`example.health-surface/frontend/health-panel/surface-sdk.js`. Keep its build manifest outside this package. The host
+injects the public `hm-*` UI kit; the page adds only its small layout rules. The SDK owns port
+requests, responses, errors and subscriptions.
+
 Create `example.health-surface/frontend/health-panel/index.html`:
 
 ```html
@@ -196,176 +202,110 @@ Create `example.health-surface/frontend/health-panel/index.html`:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Health</title>
   <style>
-    :root { color-scheme: dark; font: 14px "Segoe UI", sans-serif; color: #f5f5f4; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 16px; background: transparent; }
-    main { display: grid; gap: 12px; max-width: 360px; padding: 16px; border: 1px solid rgba(255,255,255,.16); border-radius: 8px; background: rgba(28,29,31,.86); }
-    h1 { margin: 0; font-size: 17px; }
-    .value { font-size: 30px; font-weight: 700; }
-    .muted { min-height: 20px; color: #b8b6b2; }
-    .row { display: flex; gap: 8px; align-items: center; }
-    input, button { min-height: 36px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; color: inherit; font: inherit; }
-    input { width: 100px; padding: 0 10px; background: rgba(255,255,255,.08); }
-    button { padding: 0 14px; background: #e7833c; color: #21130a; font-weight: 700; cursor: pointer; }
-    button:disabled { cursor: not-allowed; opacity: .45; }
-    :focus-visible { outline: 2px solid #ffb27b; outline-offset: 2px; }
+    body { margin: 0; padding: var(--hm-space-4); }
+    main { max-width: 360px; }
+    #health { width: 100px; }
   </style>
 </head>
-<body>
-  <main>
-    <h1>Health</h1>
-    <div id="value" class="value" aria-live="polite">-- / --</div>
-    <div id="status" class="muted" role="status" aria-live="polite">Waiting for the host...</div>
-    <div class="row">
+<body class="hm-surface">
+  <main class="hm-stack">
+    <h1 class="hm-heading">Health</h1>
+    <div id="value" class="hm-heading" aria-live="polite">-- / --</div>
+    <div id="status" class="hm-status" role="status" aria-live="polite">Waiting to enable health controls...</div>
+    <div class="hm-cluster">
       <label for="health">Set health</label>
-      <input id="health" type="number" min="0" max="100" value="50">
-      <button id="apply" type="button" disabled>Apply</button>
+      <input id="health" class="hm-input" type="number" min="0" max="100" value="50">
+      <button id="apply" class="hm-button hm-button-secondary" type="button" disabled>Apply</button>
     </div>
   </main>
-  <script>
-    (() => {
-      const valueElement = document.getElementById("value");
-      const statusElement = document.getElementById("status");
-      const input = document.getElementById("health");
-      const apply = document.getElementById("apply");
-      let port;
-      let lifecycle = "suspended";
-      let committedHealth = null;
-      let committedMaximum = null;
-      let acceptedRevision = 0;
-      let subscriptionId = null;
-      let requestSequence = 0;
-      const pending = new Map();
+  <script type="module">
+    import { SurfaceSdkClient, isSurfaceBootstrapMessageV1 } from "./surface-sdk.js";
 
-      function post(type, payload, requestId) {
-        port.postMessage({ protocolVersion: 1, type, payload, requestId });
+    const valueElement = document.getElementById("value");
+    const statusElement = document.getElementById("status");
+    const input = document.getElementById("health");
+    const apply = document.getElementById("apply");
+    let sdk;
+    let lifecycle = "suspended";
+    let observedHealth = null;
+    let acceptedRevision = 0;
+    let unsubscribeHealth;
+    let stopLifecycle;
+    let busy = false;
+
+    function isDirty() {
+      return observedHealth !== null && Number(input.value) !== observedHealth;
+    }
+
+    function render() {
+      const number = Number(input.value);
+      const valid = input.value.trim() !== "" && Number.isInteger(number) && number >= 0 && number <= 100;
+      apply.disabled = lifecycle !== "active" || observedHealth === null || busy || !valid;
+    }
+
+    function observeHealth(next, revision) {
+      if (revision <= acceptedRevision) return;
+      if (!next || !Number.isInteger(next.health) || !Number.isInteger(next.maxHealth)) {
+        statusElement.textContent = "Health could not be read.";
+        return;
       }
+      // Live observations must not overwrite an amount the player is still editing.
+      const hadLocalDraft = isDirty();
+      acceptedRevision = revision;
+      observedHealth = next.health;
+      if (!hadLocalDraft) input.value = String(observedHealth);
+      valueElement.textContent = observedHealth + " / " + next.maxHealth;
+      statusElement.textContent = "Health updated.";
+      render();
+    }
 
-      function isDirty() {
-        return committedHealth !== null && Number(input.value) !== committedHealth;
-      }
-
-      function render() {
-        const ready = lifecycle === "active";
-        apply.disabled = !ready || committedHealth === null || pending.size > 0 || !isValidInput();
-      }
-
-      function isValidInput() {
-        const number = Number(input.value);
-        return Number.isInteger(number) && number >= 0 && number <= 100;
-      }
-
-      function subscribeHealth() {
-        if (subscriptionId !== null || lifecycle !== "active") {
-          return;
+    window.addEventListener("message", event => {
+      if (sdk || !isSurfaceBootstrapMessageV1(event.data) || !event.ports[0]) return;
+      sdk = new SurfaceSdkClient(event.ports[0], event.data.payload);
+      stopLifecycle = sdk.lifecycle.onStateChange(state => {
+        lifecycle = state;
+        if (state === "active" && !unsubscribeHealth) {
+          acceptedRevision = 0;
+          statusElement.textContent = "Reading health...";
+          unsubscribeHealth = sdk.viewModels.subscribe("health.current", observeHealth);
+        } else if (state !== "active") {
+          unsubscribeHealth?.();
+          unsubscribeHealth = undefined;
+          statusElement.textContent = state === "disposed" ? "Health view closed." : "Health view paused.";
         }
-        acceptedRevision = 0;
-        subscriptionId = "health-view-" + (++requestSequence);
-        post("feed.subscribe", { binding: "health.current" }, subscriptionId);
-      }
-
-      function unsubscribeHealth() {
-        if (subscriptionId === null) {
-          return;
-        }
-        post("feed.unsubscribe", {}, subscriptionId);
-        subscriptionId = null;
-      }
-
-      function showError(error) {
-        statusElement.textContent = "Request failed: " + (error.code || "unexpected_failure");
-      }
-
-      window.addEventListener("message", (event) => {
-        const bootstrap = event.data;
-        const receivedPort = event.ports && event.ports[0];
-        if (!receivedPort || !bootstrap || bootstrap.type !== "hexmod.surface.bootstrap" ||
-            !bootstrap.payload || bootstrap.payload.protocolVersion !== 1) {
-          return;
-        }
-
-        port = receivedPort;
-        port.addEventListener("message", (portEvent) => {
-          const message = portEvent.data;
-          if (!message || message.protocolVersion !== 1) {
-            return;
-          }
-
-          if (message.type === "lifecycle.changed") {
-            lifecycle = message.payload.state;
-            if (lifecycle === "active") {
-              statusElement.textContent = "Connected. Waiting for health state...";
-              subscribeHealth();
-            } else {
-              unsubscribeHealth();
-              statusElement.textContent = lifecycle === "disposed" ? "Surface closed." : "Surface paused.";
-            }
-            render();
-            return;
-          }
-
-          if (message.type === "request.succeeded" && message.requestId) {
-            pending.delete(message.requestId);
-            statusElement.textContent = "Command completed. Waiting for health state...";
-            render();
-            return;
-          }
-
-          if (message.type === "request.failed" && message.requestId) {
-            pending.delete(message.requestId);
-            showError(message.payload.error);
-            render();
-            return;
-          }
-
-          if (message.type === "feed.updated" && message.requestId === subscriptionId) {
-            if (message.payload.revision <= acceptedRevision) {
-              return;
-            }
-            const next = message.payload.value;
-            if (!next || !Number.isInteger(next.health) || !Number.isInteger(next.maxHealth)) {
-              statusElement.textContent = "Health state is invalid.";
-              render();
-              return;
-            }
-            const hadLocalDraft = isDirty();
-            acceptedRevision = message.payload.revision;
-            committedHealth = next.health;
-            committedMaximum = next.maxHealth;
-            if (!hadLocalDraft) {
-              input.value = String(committedHealth);
-            }
-            valueElement.textContent = committedHealth + " / " + committedMaximum;
-            statusElement.textContent = "Observed revision " + acceptedRevision + ".";
-            render();
-          }
-        });
-        port.start();
-        post("surface.ready", {});
-      }, { once: true });
-
-      input.addEventListener("input", () => {
-        post("lifecycle.setDirty", { isDirty: isDirty() });
         render();
       });
+      sdk.lifecycle.ready();
+    });
 
-      apply.addEventListener("click", () => {
-        if (apply.disabled) {
-          return;
-        }
-        const requestId = "health-command-" + (++requestSequence);
-        pending.set(requestId, true);
-        statusElement.textContent = "Command submitted...";
-        post("command.execute", {
-          binding: "health.set",
-          arguments: { health: Number(input.value) }
-        }, requestId);
+    input.addEventListener("input", () => {
+      sdk?.lifecycle.setDirty(isDirty());
+      render();
+    });
+
+    apply.addEventListener("click", async () => {
+      if (apply.disabled) return;
+      busy = true;
+      statusElement.textContent = "Updating health...";
+      render();
+      try {
+        await sdk.commands.execute("health.set", { health: Number(input.value) });
+        statusElement.textContent = "Health updated. Waiting for the latest value...";
+      } catch {
+        statusElement.textContent = "Health could not be updated. Try again.";
+      } finally {
+        busy = false;
         render();
-      });
-    })();
+      }
+    });
+
+    window.addEventListener("pagehide", () => {
+      unsubscribeHealth?.();
+      stopLifecycle?.();
+      sdk?.dispose();
+    }, { once: true });
   </script>
 </body>
 </html>
@@ -373,7 +313,7 @@ Create `example.health-surface/frontend/health-panel/index.html`:
 
 ## Run It
 
-1. Create the three files at the paths shown above.
+1. Create the three source files and copy `surface-sdk.js` at the paths shown above.
 2. Open the package in Studio and wait for it to save.
 3. Apply the package changes, start the target session, and wait for the trainer to connect.
 4. Open the `Health` surface.
