@@ -15,7 +15,7 @@ explain the same package section by section.
 The client and worker author-reference bundles provide these files under `docs/_code/`:
 
 - `surface-sdk.js`: the existing host-tested `SurfaceSdkClient` bundled as a browser ES module.
-- `surface-ui-kit.css`: the existing public `hm-*` design classes, also injected by the host.
+- `surface-ui-kit.css`: the public `hm-*` design classes for standalone previews; the host injects them.
 - `surface-sdk.manifest.json`: internal build/source hashes; keep this metadata outside your package.
 
 Copy `surface-sdk.js` into the package's UI directory using ordinary file tools, then import its
@@ -43,50 +43,67 @@ the host reports `active`. The alias `setHealth` is the declared surface binding
 not call a Lua symbol. Handle command failure in the UI and keep the entered value for another try.
 Use `sdk.queries.execute` for queries and `sdk.viewModels.subscribe` for live values.
 
-Use `hm-surface`, `hm-input`, `hm-button`, `hm-cluster`, `hm-list-row` and the other provided classes
-for the layout. The stylesheet is available for standalone previews; installed surfaces receive it
-from the host. A copied custom CSP that blocks package-relative modules will also block this SDK;
-use the host-owned asset policy rather than copying an older inline-only CSP example.
+A copied custom CSP that blocks package-relative modules will also block this SDK; use the
+host-owned asset policy rather than copying an older inline-only CSP example.
 
 ## Transparent documents and aligned fields
 
-The host supplies the page background. Keep the document, main container and form transparent;
-`hm-surface` already does this. Use `hm-stack` for the page rather than wrapping everything in
-`hm-card`. A card is for a purposeful subsection, not an extra page background.
+The host injects the `hm-*` UI kit into every surface page, before the page's own CSS. Do not copy or
+link `surface-ui-kit.css` in a package; the `docs/_code` copy is only for standalone previews. A
+copied file is loaded after the host kit and can pin an older version of its rules.
 
-Use the kit's input, select, button, label and description classes for their colors, size and focus
-states. Inherit the placement's control sizing and use its spacing tokens; keep custom CSS to the
-layout the task needs. This layout-only example uses the kit's responsive two-column grid:
+- **Root class.** Base font, text color and `box-sizing: border-box` apply to the whole document
+  with or without a root class. Put `class="hm-surface"` or its identical alias `class="hm-root"` on
+  `<body>`; it also removes default heading and paragraph margins. Keep the page, main container
+  and forms transparent: the host owns the background.
+- **Your CSS wins.** Kit base and native-control rules have zero specificity, so write only the
+  layout the task needs. Do not resize or restyle native controls by hand (no
+  `input[type=checkbox] { width: 20px }`, no fixed widths on inputs).
+- **Native controls.** Raw checkboxes, radios, ranges, selects, buttons and text/number inputs are
+  given the kit look automatically, but prefer the classes below.
+
+| Purpose | Classes |
+| --- | --- |
+| Text | `hm-heading`, `hm-heading-sm`, `hm-body`, `hm-description`, `hm-label`, `hm-meta` |
+| Layout | `hm-stack`, `hm-stack-sm` (vertical), `hm-cluster` (wrapping row), `hm-toolbar` (row, ends apart), `hm-grid` with `hm-grid-2`/`hm-grid-3` (one column below 620px), `hm-layout-panel` (content + 180-220px side column), `hm-control-group` (input + button row) |
+| Fields | `hm-field` (label text or `hm-label`, control, optional `hm-description` in one stack; the control fills the field), `hm-field-grid` (wrapping grid of `hm-field`, columns at least 160px; change with `style="--hm-field-min: 220px"`) |
+| Controls | `hm-input`, `hm-select`, `hm-textarea`; `hm-check` (`<label class="hm-check"><input type="checkbox"><span>Text</span></label>`, also for radios); `hm-toggle` (switch: same markup with `role="switch"` on the checkbox) |
+| Buttons | `hm-button` plus `hm-button-primary`/`-secondary`/`-ghost`/`-danger`, sizes `hm-button-sm`/`-md`/`-lg`, `hm-button-icon` |
+| Content | `hm-card` (a purposeful subsection, not a page background), `hm-divider`, `hm-chip` (`aria-pressed`), `hm-list` + `hm-list-row` (`aria-selected`), `hm-badge`, `hm-metric` + `hm-metric-value`, `hm-status` + `hm-status-success`/`-warning`/`-error`, `hm-empty`, `hm-selected` |
+| Sizing | `hm-control-sm`/`-md`/`-lg` on a container or control selects 32/40/48px control geometry |
+
+Layout rules:
+
+- No fixed heights, `100vh` layouts or inner scroll areas (`overflow: auto` panels). The host sizes
+  the frame and the document scrolls as a whole.
+- Put every label + input set in `hm-field` inside `hm-field-grid`. Never put `width: 100%` inputs
+  in hand-made flex rows or fixed-column grids; that is what makes inputs overlap.
+- Checkbox or switch rows use `hm-check`/`hm-toggle`, not a bare input next to a block `hm-label`.
+- Check the page at about 420px and 900px wide: nothing may overlap or scroll sideways.
 
 ```html
-<style>
-  .item-fields { align-items: start; }
-</style>
-<body class="hm-surface">
+<body class="hm-root">
   <main class="hm-stack">
-    <div class="hm-grid hm-grid-2 item-fields">
-      <div class="hm-stack-sm">
-        <label class="hm-label" for="item-id">Item ID (hex)</label>
-        <input id="item-id" class="hm-input" type="text" value="00061A80"
-               aria-describedby="item-name">
-        <span id="item-name" class="hm-description">Standard Arrow</span>
+    <section class="hm-card hm-stack-sm">
+      <div class="hm-toolbar">
+        <label class="hm-toggle"><input id="damage-on" type="checkbox" role="switch"><span>Damage tuning</span></label>
+        <button id="damage-reset" class="hm-button hm-button-ghost hm-button-sm" type="button">Reset values</button>
       </div>
-      <div class="hm-stack-sm">
-        <label class="hm-label" for="quantity">Quantity</label>
-        <input id="quantity" class="hm-input" type="number" min="1" step="1" value="30">
+      <div class="hm-field-grid">
+        <label class="hm-field">Additional
+          <input id="damage-add" class="hm-input" type="number" step="any" value="0"></label>
+        <label class="hm-field">Multiplier
+          <input id="damage-mul" class="hm-input" type="number" step="any" value="1">
+          <span class="hm-description">1 keeps the game value.</span></label>
       </div>
-    </div>
-    <div class="hm-cluster">
-      <button id="spawn" class="hm-button hm-button-primary" type="button" disabled>Spawn Item</button>
-    </div>
+      <p id="damage-error" class="hm-status hm-status-error" role="status"></p>
+    </section>
+    <label class="hm-check"><input id="flares" type="checkbox"><span>Infinite flares</span></label>
   </main>
 </body>
 ```
 
-`hm-stack-sm` keeps each field's contents at the top, so optional helper text below one input does
-not stretch a neighbouring label row or move its control down. `hm-grid-2` collapses to one column
-on a narrow surface. Do not replace these field stacks with stretching automatic grid rows.
-The button still waits for the SDK's active lifecycle before it can execute a declared command.
+The button or switch still waits for the SDK's active lifecycle before it can execute a declared command.
 
 ## 1. Decide What the Control Needs
 

@@ -58,13 +58,16 @@ For a custom HTML interface, reuse the supplied `surface-sdk.js` module and the 
 kit. The installed author-reference folder contains `_code/surface-sdk.js`,
 `_code/surface-ui-kit.css` and an internal `_code/surface-sdk.manifest.json` with source hashes.
 Copy/import the module with ordinary file tools; do not rewrite MessagePort request routing,
-pending requests, errors or subscriptions. The host injects the UI kit. The same SDK is supplied to
+pending requests, errors or subscriptions. The host injects the UI kit; do not copy
+`surface-ui-kit.css` into a package. The same SDK is supplied to
 the conversion worker and the in-client authoring agent. Read the
 [custom interface quickstart](../application/custom-interface-quickstart.md#reuse-the-supplied-sdk).
 Keep the embedded document, main container and form background transparent; the host owns the page
 background. Use the kit's control sizing, colors, spacing, focus and selected-state classes, without
-an arbitrary page-wide card or custom theme. Top-align form fields and keep optional helper text
-below its control; see the [aligned form example](../application/custom-interface-quickstart.md#transparent-documents-and-aligned-fields).
+an arbitrary page-wide card or custom theme. Put `class="hm-root"` (or `hm-surface`) on `<body>`,
+put each label + input set in `hm-field` inside `hm-field-grid`, use `hm-check`/`hm-toggle` for
+checkbox and switch rows, do not size native controls by hand, and avoid fixed heights or inner
+scroll areas; see the [UI kit reference and example](../application/custom-interface-quickstart.md#transparent-documents-and-aligned-fields).
 
 Player-facing labels, progress and errors describe the game operation in plain language. Use
 "Waiting to enable mods..." or "Item spawning is paused.", not "Waiting for the host" or
