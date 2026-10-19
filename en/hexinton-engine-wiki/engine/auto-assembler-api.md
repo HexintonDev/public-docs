@@ -50,6 +50,25 @@ This writes the call at the second address without writing instructions at `orig
 A Lua-resolved numeric operand is another option when the operation already requires Lua.
 The addresses are illustrative; source evidence supplies the actual site and destination.
 
+Bound labels, allocation names and visible symbols also work in memory operands, including
+`[flag]` and `[flag+4]`. A label in a later chunk is resolved before the earlier chunk is written:
+
+```asm
+alloc(work, 0x100)
+label(flag)
+work:
+  mov dword ptr [flag], 1
+  ret
+work+0x80:
+flag:
+  .dd 0
+```
+
+On x64, nearby data can use RIP-relative addressing. An address too far away for the instruction's
+memory form is an assembly error; load it into a register instead, for example `mov rax, distantData`
+followed by `mov dword ptr [rax], 1`. Keep symbolic operands in conversions when their addressing
+form is valid; resolving every data address through Lua is unnecessary.
+
 AA files execute one operation. Split CE `[ENABLE]` and `[DISABLE]` sections into separate entries;
 embedded `{$lua}` sections are not AA instructions. Move required Lua behavior to a Lua entry or
 invoke AA from that entry, rather than inventing unsupported CE directives. The binding rules for numbers, data and
@@ -150,7 +169,9 @@ aobScanModule(name, module, pattern)
 ```
 
 Scans only the named loaded module and binds the first match to `name`. The directive accepts exactly
-three arguments: result name, module expression/name, and AOB pattern. Invalid module or pattern
+three arguments: result name, module name, and AOB pattern. The module name may be unquoted or
+enclosed in double quotes; both `Tactics Ogre Reborn.exe` and `"Tactics Ogre Reborn.exe"` name the
+same module, including its spaces. Invalid module or pattern
 input, scan failure, zero matches, invalid name, or label conflict is an error.
 
 Module scoping reduces accidental matches but does not guarantee uniqueness. Confirm the selected

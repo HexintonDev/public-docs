@@ -121,6 +121,106 @@ An action result answers “did this operation finish?”. It is not a live valu
 later Service observation. If another source can change the value, display the ViewModel updated by
 the Service rather than the last value returned by the action.
 
+## Input with an explicit button
+
+A repeatable command such as Add Souls, Add Money or Grant XP needs one row with a separate input
+and button, each with its own boundary and a gap between them. They are one declared widget and
+one action. Use the existing `number` or `text` widget with `presentation.submitMode` set to
+`explicit`. The entered value goes directly to the action; it does not need a second widget or a
+separate amount-storage action.
+
+| Presentation field | Contract |
+| --- | --- |
+| `submitMode` | `explicit` submits only from the button or Enter. Omit it for the existing number/text commit behavior. |
+| `buttonLabel` | Optional button label, such as `Add` or `Give item`. |
+| `defaultValue` | Optional initial draft value when no read value is available: a number for a number widget, or a string for a text widget. Used by explicit mode only; it does not execute the action. |
+
+Typing, blur and number adjustments only edit the draft in explicit mode. Clicking the button or
+pressing Enter submits the current valid value once, including when it is unchanged from the last
+submission. Validation and pending execution prevent another submission until the control is ready.
+Keep `write.action` and `write.valueParameter` on the same widget. A Lua action receives one object:
+`{ "amount": 500 }` becomes a table read as `params.amount`, not the positional number `500`.
+
+The following complete package is an engine fixture example. `game.exe+0x2100` is illustrative
+memory in a named test module; it is not a verified currency address for any game.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.add-currency", "version": "1.0.0", "displayName": "Add currency",
+  "runtime": {
+    "files": [{ "path": "lua/main.lua", "runtime": "lua" }],
+    "runnables": [
+      { "id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable" },
+      { "id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable" },
+      { "id": "add-currency", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "addCurrency",
+        "parameterSchema": {
+          "type": "object", "required": ["amount"], "additionalProperties": false,
+          "properties": { "amount": { "type": "integer", "minimum": 1, "maximum": 1000000 } }
+        }
+      }
+    ]
+  },
+  "frontend": { "hosted": { "schemaVersion": 1, "groups": [{
+    "id": "resources", "label": "Resources", "widgets": [{
+      "id": "add-currency", "kind": "number", "label": "Add currency", "valueType": "integer",
+      "constraints": { "minimum": 1, "maximum": 1000000, "step": 1 },
+      "presentation": { "submitMode": "explicit", "buttonLabel": "Add", "defaultValue": 500 },
+      "write": { "action": "add-currency", "valueParameter": "amount" }
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+function enable() end
+function disable() end
+
+function addCurrency(params)
+  local address = getAddress("game.exe+0x2100")
+  writeInteger(address, readInteger(address) + params.amount)
+end
+```
+{% endcode %}
+
+The lifecycle functions prepare and clean up package resources. This one-time operation owns no
+timer or reversible patch, so they have no work to do. A real package replaces the sample address
+with its supported resolver or game-function call. A confirmed additive operation is not undone by
+disabling the package.
+
+Use a host-driven `action` step to check the same binding and parameter object as the app. This
+test repeats the unchanged amount and inspects the resulting memory after each command.
+
+{% code title="tests/integration.lua" %}
+```lua
+local function address(ctx) return ctx.fixture.modules[1].base + 0x2100 end
+return {
+  setup = function(ctx) writeInteger(address(ctx), 0) end,
+  first = function(ctx) assert(readInteger(address(ctx)) == 500) end,
+  second = function(ctx) assert(readInteger(address(ctx)) == 1000) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{ "schemaVersion": 1, "cases": [{
+  "id": "repeated-add", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": { "modules": [{ "name": "game.exe", "size": 16384 }] },
+  "steps": [
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup" },
+    { "kind": "action", "widgetId": "example.add-currency/add-currency", "value": 500 },
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "first" },
+    { "kind": "action", "widgetId": "example.add-currency/add-currency", "value": 500 },
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "second" },
+    { "kind": "cleanup" }
+  ]
+}] }
+```
+{% endcode %}
+
 ## Hosted View Models
 
 Declare a ViewModel in `frontend.hosted` and connect it to a Service:
@@ -223,6 +323,16 @@ network, or native access.
 ## UI Design Rules
 
 Use a toggle for a reversible enable/disable feature, a command button for a one-time action, a
-query for transient results, and a read-only ViewModel value for the current value observed by the
+number/text input with `submitMode: "explicit"` for a repeatable command that takes one entered
+value, a query for transient results, and a read-only ViewModel value for the current value observed by the
 Service. Keep local draft input separate from the committed ViewModel value. A delta is only the
 transport message that changes the ViewModel; it is not the ViewModel itself.
+
+Continuous movement (fly mode with up/down keys, noclip, free camera, a held speed boost) is one
+toggle that owns script-read [native hotkeys](native-hotkeys.md) through `nativeHotkeys`, with
+default keys. Do not add separate "Fly Up"/"Fly Down" actions for the player to bind as UI
+hotkeys; UI hotkeys are for ordinary toggles, inputs and actions.
+
+For an item catalogue or several related parameters, consider a custom searchable surface instead
+of a long collection of unrelated inputs. Keep IDs and names as data and send one parameter object
+to the declared action. A native input/button is sufficient for a single amount.

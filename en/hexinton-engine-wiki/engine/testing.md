@@ -34,6 +34,7 @@ Add the checks below only when the package has the matching behavior:
 | If the package... | Also check |
 | --- | --- |
 | takes action arguments | a valid value and one malformed value |
+| exposes an explicit input/button action | submit through the declared widget; repeat the same value and inspect both results |
 | scans for an AOB | the scan finds the seeded pattern; a missing pattern fails the action |
 | follows a pointer chain | the resolved field; an unreadable pointer fails the action |
 | installs a hook | the jump/cave bytes, and that off restores the original instruction |
@@ -70,8 +71,9 @@ an unsupported `tests` field to `package.json`. Example:
 ```
 
 Each case has a unique `id`, `kind` (`unit` or `integration`), `runtime` (`lua`, `js`, or `command`)
-and optional `timeoutMs` (default 10000; allowed 100–120000). Lua/JS cases require an existing
-package-relative `entryFile`; `entrySymbol` defaults to `runTest`. JS `capabilities` optionally
+and optional `timeoutMs` (default 10000; allowed 100–120000). Ordinary Lua/JS cases require an existing
+package-relative `entryFile`; `entrySymbol` defaults to `runTest`. An integration Lua case with
+ordered `steps` does not need a case-level `entryFile`. JS `capabilities` optionally
 declare the existing application runtime capabilities the test uses. Entries may not escape the
 package. Declarations are limited to 100 cases and 128 KiB.
 
@@ -81,6 +83,22 @@ again. Unrelated packages are not copied or initialized. Missing dependencies ar
 Each case uses its own copied files and fresh process, including between two cases of one suite.
 The runner never Applies, enables, or changes the user's live game session. Test code and custom
 commands retain their normal tool access; this mechanism is not an operating-system sandbox.
+
+While fixing a failure, the assistant can rerun specific cases with
+`run_package_tests(packageId, kind="all", caseIds=["case-id", ...])`. `caseIds` takes 1–100 unique
+case IDs and selects them from the captured declaration in memory; `tests/studio.tests.json` is not
+changed. The run reports only the selected cases, adds no missing-suite entries, and is marked
+`partial: true` with its `caseIds` in the tool result and in test history, so a partial pass is never
+the package's full result. Unknown IDs fail with `test_case_unknown`, listing the declared IDs, and
+nothing runs; an ID whose kind does not match a `unit` or `integration` filter fails with
+`test_case_kind_mismatch`. Run the full suite without `caseIds` before reporting the package done.
+
+Tool calls in one assistant turn run concurrently, so write files and run tests in separate turns.
+An assistant run first waits until the saved package closure is unchanged across two reads about one
+second apart (at most about 10 seconds; otherwise `test_inputs_unsettled` and nothing runs). If a
+saved input changes while cases execute, the run is `incomplete` with `test_inputs_changed`: its
+case results are withheld and only `withheldResults` reports how many there were. Rerun after the
+writes finish.
 
 The context passed to tests contains:
 
@@ -124,6 +142,30 @@ automatic lifecycle runner.
 
 ## Controlled integration target
 
+An integration case can select the target architecture inside `fixture`:
+
+```json
+"fixture": { "architecture": "x86", "modules": [{ "name": "game.dll", "size": 65536 }] }
+```
+
+`architecture` accepts `"x86"` or `"x64"`; omission defaults to x64. `null` and other values are
+invalid. An x86 case launches a real 32-bit process and loads matching 32-bit named modules;
+the module declarations and action steps otherwise keep their existing format. The x86 context
+reports `architecture: "x86"` and `pointerSize: 4`, and `targetIs64Bit()` returns false.
+
+Choose the source game's bitness when the installed runner provides it. Testing literal x86 bytes
+in an x64 process can check those bytes and restoration, but does not test the x86 assembler mode,
+calling convention or execution. Do not change production registers or instruction encodings to
+make a test for another architecture pass.
+
+Prepared builds support x86 when they include `studio_test_target_x86.exe`,
+`ce_test_module_fixture_x86.dll` and `ce_test_module_large_fixture_x86.dll`. Older builds may provide
+only x64. The conversion worker's `get_engine_info` reports `test_fixture_architectures`; it adds x86
+only when all three files are present. That worker rejects an unavailable x86 request with
+`fixture_architecture_unavailable` before starting a native test process. It never silently uses
+x64. A missing test target is a fixture limitation, not proof that the production engine lacks the
+gameplay capability. Prepare a matching runner and test the same package again.
+
 Every integration case receives a fresh owned target process, never the actual game. Its 256-byte
 allocation contains the 16-byte ASCII signature `HEXMODTESTPLAYER`, a pointer at
 `signatureAddress + 16` to the player, and a pointer at `playerAddress + 32` to stats.
@@ -157,12 +199,183 @@ end
 ```
 
 Import dependencies explicitly from `ctx.scriptsRoot`. Lua uses the native runtime attached to the
-owned target (unit Lua attaches only to its own worker). The runner does not automatically call
-the production package's enable/disable hooks. A lifecycle test must invoke the actual hooks and
-assert their effects and cleanup itself. Test pure address-independent logic separately, replacing
+owned target (unit Lua attaches only to its own worker). Ordinary entry-file cases do not automatically
+call the production package's enable/disable hooks. Use the host-driven control steps below to test
+the player's real toggle, or explicitly invoke hooks when testing a module's own exports.
+Assert the effects and cleanup. Test pure address-independent logic separately, replacing
 host/dependency functions where needed. Fixture tests cannot establish that real-game AOBs or
-offsets are correct. Arbitrary target layouts, game emulation and automatic AA/.NET framework
-discovery are not included; use command adapters or an explicit game test for those prerequisites.
+offsets are correct. Named test modules support the bounded layouts below; game behavior and
+automatic AA/.NET framework discovery are not emulated.
+
+## Named game memory and real control steps
+
+An integration `lua` or `command` case may declare `fixture.modules`. The owned target loads a
+small data-only test DLL using each requested game filename. Windows lists these as real modules;
+the ordinary engine module lookup, AOB scanner, reads and writes run unchanged. These are test
+modules, not the game's executable or gameplay.
+
+```json
+{
+  "fixture": {
+    "modules": [
+      { "name": "game.exe", "size": 65536 },
+      { "name": "DarkSoulsIII.exe", "size": 83886080,
+        "committedRanges": [{ "offset": 74874880, "size": 8192 }] }
+    ]
+  }
+}
+```
+
+`size` selects a test DLL with enough space: the small template has 64 KiB of zero-filled data,
+and the large template has 128 MiB. Each file is only 2.5 KiB on disk; Windows supplies zero-filled
+memory as it is used. Sizes must be positive and at most 128 MiB. The returned image size may be
+larger than the requested size. Optional `committedRanges` is retained for compatibility and
+selects pages made writable; it no longer allocates a separate fake module. Ranges must be positive
+and inside the requested span. At most 32 unique module names and 1024 ranges are supported.
+Named memory is not currently supported by JavaScript test cases.
+
+`ctx.fixture.modules` contains `{name, base, size, dataAddress, dataSize}` in declaration order.
+Use `base + sourceOffset` for an original module-relative address. Place AOB sample bytes inside
+`dataAddress .. dataAddress + dataSize`, for example
+`writeBytes(ctx.fixture.modules[1].dataAddress + 0x80, 0x8B, 0x00, 0x41, 0x54, 0x90, 0x90)`.
+The area at the image base contains real DLL headers; do not overwrite those when seeding a scan.
+Pointer values must describe the source's exact chain. Keep MaxHP and HP separate when the source
+uses separate fields.
+
+For the player's actual toggle, declare an integration Lua case with ordered steps:
+
+```json
+{
+  "id": "player-toggle", "kind": "integration", "runtime": "lua",
+  "fixture": { "modules": [{ "name": "game.exe", "size": 65536 }] },
+  "steps": [
+    { "kind": "lua", "entryFile": "tests/setup.lua" },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": true },
+    { "kind": "lua", "entryFile": "tests/check-on.lua" },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": false },
+    { "kind": "lua", "entryFile": "tests/check-off.lua" },
+    { "kind": "cleanup" },
+    { "kind": "lua", "entryFile": "tests/check-cleanup.lua" }
+  ]
+}
+```
+
+The case allows 1–100 steps. A `lua` step uses a package-relative `entryFile` and optional
+`entrySymbol` (default `runTest`), with the same context and owned target throughout the case.
+Lua seeds or asserts memory, then returns to the host. A `toggle` step uses the compiled
+`frontend.hosted` widget identified by `package-id/widget-id`, selects its declared on/off action,
+and executes the actual manifest runnable through the same command builder as the app. It supplies
+the app's empty parameter object `{}`; fixture addresses are not action arguments. A Lua action
+therefore receives its normal single parameter table, not a positional test address. A `cleanup`
+step runs the package's declared lifecycle disable through the host with `{}`. Check the resulting
+memory afterward; calling cleanup alone is not an assertion.
+
+An `action` step uses a non-toggle widget's compiled write binding. A number control takes a numeric
+`value`; text takes a string. A select takes the option's label string, which the host resolves to
+its declared value. The host puts the result under `write.valueParameter`. An ordinary button
+omits `value` and sends `{}`. For example:
+
+```json
+{ "kind": "action", "widgetId": "example.add-currency/add-currency", "value": 500 }
+```
+
+With `write: { "action": "add-currency", "valueParameter": "amount" }`, this invokes the manifest
+action with `{ "amount": 500 }`. Repeat that step to check a repeatable command; a test-only direct
+call such as `addCurrency(500)` would use the wrong signature. Step evidence contains the actual
+selected widget, runnable and parameter object. Check that evidence alongside the memory assertions.
+The complete [input/button example](trainer-controls.md#input-with-an-explicit-button) includes a
+repeated-value integration case. This host check does not exercise browser typing, blur or keyboard
+events; those interaction checks belong to frontend tests and a rendered UI inspection.
+
+A `hotkey` step holds or releases one of the package's declared native hotkeys in the owned test
+process, then waits so the engine samples it and package timers run:
+
+```json
+{ "kind": "hotkey", "hotkeyId": "fly-up", "state": "down", "waitMs": 300 }
+```
+
+`state` is `down` or `up` and `waitMs` is 0–5000 (default 100). Turn the owning toggle on first,
+assert the held effect with a Lua step, then release the key. See
+[native hotkeys](native-hotkeys.md#testing).
+
+### Custom surface command steps
+
+For a custom HTML interface, use `surfaceCommand` instead of calling its Lua entry directly from
+a test. This step resolves the surface's compiled command alias using the same resolver as the
+player's command and invokes the real manifest action with the supplied JSON object:
+
+```json
+{
+  "kind": "surfaceCommand",
+  "surfaceId": "example.item-spawner/inventory",
+  "commandAlias": "giveItem",
+  "arguments": { "itemId": "00061A80", "quantity": 30 }
+}
+```
+
+`surfaceId` is the host's complete `package-id/surface-id`, while `commandAlias` is the local
+binding name under that surface's `bindings`. It must expose a `command`; a query alias or a raw
+runnable ID cannot bypass the declared binding. `arguments` is required and must be an object;
+use `{}` for an action with no arguments. The engine performs the action's normal parameter checks.
+Use exactly the object the interface sends through `sdk.commands.execute`, without adding fixture
+addresses or test-only parameters.
+
+Lua steps still seed and inspect the owned memory target. Each surface command uses the normal
+package invocation, so repeated actions retain the package's ordinary Lua state and preparation.
+Results include `surfaceActions` with `surfaceId`, `commandAlias`, `runnableId` and `parameters`.
+Assert the resulting memory or function-call evidence, then use `cleanup` for lifecycle disable.
+This step checks command resolution and runtime behavior; it does not render HTML or exercise the
+MessagePort transport. A frontend test or host inspection separately checks the control sends the
+same object and uses the supplied SDK correctly.
+
+### Expected failures, companion packages and step timings
+
+A `toggle`, `action` or `surfaceCommand` step can assert that the production runnable rejects the request:
+
+```json
+{ "kind": "action", "widgetId": "example.add-currency/add-currency", "value": -5,
+  "expectError": { "messageContains": "amount must be positive" } }
+```
+
+`expectError.messageContains` (1–500 characters) must occur, case-sensitively, in the step's own
+failure message; the step then counts as passed and the case continues. A step that succeeds fails
+the case with `test_expected_error_missing`; a different message fails with
+`test_expected_error_mismatch`. Only the runnable's or control's own rejection can satisfy the
+expectation. An invalid test, such as an unknown widget, still fails the case. `expectError` is
+accepted on `toggle`, `action` and `surfaceCommand` steps, not on `lua`, `hotkey` or `cleanup` steps.
+
+A step case can load other installed packages beside the package under test with case-level
+`companionPackages`:
+
+```json
+{
+  "id": "uses-shared-hotkeys", "kind": "integration", "runtime": "lua",
+  "companionPackages": ["example.shared-hotkeys"],
+  "steps": [
+    { "kind": "toggle", "widgetId": "example.shared-hotkeys/enable", "enabled": true },
+    { "kind": "toggle", "widgetId": "example.package/feature", "enabled": true },
+    { "kind": "cleanup" }
+  ]
+}
+```
+
+List 1–16 unique package IDs; the package under test cannot be its own companion. Each companion is
+captured with its dependency closure and loaded as a separate top-level package in its own script
+context, as in the trainer. Companions are enabled in order before the first step, their widgets
+can be driven by `toggle` and `action` steps, and `cleanup` disables the package under test, then the
+companions in reverse order. Every context is destroyed when the case ends. `companionPackages` is
+accepted only on step cases.
+
+Each step case result contains `steps[]` with one entry per executed step: `index` (1-based),
+`kind`, `status` (`passed` or `failed`; a matched `expectError` is `passed`), `durationMs`, and, when
+present, `widgetId` and the step's `errorMessage`. Steps after the failing step are not listed.
+
+Use named memory and these steps to keep the production resolver and invocation unchanged. Do not
+add a scan-scope parameter, replace production addresses, or call a different function signature
+just to make a fixture test pass. Direct `dofile` calls or `autoAssemble` of a production file can
+check its implementation, but do not by themselves verify the player's command path. Step evidence
+records the selected widget, runnable, parameters and cleanup; assertions still decide whether the
+feature's effects match its source.
 
 ## External framework commands
 
@@ -174,7 +387,7 @@ A command case can run an existing unit or integration framework:
   "kind": "unit",
   "runtime": "command",
   "command": "node",
-  "arguments": ["--test", "tests/frontend.test.mjs"],
+  "arguments": ["--test", "--test-reporter=tap", "tests/frontend.test.mjs"],
   "timeoutMs": 30000
 }
 ```
@@ -186,6 +399,8 @@ The last placeholder is a JSON **context file**, also available in `HEXMOD_TEST_
 `fixture` field contains integration metadata. Required tools/dependencies must already exist or
 be prepared explicitly. Exit zero passes; nonzero exit preserves the exit code and stdout/stderr.
 Output is bounded to the last 16000 characters with an explicit truncation notice.
+For Node's test runner, `--test-reporter=tap` keeps captured results readable without Unicode
+status symbols. Use the existing prepared test dependencies rather than installing them per package.
 
 ## Results and limits
 
@@ -197,7 +412,8 @@ including the fixture/command children. Worker startup errors are text failures,
 dialogs. Shutdown cancels and waits for active tests before disposing workspace services.
 
 The default `all` run requires both unit and integration cases. Missing coverage is `not_run`, with
-overall `incomplete`; blocked/empty suites are never passing. A package with no pure logic declares
+overall `incomplete`; blocked/empty suites are never passing. A `partial` run covers only its
+`caseIds` and never establishes the package result. A package with no pure logic declares
 only integration cases and runs `run_package_tests(packageId, kind="integration")`. Hex Assistant
 runs static validation and the suites that apply to the change, fixes failures and reports what was
 not covered. Adequate assertions remain a review responsibility. Tests execute saved copies; Save's automatic static checks do not run these suites.
@@ -225,7 +441,7 @@ query/action, so initial control reads must not apply a gameplay toggle, and bot
 route to the intended operations.
 
 Fixture tests cannot identify the running game build, and packages are not expected to. Record the
-build a package was written or tested against in its `docs/` notes; do not gate operations on a
+build a package was written or tested against in separate research/publication records; do not gate operations on a
 version check. See [game versions](engine-essentials.md#game-versions).
 
 ## Safe Development Loop

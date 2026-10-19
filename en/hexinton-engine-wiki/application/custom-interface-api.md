@@ -6,6 +6,10 @@ The current host loads one package HTML document in a sandbox and transfers a pr
 The page can use only the aliases declared in its surface manifest. A page sends a binding alias such
 as `health.set`; it never sends a package runnable ID such as `set-health` directly.
 
+Author pages should import the supplied `SurfaceSdkClient` module as shown in the
+[quickstart](custom-interface-quickstart.md#reuse-the-supplied-sdk). The wire envelopes below explain
+what that existing SDK and the host exchange; they do not require another inline request client.
+
 The manifest uses `type: "viewModel"` for a changing value. The wire message is named
 `feed.updated` because the host delivers ViewModel changes through a Service-backed feed. There is no
 current `type: "feed"` surface binding or `stateFeed` property in this contract.
@@ -252,12 +256,13 @@ failure and show a task-oriented message.
 When the surface becomes active again, create fresh ViewModel subscriptions with fresh request IDs.
 Protocol v1 does not replay old subscribe messages automatically.
 
-## Minimal Client Shape
+## Supplied Client API
 
-An inline client or future public SDK can expose this shape:
+The bundled browser module exports `SurfaceSdkClient`, `SurfaceSdkError`,
+`isSurfaceBootstrapMessageV1` and `SURFACE_PROTOCOL_VERSION`. The existing client exposes:
 
 ```ts
-interface SurfaceClientV1 {
+interface SurfaceSdkClient {
   lifecycle: {
     ready(): void;
     setDirty(isDirty: boolean): void;
@@ -265,19 +270,25 @@ interface SurfaceClientV1 {
   };
   commands: {
     execute<TResult>(binding: string, argumentsValue: JsonValue): Promise<TResult>;
+    isAvailable(binding: string): boolean;
   };
   queries: {
-    execute<TResult>(binding: string, argumentsValue: JsonValue, signal?: AbortSignal): Promise<TResult>;
+    execute<TResult>(binding: string, argumentsValue: JsonValue, options?: { signal?: AbortSignal }): Promise<TResult>;
   };
   viewModels: {
     subscribe<TValue>(binding: string, listener: (value: TValue, revision: number) => void): () => void;
+  };
+  environment: {
+    getSnapshot(): SurfaceEnvironmentV1;
+    subscribe(listener: (environment: SurfaceEnvironmentV1) => void): () => void;
   };
   dispose(): void;
 }
 ```
 
-This is an authoring shape, not a promise that a public npm package is already available. The current
-package can bundle a compatible inline client in its single HTML entry document.
+Copy the supplied `surface-sdk.js` into your UI folder and import it as an ES module. The SDK build
+manifest records its source hashes; keep that metadata in authoring records rather than deliverable
+packages. Use the actual client instead of duplicating request IDs, pending maps and port listeners.
 
 The protocol is intentionally capability-limited: the page cannot call Lua, read process memory,
 access credentials, call arbitrary host methods, or use the raw WebView bridge.
