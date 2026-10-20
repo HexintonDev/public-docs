@@ -127,7 +127,7 @@ The planner enables the provider before the consumer. `location` receives a deta
 
 ## Exercise and verify
 
-1. Supply the prepared framework in the actual applied scripts root; see [loading prerequisites](../ue4ss-runtime.md#loading-and-prerequisites).
+1. Use a client installation that ships the UE4SS framework (`<application>/components/ue4ss`); packages and scripts roots never carry it. See [loading prerequisites](../ue4ss-runtime.md#loading-and-prerequisites).
 2. Enable the consumer, then invoke its `location` query. In a menu expect null; in a verified active world expect `{x,y,z}`.
 3. Invoke consumer `capture`, then query provider `status` to inspect the stored observation. Action success itself contains no captured coordinates.
 4. Start `watch` once and inspect provider events through the host feed path. A second start must fail with `service_already_running`.

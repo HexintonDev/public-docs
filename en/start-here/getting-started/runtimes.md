@@ -16,7 +16,7 @@ instruction replacement may fit two short AA operations; a pointer/value edit or
 may fit Lua; a hook that captures an object pointer for a parameterized action may use both. Reuse
 the engine's symbols, allocations and typed memory APIs instead of constructing a second runtime.
 
-Use UE4SS Lua for Unreal object/function access; it requires an attached PID and prepared framework.
+Use UE4SS Lua for Unreal object/function access; it requires an attached PID and the UE4SS framework installed with the client.
 Use application JavaScript for capability-gated host-side work. Use a service plus a ViewModel/feed
 when the interface needs continuously observed game state. A one-time patch does not require a
 polling service.
@@ -30,7 +30,7 @@ user-selected gameplay change in an action, with explicit lifecycle cleanup. See
 
 Host Lua and UE4SS Lua use separate interpreters and APIs. Keep existing Lua logic and call a declared UE provider through [dependency runnables](../../hexinton-engine-wiki/engine/dependency-runnable-api.md) when it needs Unreal data or an operation. You do not need to duplicate the package dependency/lifecycle rules or create another UI command format. Files remain `.lua`; the manifest runtime selects the interpreter.
 
-UE4SS loads on demand, but automatic application framework delivery is incomplete. Read [UE4SS loading prerequisites](../../hexinton-engine-wiki/engine/ue4ss-runtime.md#loading-and-prerequisites) before trying the [location sample](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md).
+UE4SS loads on demand from the framework installed with the client. Read [UE4SS loading prerequisites](../../hexinton-engine-wiki/engine/ue4ss-runtime.md#loading-and-prerequisites) before trying the [location sample](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md).
 
 Application JavaScript is not the same as a WebView surface script. Both are host-side concerns, but the surface uses declared bindings and the application JavaScript runtime uses the capability-gated `hex` object. Neither receives unrestricted Lua or CLR access.
 

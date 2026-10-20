@@ -1,6 +1,6 @@
 # Lua Dependency Runnable API
 
-Status: implemented host-Lua API, reviewed on 2026-10-07. UE4SS targets require a client build containing that runtime and a prepared framework installation; see [UE4SS availability](ue4ss-runtime.md#loading-and-prerequisites).
+Status: implemented host-Lua API, reviewed on 2026-10-07. UE4SS targets require a client build containing that runtime and the UE4SS framework installed with it; see [UE4SS availability](ue4ss-runtime.md#loading-and-prerequisites).
 
 Ordinary engine Lua can call declared dependency runnables through the same native validation and dispatch used by UI commands. This permits host memory logic to use an Unreal observation without sharing interpreters or inventing a second lifecycle.
 
