@@ -71,4 +71,4 @@ The sample library is a separate indexed section. Each sample has a stable topic
 
 ## Important Boundary
 
-Hexinton Engine dispatches host Lua, Auto Assembler and UE4SS runnables through the native package lifecycle. UE4SS Lua executes inside the game with separate APIs/state and requires a prepared framework; its guide labels remaining availability limits. Application JavaScript is a separate, capability-gated runtime owned by the desktop host. Do not use JavaScript APIs in a native Lua runnable.
+Hexinton Engine dispatches host Lua, Auto Assembler and UE4SS runnables through the native package lifecycle. UE4SS Lua executes inside the game with separate APIs/state and uses the UE4SS framework installed with the client; its guide labels remaining availability limits. Application JavaScript is a separate, capability-gated runtime owned by the desktop host. Do not use JavaScript APIs in a native Lua runnable.

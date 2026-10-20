@@ -35,7 +35,7 @@ run cleanup and confirm symbols, allocations, patches, and timers are gone.
 
 ## UE4SS Runtime
 
-For UE packages, first use the [UE4SS troubleshooting table](ue4ss-runtime.md#results-transport-and-troubleshooting). Verify the framework exists in the actual applied scripts root; a package source file alone is insufficient. Inspect the framework log for reflected-entry/callback errors. Distinguish a valid null pawn from execution failure. Release all owners before recovering a package fault; reattach for connection failure, and restart the game after uncertain loading. Never replay an unconfirmed action automatically.
+For UE packages, first use the [UE4SS troubleshooting table](ue4ss-runtime.md#results-transport-and-troubleshooting). Verify the client installation contains the framework (`<application>/components/ue4ss/.frameworks/ue4ss/profile.json`); a package source file alone is insufficient, and a framework copied into the scripts root is ignored. Inspect the framework log for reflected-entry/callback errors. Distinguish a valid null pawn from execution failure. Release all owners before recovering a package fault; reattach for connection failure, and restart the game after uncertain loading. Never replay an unconfirmed action automatically.
 
 ## What to Collect
 

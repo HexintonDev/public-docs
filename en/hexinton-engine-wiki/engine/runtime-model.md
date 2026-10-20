@@ -1,6 +1,6 @@
 # Runtime Model
 
-Status: current public architecture reference. UE4SS is an implemented integration whose framework-delivery and qualification limits are documented separately.
+Status: current public architecture reference. UE4SS is an implemented integration; its framework ships with the client, and its qualification limits are documented separately.
 
 ## Runtime Families
 
@@ -19,7 +19,7 @@ must call a declared command, query, view model, or state feed exposed by the ho
 ## Choosing a Runtime
 
 - Use Lua for game-facing logic and lifecycle-owned resources.
-- Use UE4SS for Unreal object/function operations, with a prepared framework. Ordinary Lua can consume its declared runnables through the [dependency API](dependency-runnable-api.md).
+- Use UE4SS for Unreal object/function operations, with the framework installed with the client. Ordinary Lua can consume its declared runnables through the [dependency API](dependency-runnable-api.md).
 - Use Auto Assembler for assembly operations declared in a package manifest; it supports enable/disable/actions, but not queries/services.
 - Use application JavaScript for approved host-side operations. WebView surface JavaScript is a separate presentation environment using declared bindings.
 

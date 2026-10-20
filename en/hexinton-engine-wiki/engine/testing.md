@@ -53,7 +53,7 @@ examples when adding a new runtime feature.
 
 Verify framework provisioning, on-demand load, finite entrypoints, serializable results, managed cleanup, service events and structured failures. Then test in an active game world: local-player selection, missing pawn, respawn, travel/save loading, repeated enable/disable and detach. The [location sample](samples/ue4ss-player-location.md) provides a bounded query/action/service exercise.
 
-Native bridge fixtures inject a test DLL and run actual transport/lifecycle code with mocked reflection. They do not prove a game's APIs or complete client provisioning. The ordinary application does not yet automatically deliver the framework bundle. Studio test declarations accept `lua`, `js` and `command`; no `ue4ss` case runtime was added. Test pure host transformations with Lua cases and qualify Unreal operations through the prepared runtime/live attachment. Do not assume copied Studio test snapshots contain the framework.
+Native bridge fixtures inject a test DLL and run actual transport/lifecycle code with mocked reflection. They do not prove a game's APIs or complete client provisioning. Package UE4SS runs load the framework installed with the client (`<application>/components/ue4ss`), never a copy in the scripts root. Studio test declarations accept `lua`, `js` and `command`; no `ue4ss` case runtime was added. Test pure host transformations with Lua cases and qualify Unreal operations through the prepared runtime/live attachment. Do not copy the framework into packages or test snapshots.
 
 ## Package test declaration
 
@@ -206,6 +206,16 @@ Assert the effects and cleanup. Test pure address-independent logic separately, 
 host/dependency functions where needed. Fixture tests cannot establish that real-game AOBs or
 offsets are correct. Named test modules support the bounded layouts below; game behavior and
 automatic AA/.NET framework discovery are not emulated.
+
+Allocations near a fixture address can fail intermittently on a busy machine. `alloc(name, size,
+near)` or `allocateMemory(size, near)` may report "Unable to reserve memory near target address" or
+return a block below the module or beyond the reach of a 5-byte `jmp`, and the same unchanged case
+passes on the next run. Batch runs saw this in about one run in three for packages that allocated a
+separate cave per hook. Re-run a failing case once before treating it as a package bug. To make
+such tests stable: allocate one block near the module and carve every hook's cave from it, retry a
+failed or out-of-range near allocation with other hints (for example 1 MiB steps above the module,
+checking the jump distance each time), and keep each case to a few allocations. Never remove the
+production distance check to make a test pass.
 
 ## Named game memory and real control steps
 

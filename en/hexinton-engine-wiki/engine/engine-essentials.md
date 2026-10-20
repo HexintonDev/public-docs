@@ -54,6 +54,19 @@ destination lists are data: extract and preserve their IDs and names instead of 
 code. Use ordinary controls for simple features; use a custom searchable interface when the task
 needs a catalogue, several related inputs or richer results.
 
+Group a game's features into a few packages by player activity (survival, combat, inventory,
+movement, world), not by source and not one feature per package. Do not split an activity into tiny
+packages: a toggle or two that share nothing else belongs in the nearest activity package.
+
+The engine has no .NET name resolver. For .NET games (CoreCLR such as Stardew Valley, or .NET
+Framework such as Terraria), Cheat Engine `.NET` symbols like `Terraria.Main::get_LocalPlayer+10`
+and trainer scripts that find methods by name cannot be resolved; the methods exist only after the
+runtime compiles them. The current workaround is a whole-process `AOBScanUnique` of the source's
+own bytes that refuses to patch unless there is exactly one match. Short prologue-only patterns
+are rarely unique, so those features, and features that call managed methods by name, cannot be
+converted yet; report them with that reason. Unity Mono games are different: the game's exported
+`mono_*` functions can be called with `executeCode` to resolve classes, methods and fields by name.
+
 For a custom HTML interface, reuse the supplied `surface-sdk.js` module and the public `hm-*` UI
 kit. The installed author-reference folder contains `_code/surface-sdk.js`,
 `_code/surface-ui-kit.css` and an internal `_code/surface-sdk.manifest.json` with source hashes.
@@ -176,6 +189,10 @@ Instead:
   "on" created. That is all the state most hooks need.
   Independent hooks in one package need distinct persistent names (`healthCave`, `manaCave`); each
   hook's on/off reuse its names. Local labels within one chunk and intentionally shared setup need no prefixes.
+- Allocation, label and symbol names must not consist only of hexadecimal characters: `acc`, `dec`,
+  `add`, `be`, `cc` or `face` read as numbers and are rejected ("name must not be a pure hex
+  literal"). Include a non-hex letter, as in `accHook` or `decCave`, including in names a helper
+  derives from a short hook id.
 - Bound labels, allocations and visible symbols work directly in memory operands: `mov dword ptr
   [flag], 1`, `lea rax, [flag]` and `mov rax, qword ptr [flag]`. A declared data label in a later
   chunk resolves before the earlier code chunk is written. Preserve these symbolic operands.
