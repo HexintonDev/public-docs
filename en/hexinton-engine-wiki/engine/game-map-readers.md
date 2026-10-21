@@ -84,10 +84,25 @@ publishEvent("watch", {
 | `position` | Finite numeric `x`, `y`, `z`, or JSON null (`hex.null` in host Lua). |
 | `observedAt` | UTC timestamp parseable by the client. The current viewer rejects invalid timestamps or observations older than five seconds. |
 | `state` | `ready`, `starting`, `stopped` or `failed`. Only ready observations render a player position. |
-| `headingDegrees` | Optional finite heading. Omit if unverified; the viewer does not invent a heading from movement. |
+| `headingDegrees` | Facing direction in degrees clockwise from map north. Publish it whenever the game exposes the player's facing (see [Facing direction](#facing-direction)); when omitted, the viewer falls back to movement direction. |
 | `worldId` | Optional world identity, useful for destination checks. Its meaning must be verified by the package author. |
 
 Coordinate calibration is supplied by the map content, separately from the runtime package. The current `mercator-affine-v1` transform has two rows of four coefficients applied to `[x, y, z, 1]`, followed by the map projection. Retain verified axes, units, offsets and radius; a raw map pin coordinate is not automatically a game position.
+
+## Facing direction
+
+Publish the real facing direction whenever the game exposes it: camera or controller yaw for third-person and first-person games where WeMod-style maps follow the camera, otherwise the player actor's yaw. Read the yaw ψ (radians) in the world plane spanned by the calibration's first two world axes, measured from +axis0 towards +axis1, and convert it through the published map calibration `matrix`:
+
+```lua
+-- m = calibration.matrix of the published map content (rows of x, y, z, translation coefficients)
+local e = m[1][1] * math.cos(psi) + m[1][2] * math.sin(psi)
+local n = m[2][1] * math.cos(psi) + m[2][2] * math.sin(psi)
+headingDegrees = math.deg(math.atan(e, n)) % 360
+```
+
+That is `heading = atan2(m00·cos ψ + m01·sin ψ, m10·cos ψ + m11·sin ψ) mod 360`. If the game's horizontal plane is x/z (y up), use the x and z columns instead. Verify the signs against the live published map content: walk forward along a road on the map and confirm the arrow points along it, then turn 90° right and confirm the arrow turns clockwise. Unreal `Rotator.Yaw` is in degrees; convert to radians first.
+
+When a package publishes no heading, the client derives one from movement in map space: it ignores movement under about three pixels at the deepest map zoom, keeps the last heading while the player stands still, re-anchors without turning after teleports or world changes, and shows a non-directional marker until the first movement. A published `headingDegrees` always wins over the fallback, so publish it only from a verified source.
 
 ## Demand and lifecycle
 
