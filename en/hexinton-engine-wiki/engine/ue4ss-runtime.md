@@ -28,6 +28,14 @@ The framework belongs to the client installation, not to packages. At startup th
 
 One connection is shared by UE packages in that process. Another already-loaded UE4SS installation is rejected unless it is the matching staged HexMod installation. Detach releases package work and the connection; it does not unload the DLL. An uncertain loader attempt requires game restart. An established matching DLL can be reused with a fresh attachment session.
 
+The installed framework is a pinned RE-UE4SS experimental build (since 2026-10-21: `3.0.1-1181-g83330635`, upstream commit `8333063`), mirrored on the HexMod CDN and pinned by hash; it is not the 2024 `v3.0.1` release. Behavior that differs from older UE4SS documentation and examples:
+
+- Object-returning calls such as `AActor:GetWorld()`, `FindFirstOf` and property reads can return an invalid UObject wrapper instead of `nil`. Always test `obj and obj:IsValid()`; a non-nil wrapper is not a live object.
+- Hook callbacks receive delegate parameters, and Lua can bind/call delegates (needed by spawner flows that pass completion delegates).
+- `ExecuteInGameThread` may target the EngineTick or ProcessEvent hook. The managed wrapper picks a hook the game exposes; pass `EGameThreadMethod.EngineTick`/`ProcessEvent` only when the distinction matters.
+- `RegisterProcessConsoleExec*` callback arguments changed; check the upstream documentation for the current signature before relying on console-command hooks.
+- UE 5.5-5.7 games are supported; FName layout handling changed, so compare names with `:ToString()` rather than assuming a raw FName layout.
+
 Framework SHA-256 checks verify the supplied assets. There is no game executable hash allowlist: game updates are evaluated by loading and executing the runtime. Passing integrity checks is not evidence that every reflected game API works.
 
 ## Manifest and entry functions
@@ -74,7 +82,7 @@ These helpers are available in UE4SS package environments:
 | `publishEvent(name, payload)` | Publish a detached service observation with provider package/service identity |
 | `RegisterHook(path, preCallback, postCallback?)` | Register wrapped callbacks and retain both returned IDs for package cleanup |
 | `UnregisterHook(path, preId, postId)` | Remove a hook registered by this package; an unowned tuple fails |
-| `ExecuteInGameThread(callback)` | Schedule a package-owned wrapped callback |
+| `ExecuteInGameThread(callback, method?)` | Schedule a package-owned wrapped callback; without `method` the bridge picks an available game-thread hook |
 
 The `RegisterHook` target must exist when registered, and upstream callback parameter/return rules still apply. The wrapper adds ownership and fault handling; it does not redefine the underlying [UE4SS hook API](https://docs.ue4ss.com/lua-api/global-functions/registerhook.html).
 
