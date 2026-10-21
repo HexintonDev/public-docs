@@ -65,14 +65,21 @@ uploadable package. See [script package dependencies](../../hexinton-engine-wiki
 
 ## Validation
 
-The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md). Studio and package upload also enforce the [user-facing text rule](#user-facing-text-no-source-brands). Studio also reports text missing from any of the [six launch locales](#user-facing-text-six-launch-locales).
+The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md). Studio and package upload also enforce the [user-facing text rule](#user-facing-text-no-source-brands).
 
 ## User-facing text: six launch locales
 
 Status: current rule, effective 2026-10-21.
 
-Every package ships the text players see in all six launch locales: English (`en`), Simplified
+Packages can ship the text players see in the six launch locales: English (`en`), Simplified
 Chinese (`zh-Hans`), Japanese (`ja`), Korean (`ko`), German (`de`), and Spanish (`es`).
+
+- **Your packages:** translations are optional. Studio and package upload never report a missing or
+  partial locale as an error or a warning; players see the English text for anything not
+  translated. Studio's AI agent writes the five translation files by default whenever it creates or
+  edits player-facing text, and you can edit or delete them like any other file.
+- **HexMod's own converted packages:** all six locales are required and complete; the conversion
+  pipeline refuses to validate or upload a package with a gap.
 
 **Manifest text.** `package.json` holds the English source text. Next to it, one overlay file per
 other locale, `locales/zh-Hans.json`, `locales/ja.json`, `locales/ko.json`, `locales/de.json`, and
@@ -89,7 +96,7 @@ other locale, `locales/zh-Hans.json`, `locales/ja.json`, `locales/ko.json`, `loc
 }
 ```
 
-Each of the five files must translate every host-rendered string: the display name and description,
+A complete file translates every host-rendered string: the display name and description,
 group, widget, and surface labels and descriptions, placeholders, button labels, tag labels, native
 hotkey labels, and option labels of lists with at most 20 options. Keys are the exact English text
 (same case, spacing, and punctuation). Longer option lists are catalogue data (items, places) and
@@ -97,7 +104,7 @@ keep their source names.
 
 **Custom-interface text.** A custom interface owns its own text. Each surface keeps one flat
 `{"key": "text"}` file per locale inside its folder, `frontend/<surface-id>/locales/en.json` through
-`frontend/<surface-id>/locales/es.json`, and all six files have the same keys. The page loads the file
+`frontend/<surface-id>/locales/es.json`, with the same keys in every file it ships. The page loads the file
 that matches the host locale and falls back to `en`; see
 [Custom Interface API](../../hexinton-engine-wiki/application/custom-interface-api.md#localized-text).
 
@@ -110,9 +117,8 @@ that matches the host locale and falls back to `en`; see
 - Never translate IDs, option values, file paths, code, hotkey chords, or catalogue data.
 - The [source-brand rule](#user-facing-text-no-source-brands) applies in every locale.
 
-A missing file, a missing or blank translation, or a surface without all six locale files is the
-error `package_locale_missing` in Studio's **Problems** panel; the message names the file and the
-missing keys. It does not stop **Apply**, so you can keep testing while you translate.
+In the conversion pipeline, a missing file, a missing or blank translation, or a surface without
+all six locale files is the error `package_locale_missing`. Studio does not run this check.
 
 ## User-facing text: no source brands
 

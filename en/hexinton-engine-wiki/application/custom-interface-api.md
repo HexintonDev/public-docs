@@ -67,7 +67,9 @@ const LOCALES = ["en", "zh-Hans", "ja", "ko", "de", "es"];
 let text = {};
 async function loadText(locale) {
   const code = LOCALES.includes(locale) ? locale : "en";
-  text = await (await fetch(`./locales/${code}.json`)).json();
+  const response = await fetch(`./locales/${code}.json`).catch(() => null);
+  // A package may ship only some locales; fall back to English when a file is missing.
+  text = await (response?.ok ? response : await fetch("./locales/en.json")).json();
   render();
 }
 // sdk is the SurfaceSdkClient created from the bootstrap message.
@@ -75,7 +77,7 @@ loadText(sdk.environment.getSnapshot().locale);
 sdk.environment.subscribe((environment) => loadText(environment.locale));
 ```
 
-All six files are required ([package format](../../start-here/getting-started/package-format.md#user-facing-text-six-launch-locales)).
+Ship `en.json` always; the other five are optional for your packages and required for HexMod's converted packages ([package format](../../start-here/getting-started/package-format.md#user-facing-text-six-launch-locales)).
 Catalogue data such as item names keeps its source names; translate the interface around it.
 
 ## Message Envelope
