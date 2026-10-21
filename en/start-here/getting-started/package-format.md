@@ -65,7 +65,54 @@ uploadable package. See [script package dependencies](../../hexinton-engine-wiki
 
 ## Validation
 
-The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md). Studio and package upload also enforce the [user-facing text rule](#user-facing-text-no-source-brands).
+The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md). Studio and package upload also enforce the [user-facing text rule](#user-facing-text-no-source-brands). Studio also reports text missing from any of the [six launch locales](#user-facing-text-six-launch-locales).
+
+## User-facing text: six launch locales
+
+Status: current rule, effective 2026-10-21.
+
+Every package ships the text players see in all six launch locales: English (`en`), Simplified
+Chinese (`zh-Hans`), Japanese (`ja`), Korean (`ko`), German (`de`), and Spanish (`es`).
+
+**Manifest text.** `package.json` holds the English source text. Next to it, one overlay file per
+other locale, `locales/zh-Hans.json`, `locales/ja.json`, `locales/ko.json`, `locales/de.json`, and
+`locales/es.json`, maps each exact English string to its translation:
+
+```json
+{
+  "locale": "zh-Hans",
+  "replacements": {
+    "Survival": "生存",
+    "Unlimited Health": "无限生命",
+    "Health never drops below its maximum.": "生命值始终保持满值。"
+  }
+}
+```
+
+Each of the five files must translate every host-rendered string: the display name and description,
+group, widget, and surface labels and descriptions, placeholders, button labels, tag labels, native
+hotkey labels, and option labels of lists with at most 20 options. Keys are the exact English text
+(same case, spacing, and punctuation). Longer option lists are catalogue data (items, places) and
+keep their source names.
+
+**Custom-interface text.** A custom interface owns its own text. Each surface keeps one flat
+`{"key": "text"}` file per locale inside its folder, `frontend/<surface-id>/locales/en.json` through
+`frontend/<surface-id>/locales/es.json`, and all six files have the same keys. The page loads the file
+that matches the host locale and falls back to `en`; see
+[Custom Interface API](../../hexinton-engine-wiki/application/custom-interface-api.md#localized-text).
+
+**Writing translations.**
+
+- Write natural, idiomatic interface wording for each language, not word-for-word translation.
+- Use an official in-game name (item, character, place, skill) as the game shows it in that
+  language when you know it; otherwise keep the English name. A translation may equal the English
+  text for exactly this case.
+- Never translate IDs, option values, file paths, code, hotkey chords, or catalogue data.
+- The [source-brand rule](#user-facing-text-no-source-brands) applies in every locale.
+
+A missing file, a missing or blank translation, or a surface without all six locale files is the
+error `package_locale_missing` in Studio's **Problems** panel; the message names the file and the
+missing keys. It does not stop **Apply**, so you can keep testing while you translate.
 
 ## User-facing text: no source brands
 
