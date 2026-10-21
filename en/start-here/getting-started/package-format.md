@@ -65,4 +65,43 @@ uploadable package. See [script package dependencies](../../hexinton-engine-wiki
 
 ## Validation
 
-The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md).
+The host checks strict JSON, matching directory and ID, declared files, unique runnable IDs, entry-file/runtime consistency, lifecycle entries, dependency constraints, and action parameters. Invalid packages produce structured errors. See [Errors and Results](../../hexinton-engine-wiki/engine/errors-and-results.md). Studio and package upload also enforce the [user-facing text rule](#user-facing-text-no-source-brands).
+
+## User-facing text: no source brands
+
+Status: current rule, effective 2026-10-21.
+
+Text that players see describes the effect only. It never names a cheat source, trainer brand,
+cheat site, cheat tool, or cheat-table author.
+
+| Bad | Good |
+| --- | --- |
+| `Infinite EXP (FLiNG)` | `Infinite EXP` |
+| `One-hit kills from the CE table` | `One-hit kills` |
+| `Teleport (WeMod map)` | `Teleport` |
+
+The rule covers, in every locale:
+
+- package display names and descriptions;
+- widget and group labels, descriptions, tooltips, and option labels;
+- custom-interface visible text, including strings in surface HTML and JavaScript;
+- publication metadata: package profile title, short description, description, instructions,
+  changelog, and catalog descriptions.
+
+Internal provenance is allowed in notes, code comments, Lua code, and tests.
+
+A violation is a hard error everywhere. Studio's **Problems** panel reports it as an error, and
+package uploads are rejected with error code `source_brand_reference`.
+
+Matching is case-insensitive and whole-word. Namespaced identifiers, such as `wemod:<id>`
+coordinate-space IDs, are not text and are not matched. Ordinary words that merely resemble a
+brand, such as a "Dagger Fling" skill, a "Sunbeam" spell, or a "Fearless Cape", are not matched.
+
+Checked names include FLiNG (flingtrainer.com), WeMod / Wand, Cheat Engine (including "CE table",
+"CE script", "from CE", cheat tables, and CT files), Cheat Happens (CoSMOS), MrAntiFun, PLITCH,
+Infinity trainer, FearLess Revolution (FRF), Trainer Manager, GameCopyWorld, MegaDev / MegaGames,
+palmods.gg, OpenCheatTables, other cheat, trainer, and mod download sites (for example GuidedHacking,
+MPGH, XModHub, VGTimes, Nexus Mods, and Thunderstore), and trainer makers and cheat-table authors
+(for example Zanzer, Recifense, Csimbi, DrummerIX, SunBeam, and Abolfazl.k). The authoritative list
+is the deny list
+[`source_brand_denylist.json`](https://github.com/HexintonDev/HexModTools/blob/main/production/game-ingestion-worker/source_brand_denylist.json).
