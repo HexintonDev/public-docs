@@ -383,6 +383,20 @@ Open `Settings` from the left navigation to change:
 
 Sounds only report trainer operation status. They do not mean that an in-game modification will remain active. Use the trainer result and in-game behavior as the final indication.
 
+## Usage and Error Reports
+
+When you use a feature of a published package, Hexinton Mod sends a small report so creators can see which features are used and which ones fail. Reports are sent whether or not you are signed in.
+
+Each report contains:
+
+* A random ID for this installation of Hexinton Mod, and your account only when you are signed in.
+* The game, the detected game build, the package version, and the feature that ran.
+* For a failure, only a short error category and code, such as `script_runtime` / `lua_error`.
+* The Hexinton Mod, engine, and runtime component versions (for example UE4SS, Cheat Engine tools, CEF).
+* When the feature ran.
+
+Reports never contain error messages, file paths, script contents, save files, or what you typed. The same failure is reported at most once per hour. Offline mode sends no reports, and local or Studio packages are never reported. Remote control still requires signing in.
+
 ## Stop Using the Trainer
 
 At the end of a session, use this order:
