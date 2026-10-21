@@ -97,13 +97,49 @@ Matching is normalized, not exact. Before comparing, the checker folds case, rem
 zero-width and other format characters, converts full-width letters, and treats every punctuation
 mark or space as a single separator. A name therefore also matches when it is spaced, hyphenated,
 or joined: `We-Mod`, `we mod`, `cheatengine`, and `FLiNGTrainer` are all rejected. There is no
-capitalization exception, so an ordinary game term that collides with a name, such as a "Fling to
-the Finish" option, must be reworded. A short allowlist in the deny list exempts proven false
-positives from shipped games, such as a "Dagger Fling" skill, a "Ring of Flinging", or a
-"Fearless Cape". A "Sunbeam" spell is not matched; only phrases such as "SunBeam table" are.
+capitalization exception, and short terms such as `ce` are matched too, so `CE's table` is rejected.
+There is no global allowlist. Every match is an error.
 
-Checked names include FLiNG (flingtrainer.com), WeMod / Wand, Cheat Engine (including "CE table",
-"CE script", "from CE", cheat tables, and CT files), Cheat Happens (CoSMOS), MrAntiFun, PLITCH,
+### Marking a match that is not a brand
+
+Never name a cheat source. Only mark a match when the word is not the brand, for example `ce`
+inside another word or an abbreviation of something else, or a game's own "Dagger Fling" skill or
+"Sunbeam" spell. A real brand reference must never be marked; reword it instead. Rewording is
+also preferred when it reads naturally.
+
+A mark lives in `brand-review.json` next to `package.json`. Copy `path`, `term`, and `match`
+exactly from the reported problem and give a reason:
+
+```json
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "path": "package.json:frontend.hosted.groups[0].widgets[2].label",
+      "term": "fling",
+      "match": "fling",
+      "reason": "Dagger Fling is the game's own skill name, not the trainer brand"
+    }
+  ]
+}
+```
+
+`path` is `package.json:<manifest path>` for manifest text or the package-relative file path for
+surface files such as `frontend/ui/app.js`. A mark covers that term and matched word in that one
+field or file only. A mark that no longer matches anything is an error
+(`source_brand_review_stale`), and an entry with a missing or blank field, a duplicate, or an
+unreadable file is an error (`source_brand_review_invalid`). Accepted marks are listed by
+validation and recorded in the upload result so administrators can audit them. In Studio, the
+**Problems** panel offers **Mark as not a brand** on a brand problem, which asks for the reason and
+writes the entry for you.
+
+Catalog text written directly to the package service (profile, presentation, artwork alt text,
+changelog) accepts the same entries in an optional `brandReview` array on the request, where
+`path` is the request field name (for example `title`, `description`, or `locales[0].description`).
+Those marks are logged for audit and are not stored.
+
+Checked names include FLiNG (flingtrainer.com), WeMod / Wand, Cheat Engine (including `CE`,
+cheat tables, and CT files), Cheat Happens (CoSMOS), MrAntiFun, PLITCH,
 Infinity trainer, FearLess Revolution (FRF), Trainer Manager, GameCopyWorld, MegaDev / MegaGames,
 palmods.gg, OpenCheatTables, other cheat, trainer, and mod download sites (for example GuidedHacking,
 MPGH, XModHub, VGTimes, Nexus Mods, and Thunderstore), and trainer makers and cheat-table authors

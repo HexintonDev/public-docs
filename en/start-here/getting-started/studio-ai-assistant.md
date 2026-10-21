@@ -101,6 +101,8 @@ Independent failures are reported together: a broken manifest does not suppress 
 syntax checks.
 Problems also reports user-facing text that names a cheat source or trainer brand as an error, and
 upload rejects it with `source_brand_reference`; see [no source brands](package-format.md#user-facing-text-no-source-brands).
+When a match is provably not the brand, **Mark as not a brand** records it with a reason in
+`brand-review.json`; see [marking a match](package-format.md#marking-a-match-that-is-not-a-brand).
 
 AI file writes and external filesystem changes do not trigger this editor-save check. The assistant
 continues to call `validate_package` explicitly and retrieve diagnostics through its normal tools.
