@@ -93,9 +93,14 @@ Internal provenance is allowed in notes, code comments, Lua code, and tests.
 A violation is a hard error everywhere. Studio's **Problems** panel reports it as an error, and
 package uploads are rejected with error code `source_brand_reference`.
 
-Matching is case-insensitive and whole-word. Namespaced identifiers, such as `wemod:<id>`
-coordinate-space IDs, are not text and are not matched. Ordinary words that merely resemble a
-brand, such as a "Dagger Fling" skill, a "Sunbeam" spell, or a "Fearless Cape", are not matched.
+Matching is normalized, not exact. Before comparing, the checker folds case, removes accents,
+zero-width and other format characters, converts full-width letters, and treats every punctuation
+mark or space as a single separator. A name therefore also matches when it is spaced, hyphenated,
+or joined: `We-Mod`, `we mod`, `cheatengine`, and `FLiNGTrainer` are all rejected. There is no
+capitalization exception, so an ordinary game term that collides with a name, such as a "Fling to
+the Finish" option, must be reworded. A short allowlist in the deny list exempts proven false
+positives from shipped games, such as a "Dagger Fling" skill, a "Ring of Flinging", or a
+"Fearless Cape". A "Sunbeam" spell is not matched; only phrases such as "SunBeam table" are.
 
 Checked names include FLiNG (flingtrainer.com), WeMod / Wand, Cheat Engine (including "CE table",
 "CE script", "from CE", cheat tables, and CT files), Cheat Happens (CoSMOS), MrAntiFun, PLITCH,
