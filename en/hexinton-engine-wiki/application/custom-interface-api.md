@@ -49,6 +49,35 @@ Install the port listener before calling `surface.ready`. Call it within five se
 `lifecycle.changed` with `state: "active"`. Requests sent before ready or while suspended are
 rejected; they are not queued.
 
+## Localized Text
+
+The host does not translate text inside a custom interface. The page owns its text and picks it from
+`environment.locale`. Keep one flat JSON file per launch locale next to the page and give every file
+the same keys:
+
+```text
+frontend/<surface-id>/index.html
+frontend/<surface-id>/locales/en.json      {"title": "Item Spawner", "give": "Give"}
+frontend/<surface-id>/locales/zh-Hans.json {"title": "物品生成器", "give": "给予"}
+frontend/<surface-id>/locales/ja.json, ko.json, de.json, es.json
+```
+
+```js
+const LOCALES = ["en", "zh-Hans", "ja", "ko", "de", "es"];
+let text = {};
+async function loadText(locale) {
+  const code = LOCALES.includes(locale) ? locale : "en";
+  text = await (await fetch(`./locales/${code}.json`)).json();
+  render();
+}
+// sdk is the SurfaceSdkClient created from the bootstrap message.
+loadText(sdk.environment.getSnapshot().locale);
+sdk.environment.subscribe((environment) => loadText(environment.locale));
+```
+
+All six files are required ([package format](../../start-here/getting-started/package-format.md#user-facing-text-six-launch-locales)).
+Catalogue data such as item names keeps its source names; translate the interface around it.
+
 ## Message Envelope
 
 Every normal message uses this shape:
