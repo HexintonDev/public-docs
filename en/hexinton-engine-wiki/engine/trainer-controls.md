@@ -117,6 +117,21 @@ tag IDs across widgets in one package must use the same label. The host prefixes
 with the package ID. These control tags are separate from the backend package page's string tags.
 Personal trainer organization may override layout without rewriting the author manifest.
 
+## Phone remote sharing
+
+Toggle, action, number, and select widgets of published packages are shared with the player's phone
+remote by default. The phone receives only the widget's label, description, options, constraints, and
+current value, never its bindings, scripts, or hotkeys. To keep a widget on the PC only, declare
+`"remoteAllowed": false` on that widget:
+
+```json
+{ "id": "unlock-all", "kind": "action", "label": "Unlock all", "remoteAllowed": false }
+```
+
+Use it for controls that need the player to look at the game screen first. Other widget kinds and
+locally installed (unpublished) packages are never shared. Custom interfaces are not shown on the phone
+remote.
+
 An action result answers “did this operation finish?”. It is not a live value and does not replace a
 later Service observation. If another source can change the value, display the ViewModel updated by
 the Service rather than the last value returned by the action.

@@ -130,6 +130,12 @@ Some trainers show dedicated panels or small applications, such as an item searc
 
 Custom interfaces remain locked while the game is not connected. Use them after the connection succeeds.
 
+The search box on the `Mods` tab filters custom interfaces as well as mods, by their names and descriptions. Press `Esc` or the clear button to show everything again.
+
+### Required Packages
+
+A few games need a package to start at all, for example a launcher that starts the game in offline mode. Such a package shows a `Required` badge ("Needed to start this game"). It is always installed for that game and cannot be unsubscribed or switched off.
+
 ## Write Your Own Script
 
 Hexinton Mod organizes scripts into packages. A package contains at least a `package.json` file and one Lua file. You do not need to modify the client itself; edit package files in `Studio`.
@@ -382,6 +388,14 @@ Open `Settings` from the left navigation to change:
 * Feedback sound preview.
 
 Sounds only report trainer operation status. They do not mean that an in-game modification will remain active. Use the trainer result and in-game behavior as the final indication.
+
+## Phone Remote
+
+When you share a running game with your phone, the phone shows the toggles, actions, number inputs, and selection lists of the published packages you use. A package author can keep a particular control on the PC only. Custom interfaces and locally edited Studio packages are not shown on the phone. If the phone says that no controls are shared, either no mods are installed for the game on the PC or none of them can be controlled from a phone.
+
+## In-Game Overlay and Other Graphics Mods
+
+The in-game overlay is installed into the game folder. If that folder already contains another graphics mod that uses the same files (for example a ReShade preset), Hexinton Mod moves that mod's files to a verified backup and tells you once. While the overlay is on for that game, the other mod stays in the backup. To get the other mod back, turn the overlay off for that game; its files are restored. Uninstalling Hexinton Mod does not restore the backup, so turn the overlay off first. Files are never moved while the game is running.
 
 ## Usage and Error Reports
 
