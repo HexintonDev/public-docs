@@ -19,5 +19,12 @@ A surface is not a direct Lua bridge. It must use the supported host protocol.
 manifest -> surface bootstrap -> view model/feed state -> user action -> command result -> state update
 ```
 
+## Where surfaces appear
+
+Surfaces appear on the desktop trainer page and in the in-game overlay. The trainer search also filters
+surfaces by their label and description. Surfaces are not shown on the phone remote. Ordinary hosted
+widgets are shared with the phone by default; see
+[phone remote sharing](../engine/trainer-controls.md#phone-remote-sharing).
+
 See the [quickstart](custom-interface-quickstart.md), [manifest](custom-interface-manifest.md), and
 [API](custom-interface-api.md) pages for the authoring contract.

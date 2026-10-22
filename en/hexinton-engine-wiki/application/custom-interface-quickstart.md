@@ -61,6 +61,27 @@ copied file is loaded after the host kit and can pin an older version of its rul
   `input[type=checkbox] { width: 20px }`, no fixed widths on inputs).
 - **Native controls.** Raw checkboxes, radios, ranges, selects, buttons and text/number inputs are
   given the kit look automatically, but prefer the classes below.
+- **What every page gets for free.** The host adds the kit to every published package on the desktop,
+  in the overlay and in previews, so you never repackage to pick up a fix. It sets
+  `color-scheme: dark` and styles native inputs, selects, scrollbars, keyboard focus and disabled
+  states. Native `<select>` dropdown lists are kept readable (see below). The colors follow the
+  player's app theme (all themes are dark); the surface environment still reports `theme: "dark"`.
+- **Opting out of styling.** There is no switch to turn the kit off. Because its rules have zero
+  specificity, any rule you write for an element replaces the kit's look for that element. Restyle
+  only what you need, and keep the contrast and focus rules below.
+
+### Native select dropdowns
+
+The game-facing browsers (WebView2 and the overlay) draw the open list of a native `<select>` with
+the select's own background and text colors. A translucent background is blended with white, and
+`color-scheme` is ignored for that list. The kit therefore gives every select it styles an opaque
+fill that matches the theme, and gives option rows the same fill. To keep dropdowns readable:
+
+- do not give a `select` a translucent or `transparent` background, and do not set `color-scheme: light`;
+- do not give an `option` a text color that differs from its select, because the browser also uses it
+  on the light highlighted row;
+- if you must restyle a select, use opaque colors with at least 4.5:1 text contrast, preferably the
+  kit tokens.
 
 | Purpose | Classes |
 | --- | --- |

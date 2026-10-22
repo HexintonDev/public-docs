@@ -21,9 +21,12 @@ Only manifest-declared files are runtime inputs. Use package-relative paths and 
 | `id`           | yes      | Stable ID and directory name          |
 | `version`      | yes      | Version used by dependency resolution |
 | `displayName`  | no       | Human-readable name                   |
+| `description`  | no       | Short English description             |
 | `dependencies` | no       | Explicit package dependencies         |
 | `runtime`      | yes      | Files, public entries, and runnables  |
+| `application`  | no       | Application JavaScript scripts (`finder`, `launcher`) |
 | `frontend`     | no       | Hosted UI declarations                |
+| `required`     | no       | `true` for a package players cannot switch off (restricted, see below) |
 
 ## Runtime Files and Runnables
 
@@ -46,6 +49,26 @@ Only manifest-declared files are runtime inputs. Use package-relative paths and 
 Kinds are `enable`, `disable`, `action`, `query`, and `service`. Every package needs one functional enable and disable lifecycle entry. Auto Assembler is action-oriented. Application JavaScript is host-side and is not executed by the native engine runtime.
 
 The native runtime names are `lua`, `aa`, and `ue4ss`. UE4SS uses Lua source and requires `entrySymbol`, just like host Lua; `runtime: "ue4ss"` selects the in-game interpreter. A package can mix runtime declarations, while retaining one shared lifecycle/dependency graph. See the [UE4SS manifest and API](../../hexinton-engine-wiki/engine/ue4ss-runtime.md#manifest-and-entry-functions) and [complete two-package example](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md).
+
+## Application Scripts
+
+`application.scripts` declares host-side JavaScript that runs outside the game: a game `finder`
+([Game Detection](../../hexinton-engine-wiki/application/game-detection.md)) or a game `launcher`
+([Custom Game Launchers](../../hexinton-engine-wiki/application/custom-game-launchers.md)). Each entry has
+`id`, `kind` (`finder` or `launcher`), `runtime: "js"`, `entryFile`, `entrySymbol`, and `capabilities`.
+Package upload accepts `finder` and `launcher` only in `application.scripts`; any other kind there, or
+these kinds in `runtime.runnables`, is rejected as `invalid_executable`. Capabilities are requests:
+finder read capabilities and launcher capabilities are granted only to approved game-support creators
+and first-party packages, so an ordinary upload that declares them is rejected at publication.
+
+## Required Packages
+
+A top-level `"required": true` marks a package that the game cannot work without, such as a game
+launcher. Players cannot unsubscribe from it or switch it off, and it is installed for every player of
+the game. The value must be a JSON boolean (`invalid_required_declaration` otherwise). Only first-party
+packages and approved game-support creators may publish it; other uploads are rejected with
+`required_package_not_authorized`. Omit the field for ordinary packages. See the
+[launcher example](../../hexinton-engine-wiki/application/custom-game-launchers.md#a-required-launcher-package).
 
 ## Dependencies
 

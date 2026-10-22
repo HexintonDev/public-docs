@@ -43,8 +43,9 @@ For normal package upload and synchronization, declare the script in `package.js
 }
 ```
 
-Publication requires the backend's game-support creator approval or first-party authorization for
-these capabilities. An ordinary creator cannot grant those permissions by adding manifest strings.
+Package upload accepts the `launcher` and `finder` kinds only in `application.scripts` (any other kind
+there is rejected as `invalid_executable`). Publication requires the backend's game-support creator
+approval or first-party authorization for these capabilities. An ordinary creator cannot grant those permissions by adding manifest strings.
 The package must be selected through defaults or a subscription and refreshed before launch.
 Already installed, validated packages remain usable under the client's offline policy.
 
@@ -141,6 +142,48 @@ export function launch(args) {
 The environment values apply to the launched child process. The working directory is the folder
 containing the selected executable. The host starts it directly with separate arguments, without
 interpreting a batch command or changing the application's own working directory.
+
+## A required launcher package
+
+When a game cannot be started without the launcher, the launcher can be its own package marked
+`"required": true`, so every player of the game gets it and nobody can switch it off. Only first-party
+packages and approved game-support creators may publish `required`; see
+[Package Format](../../start-here/getting-started/package-format.md#required-packages). The package needs
+no in-game features, but every package still needs an `enable`/`disable` pair, so it carries two
+no-op Lua functions. HexMod's own Elden Ring launcher has this shape:
+
+```json
+{
+  "id": "eldenring.launcher",
+  "version": "1.0.1",
+  "displayName": "Elden Ring Launcher",
+  "description": "Starts Elden Ring offline so mods can attach.",
+  "required": true,
+  "dependencies": [],
+  "runtime": {
+    "files": [{ "path": "lua/main.lua", "runtime": "lua" }],
+    "runnables": [
+      { "id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable" },
+      { "id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable" }
+    ]
+  },
+  "application": {
+    "scripts": [{
+      "id": "launch-offline",
+      "kind": "launcher",
+      "runtime": "js",
+      "entryFile": "launcher.js",
+      "entrySymbol": "launch",
+      "capabilities": ["launcher.read", "launcher.launch"]
+    }]
+  }
+}
+```
+
+`lua/main.lua` defines `enable()` and `disable()` that each return `true` and touch no memory.
+`launcher.js` works like the example above. When no `eldenring.exe` is selected, it falls back to
+`<install path>/Game/eldenring.exe`, because a launcher has no filesystem capability to check which
+file exists.
 
 ## Return values and failures
 
