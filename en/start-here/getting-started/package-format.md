@@ -121,9 +121,9 @@ other locale, `locales/zh-Hans.json`, `locales/ja.json`, `locales/ko.json`, `loc
 
 A complete file translates every host-rendered string: the display name and description,
 group, widget, and surface labels and descriptions, placeholders, button labels, tag labels, native
-hotkey labels, and option labels of lists with at most 20 options. Keys are the exact English text
-(same case, spacing, and punctuation). Longer option lists are catalogue data (items, places) and
-keep their source names.
+hotkey labels, and every option label, whatever the list length. Keys are the exact English text
+(same case, spacing, and punctuation). An entry of a long list (items, places) may keep its source
+name as the translation, but it must be present.
 
 **Custom-interface text.** A custom interface owns its own text. Each surface keeps one flat
 `{"key": "text"}` file per locale inside its folder, `frontend/<surface-id>/locales/en.json` through
