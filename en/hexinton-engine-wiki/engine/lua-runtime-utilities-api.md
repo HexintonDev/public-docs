@@ -81,7 +81,7 @@ end
 
 function disable()
     if timer then
-        timer.destroy()
+        timer:destroy()
         timer = nil
     end
 end
