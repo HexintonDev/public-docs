@@ -147,6 +147,9 @@ patterns are byte pairs (`48 8B ?? 05`) and are not affected.
   `.db 0x90, 0x90, 0x90`. Undotted `db` and GNU `.byte` are not accepted.
 - Write floats as their IEEE-754 bit pattern: `1.0` is `.dd 0x3F800000`, `100.0` is
   `.dd 0x42C80000`, `-2000.0` is `.dd 0xC4FA0000`.
+- A data value can be a name, optionally plus or minus a number: `.dq cave` stores the address of
+  `cave`, `.dq cave+0x10` the address 16 bytes into it. Allocations, labels, registered symbols and
+  module names work; a label bound later in the script is filled in once it is bound.
 
 ### Directives
 
@@ -156,7 +159,9 @@ The engine handles `alloc(name[, size[, near]])`, `globalAlloc`, `dealloc(name)`
 the [Auto Assembler API](auto-assembler-api.md).
 
 `aobScanModule` accepts module names with spaces, either unquoted or enclosed in double quotes,
-for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`.
+for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`. In headers
+and other address expressions, put a module name that contains spaces in double quotes:
+`"Tales of Berseria.exe"+0x1234:`.
 
 Not part of HexMod AA: `define`, `readmem`, `assert`, `{$lua}`/`{$asm}` blocks, `{$try}`,
 `reassemble`, `loadlibrary`, `struct`, anonymous `@@` labels and `[ENABLE]`/`[DISABLE]` sections.
@@ -169,19 +174,14 @@ Instead:
 
 ### Addresses and labels
 
-- Module expressions such as `game.exe+0x1234:` work as chunk headers, not as instruction operands.
-  To `call` or `jmp` to a module address, bind a label there:
-
-  ```asm
-  label(originalCall)
-  game.exe+0x4801e0:
-  originalCall:
-
-  game.exe+0x4948ae:
-    call originalCall
-  ```
-
-  This writes only the `call`; nothing is written at `originalCall`.
+- A jump, call or immediate operand can be a name plus or minus a number: `jmp returnhere+5`,
+  `call game.exe+0x4801e0`, `mov eax, cave+0x10`. The engine computes the address; a label bound
+  later in the script works too. Inside memory brackets, `[name+0x10]` keeps its usual meaning.
+- `jmp far target` and `call far target` reach any address on 64-bit games. They write Cheat
+  Engine's 14-byte absolute jump (`FF 25 00000000` + 8-byte address) and 16-byte absolute call, so
+  a code cave does not have to be allocated near the hook. Reserve the matching number of bytes at
+  the hook site (and restore them on "off"). On 32-bit games every jump reaches, and `far` writes an
+  ordinary jump.
 - Declare `label(name)` only for names that connect separate chunks, such as a return address or a
   hook site the "off" file needs. Leave labels used inside one chunk, such as inline data after cave
   code, undeclared.

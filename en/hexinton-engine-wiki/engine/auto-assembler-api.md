@@ -34,8 +34,29 @@ eight-byte pointer slot. These are assembler data statements, separate from the 
 directives listed below. CE `db 90 90`, unprefixed `dq`, and GNU `.byte` are not accepted by this
 parser. Use hexadecimal `0x...` literals rather than assuming CE's implicit hexadecimal notation.
 
-Module-plus-offset expressions resolve as target headers, but do not assume they parse as
-instruction operands. Bind a simple label at the resolved destination when needed:
+A data value may also be a name, optionally plus or minus a number. The engine stores the address:
+
+```asm
+alloc(table, 0x100)
+table:
+  .dq cave, cave+0x10
+```
+
+### Names with offsets, far jumps and quoted modules
+
+These Cheat Engine forms are accepted as written:
+
+| Form | Meaning |
+| --- | --- |
+| `jmp returnhere+5`, `call game.exe+0x4801e0`, `mov eax, cave+0x10` | A name (allocation, label, registered symbol or module) plus or minus a number, outside memory brackets, becomes that address. A label bound later in the script is resolved once it is bound. Inside brackets, `[name+0x10]` keeps its usual memory-operand meaning. |
+| `jmp far target`, `call far target` | On 64-bit targets, CE's absolute forms: `FF 25 00000000` + 8-byte address (14 bytes) and `FF 15 02000000 EB 08` + 8-byte address (16 bytes). The cave does not need to be near the hook. On 32-bit targets `far` is ignored and an ordinary jump/call is written. |
+| `"Tales of Berseria.exe"+0x1234:` | Double quotes delimit a module name containing spaces in headers and address expressions. |
+
+A `far` hook overwrites 14 bytes, so reserve and restore that many at the hook site. Offsets follow
+the instruction number rules (`0x` hex, otherwise decimal); write `0x` as everywhere else. A name the
+engine does not know is not guessed: the line fails to assemble.
+
+Binding a label at a module address still works and stays useful when several lines refer to it:
 
 ```asm
 label(originalCall)
@@ -47,7 +68,6 @@ game.exe+0x4948ae:
 ```
 
 This writes the call at the second address without writing instructions at `originalCall`.
-A Lua-resolved numeric operand is another option when the operation already requires Lua.
 The addresses are illustrative; source evidence supplies the actual site and destination.
 
 Bound labels, allocation names and visible symbols also work in memory operands, including
