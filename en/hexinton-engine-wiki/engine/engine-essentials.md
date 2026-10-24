@@ -163,7 +163,18 @@ for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00
 and other address expressions, put a module name that contains spaces in double quotes:
 `"Tales of Berseria.exe"+0x1234:`.
 
-Not part of HexMod AA: `define`, `readmem`, `assert`, `{$lua}`/`{$asm}` blocks, `{$try}`,
+`readmem(address, size)` inside a chunk writes the bytes currently at `address` (1 to 4096 bytes),
+for example to keep the original instructions a hook overwrites:
+
+```asm
+alloc(saved, 0x100)
+saved:
+  readmem(game.exe+0x1234, 5)
+```
+
+The bytes are read before the same operation patches anything.
+
+Not part of HexMod AA: `define`, `assert`, `{$lua}`/`{$asm}` blocks, `{$try}`,
 `reassemble`, `loadlibrary`, `struct`, anonymous `@@` labels and `[ENABLE]`/`[DISABLE]` sections.
 Instead:
 
@@ -182,9 +193,10 @@ Instead:
   a code cave does not have to be allocated near the hook. Reserve the matching number of bytes at
   the hook site (and restore them on "off"). On 32-bit games every jump reaches, and `far` writes an
   ordinary jump.
-- Declare `label(name)` only for names that connect separate chunks, such as a return address or a
-  hook site the "off" file needs. Leave labels used inside one chunk, such as inline data after cave
-  code, undeclared.
+- Declare `label(name)` for names that connect separate chunks, such as a return address or a
+  hook site the "off" file needs, or that `registerSymbol` publishes. A declared label may be used
+  before the line that binds it, in the same chunk or another. Labels used only inside one chunk can
+  stay undeclared.
 - Allocation and symbol names persist between a package's operations, so "off" can refer to what
   "on" created. That is all the state most hooks need.
   Independent hooks in one package need distinct persistent names (`healthCave`, `manaCave`); each

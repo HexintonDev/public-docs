@@ -51,6 +51,8 @@ These Cheat Engine forms are accepted as written:
 | `jmp returnhere+5`, `call game.exe+0x4801e0`, `mov eax, cave+0x10` | A name (allocation, label, registered symbol or module) plus or minus a number, outside memory brackets, becomes that address. A label bound later in the script is resolved once it is bound. Inside brackets, `[name+0x10]` keeps its usual memory-operand meaning. |
 | `jmp far target`, `call far target` | On 64-bit targets, CE's absolute forms: `FF 25 00000000` + 8-byte address (14 bytes) and `FF 15 02000000 EB 08` + 8-byte address (16 bytes). The cave does not need to be near the hook. On 32-bit targets `far` is ignored and an ordinary jump/call is written. |
 | `"Tales of Berseria.exe"+0x1234:` | Double quotes delimit a module name containing spaces in headers and address expressions. |
+| `readmem(game.exe+0x1234, 5)` | Inside a chunk, writes the bytes currently at the address (1 to 4096). They are read before the same operation patches anything, so a cave can keep the original instructions a hook overwrites. |
+| `je skip` ... `skip:` with `label(skip)` | A declared label can be used before the line that binds it, in the same chunk or a later one. |
 
 A `far` hook overwrites 14 bytes, so reserve and restore that many at the hook site. Offsets follow
 the instruction number rules (`0x` hex, otherwise decimal); write `0x` as everywhere else. A name the
