@@ -53,6 +53,8 @@ These Cheat Engine forms are accepted as written:
 | `"Tales of Berseria.exe"+0x1234:` | Double quotes delimit a module name containing spaces in headers and address expressions. |
 | `readmem(game.exe+0x1234, 5)` | Inside a chunk, writes the bytes currently at the address (1 to 4096). They are read before the same operation patches anything, so a cave can keep the original instructions a hook overwrites. |
 | `je skip` ... `skip:` with `label(skip)` | A declared label can be used before the line that binds it, in the same chunk or a later one. |
+| `mov rax, cell` (cell bound later in the chunk) | Loads the label's address (assembled as `lea rax, [cell]`). |
+| `cmp dword ptr [eax+Game.exe+0x10], 0` | A dotted module name inside memory brackets resolves to its address. |
 
 A `far` hook overwrites 14 bytes, so reserve and restore that many at the hook site. Offsets follow
 the instruction number rules (`0x` hex, otherwise decimal); write `0x` as everywhere else. A name the
@@ -109,7 +111,9 @@ alloc(name[, size[, nearAddress]])
 ```
 
 Allocates executable/read-write memory owned by the current script context and binds `name` to the
-allocation. `size` is an address-sized integer expression and defaults to `0x1000` bytes. When
+allocation. On 64-bit targets an allocation without `nearAddress` is first placed near the game's main module,
+like Cheat Engine, so code and data cells stay within the 2 GB that relative jumps and RIP-relative
+operands reach; when no memory is free there it is allocated anywhere. `size` is an address-sized integer expression and defaults to `0x1000` bytes. When
 `nearAddress` is supplied, the allocator uses it as the placement hint for the allocation. The
 allocation can then be used as a segment target or address expression.
 
