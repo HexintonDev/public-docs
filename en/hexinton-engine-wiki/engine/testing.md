@@ -241,7 +241,9 @@ template has 64 KiB of zero-filled data and the large template 128 MiB (each fil
 disk; Windows supplies zero-filled memory as it is used). The returned image size may be larger than
 the requested size. Larger modules, up to 1 GiB on x64 and 512 MiB on x86, are generated data-only
 images of exactly the requested size, so a fixed offset such as `game.exe+0x87EBB5C` exists in the
-fixture as in the game. Optional `committedRanges` selects the pages made writable. For a generated
+fixture as in the game. Their zero range is a read-only file-backed section in a sparse file, so a large module
+costs neither disk space nor commit charge beyond the pages made writable; the worker deletes the
+module copies when the case ends. Optional `committedRanges` selects the pages made writable. For a generated
 module (above 128 MiB) it also makes every other page inaccessible: declare the ranges the test seeds
 or the package writes (for example the first 4 MiB of `dataAddress` and each fixed offset) so a large
 module costs only the memory it uses, and AOB scans skip the rest exactly as they skip unreadable game
