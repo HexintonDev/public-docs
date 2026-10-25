@@ -121,7 +121,7 @@ Personal trainer organization may override layout without rewriting the author m
 
 Toggle, action, number, and select widgets of published packages are shared with the player's phone
 remote by default. The phone receives only the widget's label, description, options, constraints, and
-current value, never its bindings, scripts, or hotkeys. To keep a widget on the PC only, declare
+current value (and the held value of a toggle with a value), never its bindings, scripts, or hotkeys. To keep a widget on the PC only, declare
 `"remoteAllowed": false` on that widget:
 
 ```json
@@ -236,6 +236,125 @@ return {
 ```
 {% endcode %}
 
+## Toggle with a value
+
+Some features hold a value the player chooses while they are on: Game Speed at 2x, Freeze Money at
+250000, Movement Speed Multiplier at 5x. Use one `toggle` with a value, not a toggle plus a separate
+number widget. The app shows the switch with the value beside it: a slider when the range is small, a
+number field otherwise. The player can set the value before turning the feature on; changing it while
+the feature is on applies it at once. Hotkeys still toggle, using the chosen value.
+
+| Field | Contract |
+| --- | --- |
+| `write.valueParameter` | Makes the toggle a toggle with a value. Turning it on runs `write.enableAction` with `{ "<valueParameter>": value }`. |
+| `valueType` | `number` or `integer`. |
+| `constraints` | `minimum`, `maximum` and `step`. Without `step` the app uses 1 for integers and about a hundredth of the range for numbers. |
+| `toggleValue.default` | Required. The value before the player changes it; it must be within `constraints`. |
+| `toggleValue.control` | Optional `slider` or `input`. Default: a slider when `minimum` and `maximum` are known and the range has at most 200 steps, a number field otherwise. A slider needs both bounds. |
+| `presentation.suffix` | Optional unit shown after the value, such as `x`. |
+
+Changing the value while the toggle is on runs the same on action again with the new value; while it
+is off, the value is only remembered for the next turn-on. Write the on action so that a second call
+replaces the held value (for example keep the original value from the first call, and restore it in
+the off action). The off action receives `{}`.
+
+Apps released before this control ignore `toggleValue` and show a plain toggle that calls the on action
+with `{}`. Default the parameter in Lua, and never list it in the on action's
+`parameterSchema.required`: packages that do are rejected, because older apps could not turn them on.
+Do not put the default in `presentation.defaultValue`; older apps reject that key on toggles.
+
+The following complete package is an engine fixture example. `game.exe+0x2200` is illustrative memory
+in a named test module; it is not a verified speed address for any game.
+
+{% code title="package.json" %}
+```json
+{
+  "id": "example.game-speed", "version": "1.0.0", "displayName": "Game speed",
+  "runtime": {
+    "files": [{ "path": "lua/main.lua", "runtime": "lua" }],
+    "runnables": [
+      { "id": "enable", "kind": "enable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "enable" },
+      { "id": "disable", "kind": "disable", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "disable" },
+      { "id": "speed-on", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "speedOn",
+        "parameterSchema": { "type": "object", "additionalProperties": false,
+          "properties": { "speed": { "type": "number", "minimum": 0.1, "maximum": 10 } } } },
+      { "id": "speed-off", "kind": "action", "runtime": "lua", "entryFile": "lua/main.lua", "entrySymbol": "speedOff" }
+    ]
+  },
+  "frontend": { "hosted": { "schemaVersion": 1, "groups": [{
+    "id": "world", "label": "World", "widgets": [{
+      "id": "game-speed", "kind": "toggle", "label": "Game speed", "valueType": "number",
+      "constraints": { "minimum": 0.1, "maximum": 10, "step": 0.1 },
+      "toggleValue": { "default": 2 },
+      "presentation": { "suffix": "x" },
+      "write": { "enableAction": "speed-on", "disableAction": "speed-off", "valueParameter": "speed" }
+    }]
+  }]}}
+}
+```
+{% endcode %}
+
+{% code title="lua/main.lua" %}
+```lua
+local original
+
+local function address() return getAddress("game.exe+0x2200") end
+
+function enable() end
+
+function speedOn(params)
+  local speed = (params and params.speed) or 2  -- apps without this control send no value
+  local a = address()
+  if original == nil then original = readFloat(a) end  -- a second call only changes the speed
+  writeFloat(a, speed)
+end
+
+function speedOff()
+  if original ~= nil then writeFloat(address(), original); original = nil end
+end
+
+function disable() speedOff() end
+```
+{% endcode %}
+
+A `toggle` test step turns it on at the default; add a numeric `value` to turn it on, or re-apply while
+on, at another value ([testing](testing.md)).
+
+{% code title="tests/integration.lua" %}
+```lua
+local function address(ctx) return ctx.fixture.modules[1].base + 0x2200 end
+local function near(a, b) return math.abs(a - b) < 0.001 end
+return {
+  setup = function(ctx) writeFloat(address(ctx), 1.0) end,
+  default = function(ctx) assert(near(readFloat(address(ctx)), 2)) end,
+  chosen = function(ctx) assert(near(readFloat(address(ctx)), 3)) end,
+  restored = function(ctx) assert(near(readFloat(address(ctx)), 1)) end,
+}
+```
+{% endcode %}
+
+{% code title="tests/studio.tests.json" %}
+```json
+{ "schemaVersion": 1, "cases": [{
+  "id": "speed-value", "kind": "integration", "runtime": "lua", "timeoutMs": 15000,
+  "fixture": { "modules": [{ "name": "game.exe", "size": 16384 }] },
+  "steps": [
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "setup" },
+    { "kind": "toggle", "widgetId": "example.game-speed/game-speed", "enabled": true },
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "default" },
+    { "kind": "toggle", "widgetId": "example.game-speed/game-speed", "enabled": true, "value": 3 },
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "chosen" },
+    { "kind": "toggle", "widgetId": "example.game-speed/game-speed", "enabled": false },
+    { "kind": "lua", "entryFile": "tests/integration.lua", "entrySymbol": "restored" },
+    { "kind": "cleanup" }
+  ]
+}] }
+```
+{% endcode %}
+
+Save Mods remembers an on toggle with a value together with its value. The phone remote and the in-game
+overlay show the same switch and value control.
+
 ## Hosted View Models
 
 Declare a ViewModel in `frontend.hosted` and connect it to a Service:
@@ -337,7 +456,8 @@ network, or native access.
 
 ## UI Design Rules
 
-Use a toggle for a reversible enable/disable feature, a command button for a one-time action, a
+Use a toggle for a reversible enable/disable feature, a [toggle with a value](#toggle-with-a-value)
+for a feature that holds a chosen value while on, a command button for a one-time action, a
 number/text input with `submitMode: "explicit"` for a repeatable command that takes one entered
 value, a query for transient results, and a read-only ViewModel value for the current value observed by the
 Service. Keep local draft input separate from the committed ViewModel value. A delta is only the
