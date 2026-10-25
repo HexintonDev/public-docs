@@ -201,6 +201,13 @@ a conflict with a previously bound label is an error.
 When a pattern has multiple matches, the directive still binds the first hit. It does not enforce
 uniqueness, so package validation must make the pattern specific enough for every supported build.
 
+"First" means the lowest address. The process-wide scan covers every committed, readable, non-guard
+region, whatever its protection or type: executable or not, image, private (including code that a
+.NET, Mono or other JIT compiled at run time) and mapped memory. This matches Cheat Engine's
+`aobscan`, which passes no protection filter, except that Cheat Engine skips `MEM_MAPPED` memory by
+default. The three scan directives stop reading memory as soon as they find their first match, so a
+pattern that matches early in the address space resolves quickly.
+
 ```asm
 aobScan(injection, 48 8B ?? ?? 89)
 
@@ -387,6 +394,28 @@ loop:
 
 Internal labels are usable by instructions in that chunk only and are not persistent script symbols.
 To create a label that can connect separate chunks, declare it first with `label(name)`.
+
+### Write order
+
+Chunks are assembled as soon as their labels resolve, but nothing is written until the whole script
+has resolved (or a `dealloc`/`createThread` needs memory to be current). The staged chunks are then
+written in three tiers, each in source order:
+
+1. memory the engine allocated (`alloc`, `globalalloc`): caves and data blocks;
+2. other private memory, such as JIT-compiled methods in .NET, Mono and other managed games;
+3. image memory (the game's executable and DLLs).
+
+A `site: jmp cave` patch therefore never becomes visible to game threads before the cave it jumps to,
+including when the hooked code is a JIT-compiled method. A script that fails to resolve writes nothing.
+
+### Label addresses in 32-bit games
+
+In a 32-bit target, `[label]` has no RIP-relative form: `mov [pPlayer],ecx`, `cmp byte ptr [flag],1`
+and `mov eax,label` encode the label's absolute address. The engine fills in that address when it
+writes the chunk. Engine builds before 2026-10-26 wrote address 0 instead, so the first such
+instruction in a cave faulted with an access violation at the start of the cave as soon as the game
+ran the hook (seen in Terraria). 64-bit targets were not affected because they address labels
+RIP-relative.
 
 ## Allocation and Symbol Ownership
 
