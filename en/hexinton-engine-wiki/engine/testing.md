@@ -280,6 +280,18 @@ therefore receives its normal single parameter table, not a positional test addr
 step runs the package's declared lifecycle disable through the host with `{}`. Check the resulting
 memory afterward; calling cleanup alone is not an assertion.
 
+A [toggle with a value](trainer-controls.md#toggle-with-a-value) turned on by a `toggle` step receives
+`{ "<valueParameter>": <default> }`, like the app before the player changes the value. Add a numeric
+`value` to an `"enabled": true` step to turn it on at that value, or to re-apply a new value while it
+is on, exactly as the app does when the player moves the slider:
+
+```json
+{ "kind": "toggle", "widgetId": "example.game-speed/game-speed", "enabled": true, "value": 3 }
+```
+
+The value must be within the widget's `constraints`; `value` on an `"enabled": false` step, or on a
+toggle without a value, is rejected as an invalid test.
+
 An `action` step uses a non-toggle widget's compiled write binding. A number control takes a numeric
 `value`; text takes a string. A select takes the option's label string, which the host resolves to
 its declared value. The host puts the result under `write.valueParameter`. An ordinary button
