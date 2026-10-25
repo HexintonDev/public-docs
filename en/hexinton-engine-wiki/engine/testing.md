@@ -236,13 +236,18 @@ modules, not the game's executable or gameplay.
 }
 ```
 
-`size` selects a test DLL with enough space: the small template has 64 KiB of zero-filled data,
-and the large template has 128 MiB. Each file is only 2.5 KiB on disk; Windows supplies zero-filled
-memory as it is used. Sizes must be positive and at most 128 MiB. The returned image size may be
-larger than the requested size. Optional `committedRanges` is retained for compatibility and
-selects pages made writable; it no longer allocates a separate fake module. Ranges must be positive
-and inside the requested span. At most 32 unique module names and 1024 ranges are supported.
-Named memory is not currently supported by JavaScript test cases.
+`size` selects the test image. Up to 128 MiB the owned target copies a template DLL: the small
+template has 64 KiB of zero-filled data and the large template 128 MiB (each file is only 2.5 KiB on
+disk; Windows supplies zero-filled memory as it is used). The returned image size may be larger than
+the requested size. Larger modules, up to 1 GiB on x64 and 512 MiB on x86, are generated data-only
+images of exactly the requested size, so a fixed offset such as `game.exe+0x87EBB5C` exists in the
+fixture as in the game. Optional `committedRanges` selects the pages made writable. For a generated
+module (above 128 MiB) it also makes every other page inaccessible: declare the ranges the test seeds
+or the package writes (for example the first 4 MiB of `dataAddress` and each fixed offset) so a large
+module costs only the memory it uses, and AOB scans skip the rest exactly as they skip unreadable game
+pages. Without `committedRanges` the whole module is writable. Ranges must be positive and inside the
+requested span. At most 32 unique module names and 1024 ranges are supported. Named memory is not
+currently supported by JavaScript test cases.
 
 `ctx.fixture.modules` contains `{name, base, size, dataAddress, dataSize}` in declaration order.
 Use `base + sourceOffset` for an original module-relative address. Place AOB sample bytes inside
@@ -307,6 +312,62 @@ process, then waits so the engine samples it and package timers run:
 `state` is `down` or `up` and `waitMs` is 0–5000 (default 100). Turn the owning toggle on first,
 assert the held effect with a Lua step, then release the key. See
 [native hotkeys](native-hotkeys.md#testing).
+
+### Allocations, a stand-in Unity runtime and pointer paths
+
+A fixture can provide memory the game would have outside its modules. `fixture.allocations` reserves
+read/write/execute memory in the owned target:
+
+```json
+"allocations": [
+  { "name": "jit-code", "size": 65536, "minAddress": 140668768878592, "maxAddress": 140737488289792 },
+  { "name": "heap", "size": 4096 }
+]
+```
+
+`address` places an allocation exactly (64 KiB aligned). Otherwise it is placed at the lowest free
+address in `[minAddress, maxAddress)`, or anywhere when both are absent. Use a range for scripts that
+scan an absolute address range, for example Unity JIT code with
+`aobScanRegion(name, 7FF000000000, 7FFFFFFFFFFF, ...)`: plant the pattern in the allocation and the
+production scan finds it there. Up to 64 allocations of at most 256 MiB each are supported.
+`ctx.fixture.allocations` lists `{name, address, size}` in declaration order.
+
+`fixture.managed` loads a stand-in Unity runtime under the real runtime's module name
+(`GameAssembly.dll` for `il2cpp`, `mono-2.0-bdwgc.dll` for `mono`) with the classes and methods the
+case declares. The production `managed.attach()` lookups attach to it exactly as to a game:
+
+```json
+"managed": { "runtime": "mono", "classes": [
+  { "name": "Game.Player", "methods": [{ "name": "TakeDamage", "codeSize": 1024 }] },
+  { "name": "Game.World/Spawner", "methods": [{ "name": "Tick", "parameters": ["System.Int32"] }] }
+] }
+```
+
+Class names use the `managed.*` class path grammar (`namespace.Name`, nested classes joined with
+`/`). Each method owns an executable code block of `codeSize` bytes (16–65536, default 4096) filled
+with `int3`; seed the bytes a script scans for or restores there. `ctx.fixture.managed` contains
+`{runtime, module, methods}` and each method `{class, name, address, size}`. The stand-in runtime
+answers name, signature and code-address lookups; it does not execute managed code, so field values
+and method calls (`rt:invoke`) are not part of it.
+
+A `lua` step with `"dependsOnPackage": true` runs as a dependent of the package under test: the package
+is enabled first if it is not already, and the package's registered symbols resolve in the step's
+Lua, as in a package that declares the dependency. Use it to set up what the running game provides
+behind a package's pointers, for example linking an unset `[pPlayer]` to fresh memory before an
+action that writes `[[pPlayer]+0xE0]+0x28`, and to read back the value the action wrote:
+
+```json
+{ "kind": "lua", "entryFile": "tests/it.lua", "entrySymbol": "chains", "dependsOnPackage": true },
+{ "kind": "action", "widgetId": "example.package/set-health", "value": 100 },
+{ "kind": "lua", "entryFile": "tests/it.lua", "entrySymbol": "checkHealth", "dependsOnPackage": true }
+```
+
+`cleanup` releases these steps' drivers before it disables the package. The option is accepted only
+on `lua` steps.
+
+These capabilities exist so that a test reproduces the game's conditions instead of expecting an
+error. A feature whose fixture cannot provide something it needs should be reported as a fixture
+limitation; do not mark the step with `expectError` to make the case pass.
 
 ### Custom surface command steps
 
