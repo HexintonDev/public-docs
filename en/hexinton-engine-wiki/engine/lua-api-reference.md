@@ -95,23 +95,26 @@ handle string reads/writes and AOB scans are not registered.
 | [`readPointer(address)`](lua-memory-api.md#readpointer) | Read a pointer value |
 
 Expressions may be integer addresses, module expressions such as `game.exe+0x1234`, or pointer
-chains such as `[[game.exe+0x1234]+0x18]+0x30`.
+chains such as `[[game.exe+0x1234]+0x18]+0x30`. As in Cheat Engine, bare numbers are hexadecimal:
+`[[pStaticBase]+F8]+10` works unchanged.
 
 ## Typed Memory I/O
 
 | Read | Write |
 | --- | --- |
-| [`readBytes(address, count, returnAsTable?)`](lua-memory-api.md#readbytes) | [`writeBytes(address, ...)`](lua-memory-api.md#writebytes) |
+| [`readBytes(address, count?, returnAsTable?)`](lua-memory-api.md#readbytes) | [`writeBytes(address, ...)`](lua-memory-api.md#writebytes) |
+| [`readByte(address, signed?)`](lua-memory-api.md#readbyte-and-readshortinteger) | [`writeByte(address, value)`](lua-memory-api.md#writebyte-and-writeshortinteger) |
 | [`readSmallInteger(address, signed?)`](lua-memory-api.md#readsmallinteger) | [`writeSmallInteger(address, value)`](lua-memory-api.md#writesmallinteger) |
 | [`readWord(address, signed?)`](lua-memory-api.md#readword) | [`writeWord(address, value)`](lua-memory-api.md#writeword) |
 | [`readInteger(address, signed?)`](lua-memory-api.md#readinteger) | [`writeInteger(address, value)`](lua-memory-api.md#writeinteger) |
 | [`readQword(address)`](lua-memory-api.md#readqword) | [`writeQword(address, value)`](lua-memory-api.md#writeqword) |
 | [`readFloat(address)`](lua-memory-api.md#readfloat) | [`writeFloat(address, value)`](lua-memory-api.md#writefloat) |
 | [`readDouble(address)`](lua-memory-api.md#readdouble) | [`writeDouble(address, value)`](lua-memory-api.md#writedouble) |
-| [`readString(address, maxLength, wideChar?)`](lua-memory-api.md#readstring) | [`writeString(address, text, terminate?, wideChar?)`](lua-memory-api.md#writestring) |
+| [`readString(address, maxLength?, wideChar?)`](lua-memory-api.md#readstring) | [`writeString(address, text, terminate?, wideChar?)`](lua-memory-api.md#writestring) |
 
-Use the operation whose width and representation match the target value. Memory writes require an
-attached, valid process session.
+Use the operation whose width and representation match the target value. As in Cheat Engine, a
+failed read returns `nil` and a failed write returns `false` (`writeBytes`: `0`); they do not raise.
+See [failures](lua-memory-api.md#failures).
 
 ## Scanning and Assembly
 
@@ -135,16 +138,21 @@ Use `??` for a wildcard byte in an AOB pattern. Check scan results before readin
 | [`executeCodeEx(callmethod, timeout, address, ...)`](lua-game-calls-and-worker-api.md#executecodeex) | Call with integer, float and string arguments |
 | [`allocateMemory(size, base?, protection?)`](lua-game-calls-and-worker-api.md#allocatememory) | Allocate caller-owned target memory |
 | [`deAlloc(address, size?)`](lua-game-calls-and-worker-api.md#dealloc) | Release an allocation |
-| [`readByte(address)`](lua-game-calls-and-worker-api.md#readbyte-and-writebyte) | Read one byte |
-| [`writeByte(address, value)`](lua-game-calls-and-worker-api.md#readbyte-and-writebyte) | Write one byte |
 
 For CE item spawners, warps and event calls, see [converting CE game-call scripts](converting-ce-game-calls.md).
+
+## Cheat Engine Helpers
+
+`bAnd`, `bOr`, `bXor`, `bNot`, `bShl`, `bShr`, the byte-table conversions (`dwordToByteTable`,
+`byteTableToDword`, ...), `getTickCount`, `print`, `showMessage`, `enumModules`, `getModuleSize`,
+`getModuleBase`, `speedhack_setSpeed` and `speedhack_getSpeed` behave as in Cheat Engine. See
+[Cheat Engine Lua compatibility](lua-ce-compatibility.md).
 
 ## Runtime Utilities
 
 | Function | Purpose |
 | --- | --- |
-| [`createTimer(...)`](lua-runtime-utilities-api.md#createtimer) | Create a runtime timer |
+| [`createTimer(...)`](lua-runtime-utilities-api.md#createtimer) | Create a timer (CE forms; callback errors do not stop it) |
 | [`sleep(milliseconds)`](lua-runtime-utilities-api.md#sleep) | Pause the current script |
 | [`process`](lua-runtime-utilities-api.md#process) | Attached process main module name |
 | [`publishEvent(event, value)`](lua-runtime-utilities-api.md#publishevent) | Publish service state to a declared feed |
@@ -160,5 +168,6 @@ the package and must stop or become inactive during `disable`.
 ## Return Values and Errors
 
 Runnable functions may return JSON-compatible values: `nil`, booleans, numbers, strings, and tables
-containing compatible values. Raise an error when a required check fails. Do not continue with a
+containing compatible values. Raise an error when a required check fails. Every engine error,
+including one raised in native code, can be caught with `pcall`. Do not continue with a
 write after an unresolved address, missing scan result, stale attachment, or invalid argument.

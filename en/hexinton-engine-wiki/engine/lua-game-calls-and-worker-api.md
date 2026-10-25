@@ -13,7 +13,7 @@ item spawner, warp, NPC spawn or event trigger, see
 | [`executeCodeEx(callmethod, timeout, address, ...)`](#executecodeex) | Call a function with integer, float and string arguments |
 | [`allocateMemory(size, base?, protection?)`](#allocatememory) | Allocate caller-owned target memory |
 | [`deAlloc(address, size?)`](#dealloc) | Release an allocation |
-| [`readByte(address)`, `writeByte(address, value)`](#readbyte-and-writebyte) | Read or write one byte |
+| [`readByte(address)`, `writeByte(address, value)`](#readbyte-and-writebyte) | Read or write one byte (see the memory API) |
 | [`synchronize(fn, ...)`](#synchronize) | Call `fn` now on the Lua worker |
 | [`queue(fn, ...)`](#queue) | Call `fn` on a later Lua worker turn |
 | [`isKeyPressed(vkey)`](#iskeypressed) | Current physical key state |
@@ -131,12 +131,12 @@ not be released. As in CE, `size` is accepted but does not limit the release.
 ## `readByte` and `writeByte`
 
 ```lua
-readByte(address) -> integer
-writeByte(address, value) -> true
+readByte(address, signed?) -> integer | nil
+writeByte(address, value) -> boolean
 ```
 
-Read or write one unsigned byte. Unlike the call functions, invalid addresses and failed reads or
-writes raise a Lua error, like the other [typed memory functions](lua-memory-api.md).
+Read or write one byte. Like the other [typed memory functions](lua-memory-api.md#failures), a
+failed read returns `nil` and a failed write returns `false`.
 
 ## `synchronize`
 
