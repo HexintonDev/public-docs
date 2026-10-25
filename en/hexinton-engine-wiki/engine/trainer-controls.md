@@ -136,6 +136,25 @@ An action result answers “did this operation finish?”. It is not a live valu
 later Service observation. If another source can change the value, display the ViewModel updated by
 the Service rather than the last value returned by the action.
 
+## Applying typed values
+
+Every value the player types into a hosted control follows one rule, so packages never need their own:
+
+- Typing only edits a draft. **Enter or the field's visible ✓** applies it (for an input-and-button row,
+  the button). One apply sends exactly one command.
+- Leaving the field does not apply and does not discard: the draft stays, marked unapplied (stronger edge,
+  lit ✓), until it is applied or **Escape** restores the current value.
+- While the command runs the control shows the shared pending treatment. When the new value is in effect
+  the draft disappears. If the command fails, the draft stays so nothing the player typed is lost, and the
+  failure is reported as a notification.
+- Input that cannot be applied (not a number, outside a text length) is marked invalid with a hint and is
+  never sent; numbers outside `minimum`/`maximum` are clamped.
+- **Sliders** apply on release (or one keyboard step); the plus/minus buttons of a number step control apply
+  one step at once.
+
+The rule covers text fields with ✓, number step controls, the number field of a
+[toggle with a value](#toggle-with-a-value), and explicit inputs (`submitMode: "explicit"`).
+
 ## Input with an explicit button
 
 A repeatable command such as Add Souls, Add Money or Grant XP needs one row with a separate input
@@ -241,8 +260,9 @@ return {
 Some features hold a value the player chooses while they are on: Game Speed at 2x, Freeze Money at
 250000, Movement Speed Multiplier at 5x. Use one `toggle` with a value, not a toggle plus a separate
 number widget. The app shows the switch with the value beside it: a slider when the range is small, a
-number field otherwise. The player can set the value before turning the feature on; changing it while
-the feature is on applies it at once. Hotkeys still toggle, using the chosen value.
+number field otherwise. The player can set the value before turning the feature on; an applied change
+(slider release, or Enter/✓ in the number field, see [Applying typed values](#applying-typed-values))
+takes effect at once while the feature is on. Hotkeys still toggle, using the chosen value.
 
 | Field | Contract |
 | --- | --- |
