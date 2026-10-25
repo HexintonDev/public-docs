@@ -224,10 +224,11 @@ return { pid = target.pid, original = before }
 getAddress(expression) -> address
 ```
 
-Resolves a numeric address, module expression, registered symbol, offset, or supported nested
-pointer chain in the default process/script context. An unresolved expression, unavailable session,
-or invalid expression raises a Lua error. This function does not read memory; it only resolves an
-address.
+Resolves a numeric address, module expression, registered symbol, offset, or nested pointer chain
+in the default process/script context. Bare numbers are hexadecimal, as in Cheat Engine
+(`[[pStaticBase]+F8]+10`). An unresolved expression, an unreadable pointer level, an unavailable
+session, or an invalid expression raises a Lua error that `pcall` can catch. Only the pointer levels
+of a chain are read.
 
 ```lua
 local address = getAddress("game.exe+0x1234")
@@ -241,8 +242,8 @@ return { direct = address, nested = nested }
 getAddressSafe(expression) -> address | nil
 ```
 
-Resolves an address in the default process/script context and converts resolution failures into
-`nil`. Invalid Lua argument types can still raise an argument error. Check the result before any
+Resolves an address in the default process/script context and returns no value (`nil`) when it
+cannot be resolved, including for an argument that is not a number or a string. Check the result before any
 read, write, scan-dependent patch, or symbol registration.
 
 ```lua

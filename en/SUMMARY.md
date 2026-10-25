@@ -37,6 +37,7 @@
   * [Lua Scanning and Assembly API](hexinton-engine-wiki/engine/lua-scanning-and-assembly-api.md)
   * [Lua Runtime Utilities API](hexinton-engine-wiki/engine/lua-runtime-utilities-api.md)
   * [Lua Game Calls and Worker Helpers API](hexinton-engine-wiki/engine/lua-game-calls-and-worker-api.md)
+  * [Cheat Engine Lua Compatibility](hexinton-engine-wiki/engine/lua-ce-compatibility.md)
   * [Converting CE Game-Call Scripts](hexinton-engine-wiki/engine/converting-ce-game-calls.md)
   * [Lua API Examples](hexinton-engine-wiki/engine/lua-api-examples.md)
   * [Auto Assembler API Examples](hexinton-engine-wiki/engine/assembly-api-examples.md)

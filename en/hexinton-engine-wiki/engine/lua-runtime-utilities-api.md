@@ -36,47 +36,50 @@ Game calls, target allocation and the CE worker helpers `synchronize` and `queue
 ## `createTimer`
 
 ```lua
-createTimer() -> timerHandle
-createTimer(enabled) -> timerHandle
-createTimer(interval, callback) -> timerHandle
+createTimer(interval, callback, ...) -> timerHandle   -- one-shot
+createTimer(enabled) -> timerHandle                   -- engine form, one boolean
+createTimer(owner?, enabled?) -> timerHandle          -- CE form
 ```
 
-Creates a timer userdata owned by the current runtime. With no arguments it creates an enabled
-repeating timer with the default interval of 1000 milliseconds. With one boolean argument, the
-boolean sets the initial `Enabled` state and the timer keeps the default interval. With an integer
-interval and a function callback, it creates an enabled one-shot timer. The interval must be
-non-negative. The two-argument overload requires a callback function in the second position.
+Timers follow Cheat Engine. The arguments are matched in this order:
 
-The handle exposes `Interval`, `Enabled`, and `OnTimer` properties, plus `destroy()`. Assigning a
-new interval while enabled reschedules the next firing. Enabling a disabled timer schedules it from
-the current time. Assigning `OnTimer=nil` removes the callback; assigning a non-function raises a
-Lua error. Destroying an already destroyed or missing timer is harmless. A callback exception is
-logged and disables that timer; it is not propagated into the caller that happened to be waiting.
+1. An integer `interval` followed by a function: a one-shot timer. After `interval` milliseconds it
+   calls `callback(...)` once with the extra arguments (not with the timer), then destroys itself,
+   whether or not the callback succeeded.
+2. Exactly one boolean: a repeating timer whose `Enabled` state is that boolean. This is the
+   engine's original form and keeps working; CE itself would read the boolean as an owner and start
+   the timer enabled.
+3. Anything else is CE's `createTimer(owner, enabled)`: `owner` is ignored (the engine has no forms
+   or components), `enabled` defaults to `true`, and `nil` also means `true`. `createTimer()`,
+   `createTimer(nil)` and `createTimer(MainForm)` create an enabled timer; `createTimer(nil, false)`
+   creates a disabled one.
+
+A repeating timer starts with an `Interval` of 1000 milliseconds and does nothing until it has an
+`OnTimer` callback. Each call receives the timer as its argument (`sender`).
 
 ```lua
-local timer = createTimer(false)
+local timer = createTimer(nil, false)
 timer.Interval = 250
-timer.OnTimer = function()
-    publishEvent("health_changed", {
-        current = readInteger(getAddress("game.exe+0x1234"))
-    })
+timer.OnTimer = function(sender)
+    publishEvent("health_changed", { current = readInteger("[[pPlayer]+18]+10") })
 end
 timer.Enabled = true
+
+createTimer(2000, function(message) print(message) end, "two seconds later")
 ```
 
-For a package service, retain the handle and destroy it from `disable` before releasing script
-state:
+For a package service, retain the handle and destroy it from `disable`:
 
 ```lua
 local timer
 
 function enable()
-    timer = createTimer(false)
-    timer.Interval = 250
+    timer = createTimer(nil, false)
+    timer:setInterval(250)
     timer.OnTimer = function()
-        publishEvent("health_changed", readInteger("game.exe+0x1234"))
+        publishEvent("health_changed", readInteger("game.exe+1234"))
     end
-    timer.Enabled = true
+    timer:setEnabled(true)
 end
 
 function disable()
@@ -87,19 +90,28 @@ function disable()
 end
 ```
 
-## Timer Handle Properties
+## Timer Handle Properties and Methods
 
-| Member | Read | Write | Behavior |
-| --- | --- | --- | --- |
-| `Interval` | Integer milliseconds | Non-negative integer | Reschedules an enabled timer from now |
-| `Enabled` | Boolean | Boolean | Starts or stops future callbacks |
-| `OnTimer` | Function or `nil` | Function or `nil` | Replaces or removes the callback |
-| `destroy` | Function | Call as `timer:destroy()` | Removes the timer and releases its callback reference |
+| Member | Behavior |
+| --- | --- |
+| `Interval` | Milliseconds between calls. Setting it on an enabled timer restarts the countdown. A repeating timer with `Interval` 0 never fires (as in CE). |
+| `Enabled` | `true` while the timer is scheduled. Enabling a disabled timer starts the countdown from now. |
+| `OnTimer` | Function called as `OnTimer(sender)`, or `nil` to remove it. Assigning another type raises a Lua error. |
+| `getInterval()`, `setInterval(ms)` | Method forms of `Interval` |
+| `getEnabled()`, `setEnabled(enabled)` | Method forms of `Enabled` |
+| `getOnTimer()`, `setOnTimer(fn)` | Method forms of `OnTimer` |
+| `destroy()` | Removes the timer and releases its callback. Calling it again is harmless. |
+
+Member names are case-insensitive, as in CE: `timer.enabled` and `timer.Enabled` are the same.
+After `destroy()`, the properties read `nil` and the other methods raise an error.
+
+**Errors in a callback.** As in CE, an error raised by `OnTimer` does not stop the timer: it is
+written to the engine log and the timer runs again at its next interval. Repeated errors from the
+same timer are logged at most once every five seconds. A callback that should stop on failure must
+do so itself, for example `sender.Enabled = false` before raising.
 
 The handle is a runtime userdata, not a serializable result value. Do not return it from a runnable
-or publish it in an event payload. The one-shot overload destroys itself after its callback returns
-successfully. A repeating timer remains scheduled until disabled, destroyed, or disabled because
-its callback failed.
+or publish it in an event payload. Script teardown destroys every timer the script created.
 
 ## `sleep`
 

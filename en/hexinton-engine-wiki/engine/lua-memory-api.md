@@ -3,322 +3,260 @@
 Status: current public API reference.
 
 Memory functions execute on the Lua runtime worker. A global function uses the command's default
-process session. The same operation can be called on an explicit process handle, for example
-`target:readInteger(address)`, to make the selected process explicit. Address arguments may be
-numeric addresses or supported address expressions.
+process session. The global functions follow Cheat Engine's Lua contract, so a converted CE script
+runs unchanged; [Cheat Engine Lua compatibility](lua-ce-compatibility.md) lists every CE function
+and the few deliberate differences.
 
-All failed address resolutions, invalid reads, invalid writes, and unavailable process sessions
-raise a Lua error unless an entry below explicitly says that it returns `nil`. A successful write
-returns `true`.
+## Addresses
+
+Every address argument may be:
+
+- an integer, such as `0x14001234` (a number with a fraction is truncated, as in CE);
+- a module expression, such as `game.exe+1234` or `"My Game.exe"+0x10`;
+- a registered symbol, such as `pPlayer` or `pPlayer+18`;
+- a pointer chain, such as `[[pStaticBase]+F8]+10` or `[[game.exe+2000]+18]+30`.
+
+As in CE, a bare number inside an expression is hexadecimal: `+F8` and `+0xF8` are the same offset.
+Expressions resolve in the calling package's script context, so a package sees its own symbols and
+those of its declared dependencies.
+
+## Failures
+
+The global memory functions never raise for a memory failure. When the address cannot be resolved
+(unknown name, an unreadable or null pointer level in a chain, unmapped or protected memory):
+
+| Function kind | Result |
+| --- | --- |
+| `read*` | No value (`nil`) |
+| `write*` except `writeBytes` | `false` |
+| `writeBytes` | `0` (number of bytes written) |
+
+A successful write returns `true` (`writeBytes`: the byte count). Check the result where the
+outcome matters:
+
+```lua
+local health = readInteger("[[pPlayer]+18]+10")
+if health == nil then
+	error("Load a save first.", 0)
+end
+if not writeInteger("[[pPlayer]+18]+10", 999) then
+	error("Health couldn't be changed.", 0)
+end
+```
+
+Programming errors, such as a missing string argument to `writeString`, still raise a Lua error.
+Every engine error, including one raised inside native code, can be caught with `pcall`.
+
+The explicit-handle forms (`target:readInteger(address)` and the other
+[process handle methods](lua-process-and-address-api.md#process-handle-properties-and-methods))
+are engine functions, not CE functions: they raise a Lua error on failure.
+
+## Integer values
+
+Integer writes convert the value like CE's `lua_tointeger`: an integer is used as-is, a number with
+a fraction is truncated toward zero (`7.9` writes `7`, `-7.9` writes `-7`) and a numeric string is
+converted (`"12"` writes `12`). The value is then reduced to the field width, so `writeByte(a, 300)`
+writes `44`. A value that is not a number at all (`nil`, a table, `"abc"`) is not written and the
+function returns `false`; CE would write `0` instead.
 
 ## `readBytes`
 
 ```lua
-readBytes(address, count, returnAsTable?) -> byte1, byte2, ...
+readBytes(address, count = 1, returnAsTable = false) -> byte1, byte2, ...
 readBytes(address, count, true) -> { byte1, byte2, ... }
 ```
 
-Reads `count` raw bytes from the default process. `count` must be non-negative. With the default
-`returnAsTable` value, the function returns one Lua integer per byte as multiple return values, not
-one table. Pass `true` to receive a 1-based Lua array instead. A zero-length read returns no values,
-or an empty table when `returnAsTable` is true.
-
-An invalid address, negative count, unavailable process, or failed read raises a Lua error. The
-explicit-handle form is `target:readBytes(address, count, returnAsTable?)` and uses `target`'s pid.
+Reads up to `count` raw bytes. With the default `returnAsTable`, the bytes are returned as multiple
+values; pass `true` for a 1-based Lua array. When only the start of the range is readable, the
+readable bytes are returned. When no byte can be read, or `count` is not positive, it returns no
+value.
 
 ```lua
-local bytes = readBytes("game.exe+0x1234", 4, true)
-for index, byte in ipairs(bytes) do
-	print(index, string.format("%02X", byte))
+local bytes = readBytes("game.exe+1234", 4, true)
+if bytes then
+	for index, byte in ipairs(bytes) do
+		print(index, string.format("%02X", byte))
+	end
 end
 ```
 
 ## `writeBytes`
 
 ```lua
-writeBytes(address, { byte, ... }) -> true
-writeBytes(address, byte1, byte2, ...) -> true
+writeBytes(address, { byte, ... }) -> count
+writeBytes(address, byte1, byte2, ...) -> count
 ```
 
-Writes raw bytes to the default process. The byte source can be a 1-based Lua array or one or more
-integer arguments. Every byte must be in the inclusive range `0..255`; at least one byte is
-required. The explicit-handle form is `target:writeBytes(address, bytes)` or
-`target:writeBytes(address, byte1, byte2, ...)`. For an explicit handle only, one string argument
-in the byte position is treated as its raw byte contents.
+Writes raw bytes and returns the number of bytes written, `0` on failure. Each value keeps its low
+byte (`0x1FF` and `-1` both write `0xFF`); table entries that are not numbers are skipped. Note that
+`0` is a true value in Lua: test `writeBytes(...) > 0`.
 
-An invalid address, missing byte, non-integer byte, out-of-range byte, unavailable process, or failed
-write raises a Lua error. The function does not save the previous bytes or provide rollback.
+The write uses temporary page-protection handling and restores the previous protection afterwards.
+It does not save the previous bytes or provide rollback.
 
 ```lua
-local address = getAddress("game.exe+0x1234")
+local address = getAddress("game.exe+1234")
 writeBytes(address, { 0x90, 0x90, 0x90, 0x90 })
 ```
 
-## `readSmallInteger`
+## `readByte` and `readShortInteger`
 
 ```lua
-readSmallInteger(address, signed?) -> integer
+readByte(address, signed = false) -> integer | nil
+readShortInteger(address, signed = false) -> integer | nil
 ```
 
-Reads two bytes from the default process. The optional boolean `signed` selects signed or unsigned
-interpretation. The explicit-handle form is `target:readSmallInteger(address)`; its implementation
-uses the selected process but does not expose the global signed flag.
+Reads one byte. `readShortInteger` is CE's name for the same function.
 
-An invalid address, unavailable process, or failed read raises a Lua error. Use this operation only
-when the target field is two bytes wide.
+## `writeByte` and `writeShortInteger`
 
 ```lua
-local stamina = readSmallInteger("game.exe+0x1250", true)
+writeByte(address, value) -> boolean
+writeShortInteger(address, value) -> boolean
 ```
 
-## `readWord`
+Writes one byte.
+
+## `readSmallInteger` and `readWord`
 
 ```lua
-readWord(address, signed?) -> integer
+readSmallInteger(address, signed = false) -> integer | nil
+readWord(address, signed = false) -> integer | nil
 ```
 
-`readWord` is a registered alias of `readSmallInteger`. It reads two bytes and follows the same
-signed flag, default-process scope, explicit-handle limitation, and Lua-error behavior.
+Reads two bytes. `signed = true` returns a value in `-32768..32767`.
 
 ```lua
-local wordValue = readWord("game.exe+0x1250", false)
+local stamina = readSmallInteger("game.exe+1250", true)
 ```
 
-## `writeSmallInteger`
+## `writeSmallInteger` and `writeWord`
 
 ```lua
-writeSmallInteger(address, value) -> true
+writeSmallInteger(address, value) -> boolean
+writeWord(address, value) -> boolean
 ```
 
-Writes `value` as a two-byte integer to the default process. The explicit-handle form is
-`target:writeSmallInteger(address, value)`. The selected process must be attached and writable.
-The implementation converts the Lua integer to the native two-byte representation; it does not
-expose a separate Lua range check for this operation.
-
-An invalid address, non-integer value, unavailable process, or failed write raises a Lua error. The
-operation does not preserve the original value.
-
-```lua
-writeSmallInteger("game.exe+0x1250", 250)
-```
-
-## `writeWord`
-
-```lua
-writeWord(address, value) -> true
-```
-
-`writeWord` is a registered alias of `writeSmallInteger`. It writes two bytes and has the same
-argument, scope, failure, and cleanup behavior.
-
-```lua
-writeWord("game.exe+0x1250", 250)
-```
+Writes two bytes.
 
 ## `readInteger`
 
 ```lua
-readInteger(address, signed?) -> integer
+readInteger(address, signed = false) -> integer | nil
 ```
 
-Reads four bytes from the default process. The optional boolean `signed` selects signed or unsigned
-interpretation. The explicit-handle form is `target:readInteger(address)`.
-
-An invalid address, unavailable process, or failed read raises a Lua error. The field must be four
-bytes wide for the result to represent the target value correctly.
+Reads four bytes. `signed = true` returns a value in `-2147483648..2147483647`.
 
 ```lua
-local health = readInteger("game.exe+0x1234", true)
+local health = readInteger("game.exe+1234", true)
 ```
 
 ## `writeInteger`
 
 ```lua
-writeInteger(address, value) -> true
+writeInteger(address, value) -> boolean
 ```
 
-Writes `value` as a four-byte integer to the default process. The explicit-handle form is
-`target:writeInteger(address, value)`. The implementation converts the Lua integer to the native
-four-byte representation; it does not expose a separate Lua range check for this operation.
-
-An invalid address, non-integer value, unavailable process, or failed write raises a Lua error. It
-does not calculate a pointer chain, change memory protection, or restore an earlier value.
+Writes four bytes.
 
 ```lua
-writeInteger("game.exe+0x1234", 999)
+writeInteger("game.exe+1234", 999)
 ```
 
 ## `readQword`
 
 ```lua
-readQword(address) -> integer
+readQword(address) -> integer | nil
 ```
 
-Reads eight bytes as an unsigned 64-bit integer from the default process. The explicit-handle form
-is `target:readQword(address)`. It is suitable for 64-bit integer fields, but a pointer should be
-read with `readPointer` when target architecture determines the width.
-
-An invalid address, unavailable process, or failed read raises a Lua error.
-
-```lua
-local totalExperience = readQword("game.exe+0x2000")
-```
+Reads eight bytes as a 64-bit integer. Use `readPointer` for pointers so the width follows the
+target's architecture.
 
 ## `writeQword`
 
 ```lua
-writeQword(address, value) -> true
+writeQword(address, value) -> boolean
 ```
 
-Writes `value` as an eight-byte integer to the default process. The explicit-handle form is
-`target:writeQword(address, value)`. The implementation converts the Lua integer to the native
-eight-byte representation; it does not expose a separate Lua range check for this operation.
-
-An invalid address, non-integer value, unavailable process, or failed write raises a Lua error.
-The operation does not infer whether the destination is a pointer or restore previous bytes.
-
-```lua
-writeQword("game.exe+0x2000", 1000000)
-```
+Writes eight bytes.
 
 ## `readPointer`
 
 ```lua
-readPointer(address) -> pointer
+readPointer(address) -> pointer | nil
 ```
 
-Reads one pointer-sized unsigned value from the default process. The width is selected from the
-attached target: four bytes for a 32-bit target or eight bytes for a 64-bit target. The explicit-
-handle form is `target:readPointer(address)`.
-
-An invalid address, unavailable process, or failed read raises a Lua error. A valid null pointer is
-returned as numeric `0`; it is not converted to Lua `nil`.
+Reads one pointer: four bytes on a 32-bit target, eight bytes on a 64-bit target. A null pointer is
+returned as `0`; an unreadable address returns `nil`.
 
 ```lua
-local object = readPointer("game.exe+0x3000")
-if object == 0 then
-	return { ok = false, reason = "object is null" }
+local object = readPointer("game.exe+3000")
+if not object or object == 0 then
+	error("Load a save first.", 0)
 end
 ```
 
-## `readFloat`
+## `readFloat` and `readDouble`
 
 ```lua
-readFloat(address) -> number
+readFloat(address) -> number | nil
+readDouble(address) -> number | nil
 ```
 
-Reads four bytes as an IEEE single-precision floating-point value from the default process. The
-explicit-handle form is `target:readFloat(address)`.
+Read a 32-bit or 64-bit IEEE floating-point value.
 
-An invalid address, unavailable process, or failed read raises a Lua error. Use it only for a field
-whose representation is a 32-bit float.
+## `writeFloat` and `writeDouble`
 
 ```lua
-local speed = readFloat("game.exe+0x1400")
+writeFloat(address, value) -> boolean
+writeDouble(address, value) -> boolean
 ```
 
-## `writeFloat`
+Write a 32-bit or 64-bit floating-point value. A numeric string is converted; a value that is not a
+number is not written and the function returns `false`.
 
 ```lua
-writeFloat(address, value) -> true
-```
-
-Writes `value` as a 32-bit floating-point value to the default process. The explicit-handle form is
-`target:writeFloat(address, value)`.
-
-An invalid address, non-number value, unavailable process, or failed write raises a Lua error.
-
-```lua
-writeFloat("game.exe+0x1400", 2.5)
-```
-
-## `readDouble`
-
-```lua
-readDouble(address) -> number
-```
-
-Reads eight bytes as an IEEE double-precision floating-point value from the default process. The
-explicit-handle form is `target:readDouble(address)`.
-
-An invalid address, unavailable process, or failed read raises a Lua error. Use it only for a field
-whose representation is a 64-bit double.
-
-```lua
-local multiplier = readDouble("game.exe+0x1500")
-```
-
-## `writeDouble`
-
-```lua
-writeDouble(address, value) -> true
-```
-
-Writes `value` as a 64-bit floating-point value to the default process. The explicit-handle form is
-`target:writeDouble(address, value)`.
-
-An invalid address, non-number value, unavailable process, or failed write raises a Lua error.
-
-```lua
-writeDouble("game.exe+0x1500", 1.25)
+writeFloat("game.exe+1400", 2.5)
 ```
 
 ## `readString`
 
 ```lua
-readString(address, maxLength, wideChar?) -> string
+readString(address, maxLength = 50, wideChar = false) -> string | nil
 ```
 
-Reads at most `maxLength` characters from the default process and stops at the first null
-terminator. With `wideChar` omitted or false, it reads one byte per character. With `wideChar=true`,
-it reads UTF-16 code units and converts the result to UTF-8 Lua text. The current explicit process
-handle does not expose a string read method.
-
-`maxLength` must be non-negative. An invalid address, unavailable process, or failed read raises a
-Lua error. The function does not guarantee that the target memory is null-terminated when the limit
-is reached.
+Reads at most `maxLength` characters and stops at the first null terminator. With `wideChar=true`,
+it reads UTF-16 code units and returns UTF-8 text. When only part of the range is readable, the
+readable prefix is returned; when nothing is readable it returns `nil`.
 
 ```lua
-local name = readString("game.exe+0x1800", 32, false)
-local displayName = readString("game.exe+0x1900", 32, true)
+local name = readString("game.exe+1800", 32)
+local displayName = readString("game.exe+1900", 32, true)
 ```
 
 ## `writeString`
 
 ```lua
-writeString(address, text, terminate?, wideChar?) -> true
+writeString(address, text, terminate = true, wideChar = false) -> boolean
 ```
 
-Writes Lua `text` to the default process. Narrow mode writes the string bytes; wide mode converts
-UTF-8 text to UTF-16 code units. `terminate` defaults to true and appends one null byte in narrow
-mode or one null UTF-16 code unit in wide mode. String methods are registered only as globals; the
-current explicit process handle does not expose `readString` or `writeString` methods.
+Writes `text`. Narrow mode writes the string bytes; wide mode converts UTF-8 text to UTF-16.
+`terminate` appends a null byte (narrow) or a null UTF-16 code unit (wide).
 
-An invalid address, non-string text, unavailable process, or failed write raises a Lua error. The
-function does not allocate a destination buffer or check that the destination is large enough.
+This is the one CE-named memory function whose arguments differ from CE: in CE the third argument
+is `wideChar` and no terminator is written. The engine keeps its own order because packages rely on
+`writeString(address, text, true)` writing a terminated narrow string. A CE script that writes a
+wide string must pass `writeString(address, text, false, true)`.
 
 ```lua
-writeString("game.exe+0x1800", "Ready", true, false)
-writeString("game.exe+0x1900", "Ready", true, true)
+writeString("game.exe+1800", "Ready")
+writeString("game.exe+1900", "Ready", true, true)
 ```
 
-## Byte Arguments and Scope
-
-Global `writeBytes` accepts either a table or positional integer bytes:
-
-```lua
-local address = getAddress("game.exe+0x1234")
-local before = readBytes(address, 4, true)
-writeBytes(address, 0x90, 0x90, 0x90, 0x90)
-return before
-```
+## Scope and cleanup
 
 Memory functions do not save original bytes, create a rollback record, or publish UI state.
-`writeBytes` uses temporary page-protection handling in the engine and restores the previous
-protection after the write. Calling `fullAccess` first is a separate persistent protection change;
-restoring the edited bytes does not reverse that change. Neither API supplies byte rollback or
-patch ownership. A package that writes memory must validate attachment and
-address resolution first, match width, signedness, encoding, and architecture, and restore or
-release its changes from `disable`. Use a query result for a one-shot value and a service/feed for
-changing state. Explicit process handles are opaque session-bound values; after runtime/session
-teardown or userdata invalidation, their methods fail rather than silently selecting another process.
+Calling `fullAccess` first is a separate persistent protection change. A package that writes memory
+must match width, signedness, encoding, and architecture, and restore or release its changes from
+`disable`. Explicit process handles are opaque session-bound values; after runtime/session teardown
+their methods fail rather than silently selecting another process.
