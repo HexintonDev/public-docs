@@ -51,10 +51,26 @@ These Cheat Engine forms are accepted as written:
 | `jmp returnhere+5`, `call game.exe+0x4801e0`, `mov eax, cave+0x10` | A name (allocation, label, registered symbol or module) plus or minus a number, outside memory brackets, becomes that address. A label bound later in the script is resolved once it is bound. Inside brackets, `[name+0x10]` keeps its usual memory-operand meaning. |
 | `jmp far target`, `call far target` | On 64-bit targets, CE's absolute forms: `FF 25 00000000` + 8-byte address (14 bytes) and `FF 15 02000000 EB 08` + 8-byte address (16 bytes). The cave does not need to be near the hook. On 32-bit targets `far` is ignored and an ordinary jump/call is written. |
 | `"Tales of Berseria.exe"+0x1234:` | Double quotes delimit a module name containing spaces in headers and address expressions. |
-| `readmem(game.exe+0x1234, 5)` | Inside a chunk, writes the bytes currently at the address (1 to 4096). They are read before the same operation patches anything, so a cave can keep the original instructions a hook overwrites. |
+| `readmem(game.exe+0x1234, 5)` | Inside a chunk, writes the bytes currently at the address. There is no size limit (`readmem(game.exe, 0x6371000)` copies a whole module into an allocation of that size); the bytes must fit the chunk's allocation. They are read before the same operation patches anything, so a cave can keep the original instructions a hook overwrites. |
 | `je skip` ... `skip:` with `label(skip)` | A declared label can be used before the line that binds it, in the same chunk or a later one. |
-| `mov rax, cell` (cell bound later in the chunk) | Loads the label's address (assembled as `lea rax, [cell]`). |
+| `mov rax, cell` (cell bound later in the chunk) | Loads the label's address (assembled as `lea rax, [cell]`). This also works for an internal label that has no `label(...)` declaration. |
 | `cmp dword ptr [eax+Game.exe+0x10], 0` | A dotted module name inside memory brackets resolves to its address. |
+| `[pCheatBase]+0x3:` | A header may start with a pointer read. The pointer is read when the operation runs, and the chunk is written at the address it holds plus the offset. A pointer that cannot be read fails the line ("segment target ... did not resolve"). |
+| `label(pPlayer)` ... `pplayer:` ... `mov rax,PPLAYER` | Names are case-insensitive everywhere, including labels inside one chunk. |
+| `007Game.exe+0x500`, `DRAGON QUEST XI S.exe+0x10`, `b1-Win64-Shipping.exe+0x8` | Module names that begin with digits, contain spaces (quoted or not) or contain hyphens resolve in address expressions and directive arguments. A token made only of hex digits stays a number. |
+
+These instruction forms also assemble the way Cheat Engine assembles them. Each applies only to a line
+the assembler would otherwise reject, so text that already assembled is unchanged:
+
+| Form | Assembled as |
+| --- | --- |
+| `fcomip st(0),st(1)`, `fcomi st0,st2` | `st(N)` is `stN`; for `fcomi`, `fcomip`, `fucomi`, `fucomip`, `fcom`, `fcomp`, `fucom`, `fucomp` and `fxch` a leading `st0` operand is implicit (`fcomip st1`). |
+| `addss xmm0 [rcx+0xB84]` | A missing comma between a register and a memory operand. |
+| `cmp dword ptr [rbx],'wood'` | A character constant of 1 to 8 characters is the value whose little-endian bytes are those characters. |
+| `cmp [rcx+0x2C],9999999` in 32-bit code | 64-bit register names inside brackets are the 32-bit registers; a memory operand without a size used with an immediate is a dword. |
+| `mov dword ptr [x],rax` | A size keyword that contradicts the register operand is ignored (the register decides). |
+| `cmp eax,rax` | Mixed 32/64-bit register pairs use the 64-bit form. |
+| `mov ebx,0x999999999` | An immediate wider than a 1-, 2- or 4-byte operand keeps its low bytes. |
 
 A `far` hook overwrites 14 bytes, so reserve and restore that many at the hook site. Offsets follow
 the instruction number rules (`0x` hex, otherwise decimal); write `0x` as everywhere else. A name the
@@ -111,9 +127,11 @@ alloc(name[, size[, nearAddress]])
 ```
 
 Allocates executable/read-write memory owned by the current script context and binds `name` to the
-allocation. On 64-bit targets an allocation without `nearAddress` is first placed near the game's main module,
-like Cheat Engine, so code and data cells stay within the 2 GB that relative jumps and RIP-relative
-operands reach; when no memory is free there it is allocated anywhere. `size` is an address-sized integer expression and defaults to `0x1000` bytes. When
+allocation. On 64-bit targets an allocation without `nearAddress` is placed like Cheat Engine places it,
+so code and data cells stay within the 2 GB that relative jumps and RIP-relative operands reach: near
+the first chunk header of the operation that already resolves (an AOB result or `module+offset`, for
+example a hook in `GameAssembly.dll`), otherwise near the game's main module; when no memory is free
+near either, it is allocated anywhere. A near allocation searches both above and below the address. `size` is an address-sized integer expression and defaults to `0x1000` bytes. When
 `nearAddress` is supplied, the allocator uses it as the placement hint for the allocation. The
 allocation can then be used as a segment target or address expression.
 
@@ -174,6 +192,8 @@ aobScan(name, pattern)
 ```
 
 Scans the attached process for a byte pattern and binds the first match to the script label `name`.
+Like Cheat Engine, the scan directives skip empty arguments, so `aobScanRegion(n, a, b,, 48 8B C4)`
+is read as `aobScanRegion(n, a, b, 48 8B C4)`.
 `??` is the wildcard byte token supported by the underlying AOB scanner. The directive accepts
 exactly two arguments. Invalid pattern text, scan failure, zero matches, an invalid label name, or
 a conflict with a previously bound label is an error.
@@ -325,7 +345,8 @@ unregisterSymbol(codeCave)
 dealloc(codeCave)
 ```
 
-The parser accepts the lower-case spellings `registersymbol` and `unregistersymbol` as well. Unknown
+The parser accepts the lower-case spellings `registersymbol` and `unregistersymbol` as well. An empty
+`registerSymbol()` or `unregisterSymbol()` does nothing, as in Cheat Engine. Unknown
 function-like lines are not silently treated as directives; they are passed to the assembler and
 normally fail as invalid assembly.
 

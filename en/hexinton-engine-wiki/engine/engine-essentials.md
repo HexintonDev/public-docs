@@ -159,7 +159,12 @@ The engine handles `alloc(name[, size[, near]])`, `globalAlloc`, `dealloc(name)`
 the [Auto Assembler API](auto-assembler-api.md).
 
 `aobScanModule` accepts module names with spaces, either unquoted or enclosed in double quotes,
-for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`. In headers
+for example `aobScanModule(site, "Tactics Ogre Reborn.exe", 66 41 01 86 4A 01 00 00)`. Address
+expressions accept the same names, and names that begin with digits (`007Game.exe+0x500`).
+
+On 64-bit games, `alloc(name, size)` without a near address is placed within 2 GB of the code the
+operation patches (its first header that resolves, such as an AOB result), or of the main module.
+Prefer the explicit form `alloc(name, size, hookSite)` in new code. In headers
 and other address expressions, put a module name that contains spaces in double quotes:
 `"Tales of Berseria.exe"+0x1234:`.
 
