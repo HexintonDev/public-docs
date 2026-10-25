@@ -28,7 +28,13 @@ local hits = AOBScanModule("game.exe", "48 8B ?? ?? 89")
 ```
 
 Use a module-scoped scan when the pattern belongs to a known module. Use the unique variant only when
-the pattern is expected to have exactly one match.
+the pattern is expected to have exactly one match. `AOBScanUnique` and `AOBScanModuleUnique` stop scanning at the
+second match, which already decides that the pattern is not unique.
+
+`AOBScan` returns every match in ascending address order and scans all committed, readable memory,
+including private memory that holds JIT-compiled code in .NET and Mono games. The auto assembler
+directives (`aobScan`, `aobScanModule`, `aobScanRegion`) only need the first, lowest match and stop
+reading memory once they have it.
 
 ## Safe Scan Pattern
 
