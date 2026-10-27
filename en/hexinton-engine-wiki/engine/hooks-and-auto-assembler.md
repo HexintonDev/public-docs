@@ -67,6 +67,21 @@ An enable implementation must record or deterministically derive the patched add
 every allocation and label it owns, and every timer or symbol created by the hook. On disable, restore
 original bytes before releasing the code cave, stop timers, and unregister published symbols.
 
+When a Lua trainer manages several features inside one package, its adapter owns
+their shared setup. Retain a prerequisite while any active consumer needs it;
+restore consumers before releasing their providers. Exclusive modes should release
+the old mode before installing the new one. Failed activation must roll back its
+acquired resources, and failed cleanup must retain enough ownership to retry.
+Successful pointer actions may need to retain setup until package disable: the
+target can be a flag inside an allocation used by the hook. Release it early only
+when the target's lifetime is known. Freezes and saved values retain setup until
+their timer stops or their original value is restored.
+
+A prerequisite and consumer that both patch the same scan match need verified hook
+composition. Preserve the dependency and reject the affected feature until its
+patch order and restore behavior are established. Removing the dependency or
+following an arbitrary installed jump cannot establish a correct hook.
+
 ## Limitations
 
 The current engine does not automatically discover instruction overwrite length, relocate displaced

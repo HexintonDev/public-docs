@@ -44,6 +44,16 @@ table:
 
 ### Names with offsets, far jumps and quoted modules
 
+Bare numbers depend on context. Use explicit `0x` literals when moving text between contexts:
+
+| Context | `10` means | Explicit hexadecimal |
+| --- | --- | --- |
+| Instruction operands and `.db/.dw/.dd/.dq` data | Decimal 10 | `0x10` means 16 |
+| Address expressions and directive size arguments | Hexadecimal 16 | `0x10` means 16 |
+
+For example, `readmem(site,0xF)` copies fifteen bytes and `alloc(buffer,0x800)`
+reserves 2048 bytes. These defaults also apply to existing scripts.
+
 These Cheat Engine forms are accepted as written:
 
 | Form | Meaning |
@@ -75,6 +85,22 @@ the assembler would otherwise reject, so text that already assembled is unchange
 A `far` hook overwrites 14 bytes, so reserve and restore that many at the hook site. Offsets follow
 the instruction number rules (`0x` hex, otherwise decimal); write `0x` as everywhere else. A name the
 engine does not know is not guessed: the line fails to assemble.
+
+Forward direct branches with an offset also work inside one chunk on x86 and x64:
+
+```asm
+alloc(cave,0x100)
+cave:
+  jmp later+0x2
+  nop
+later:
+  ret
+```
+
+`jmp`, conditional jumps and `call` use the label's actual assembled position plus
+the offset. An offset may also be negative. These temporary branch aliases stay
+inside the assembly pass; they do not export script symbols. Unknown labels and
+branches whose displacement does not fit the selected instruction remain errors.
 
 Binding a label at a module address still works and stays useful when several lines refer to it:
 

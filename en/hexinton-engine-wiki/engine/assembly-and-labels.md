@@ -41,3 +41,15 @@ private labels or allocations.
 
 See [Visibility and Namespaces](visibility-and-namespaces.md) for the package and session scope of
 these names.
+
+## Forward offsets and imported symbols
+
+Within one assembly chunk, `jmp later+0x2`, `jne later-0x2` and `call later+2`
+resolve after `later:` binds. Offsets use instruction number rules: bare numbers
+are decimal, and `0x` marks hexadecimal. The resulting aliases stay private to
+that assembly pass. See the [Auto Assembler API](auto-assembler-api.md#names-with-offsets-far-jumps-and-quoted-modules).
+
+An already visible registered symbol can be an address header (`flag:`) that
+writes to that address. A consumer in another script context must declare its
+provider dependency. Declaring a fresh unbound local label with the same name
+does not import the provider's symbol.

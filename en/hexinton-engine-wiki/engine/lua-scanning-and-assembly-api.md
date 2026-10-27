@@ -109,13 +109,15 @@ Lua array iterator, a `pairs` contract, process writes, or an automatic patch/ro
 ```lua
 autoAssemble(text) -> true
 autoAssemble(text) -> false, errorMessage
+autoAssemble(text, false, nil, {rollbackResourcesOnFailure = true}) -> true | false, errorMessage
 ```
 
 Executes Auto Assembler text synchronously in the current script/session context. On success it
 returns exactly `true`. On assembly, parser, address, allocation, protection, or process failure it
 returns `false` followed by an error string rather than throwing that failure directly. The optional
 `targetself=true` mode is explicitly unsupported and returns `false, errorMessage`; a non-`nil`
-`disableInfo` argument is also unsupported. Omit both optional arguments and put cleanup in the
+`disableInfo` argument is also unsupported. Normally omit both optional arguments; when selecting
+the fourth-argument options table, use `false, nil` for them. Put successful-call cleanup in the
 package disable path.
 
 ```lua
@@ -130,6 +132,26 @@ end
 
 `autoAssemble` does not expose native `EngineSession` patch methods as Lua functions and does not
 create an automatic disable/rollback record.
+
+Adapters that manage their own feature lifetimes can request resource rollback explicitly:
+
+```lua
+autoAssemble(text, false, nil, {rollbackResourcesOnFailure = true})
+```
+
+Before any writes, deallocation or remote-thread execution may have committed, a failed
+call releases its new allocations and restores the prior local labels and exports.
+Existing callers keep their current failure-cleanup ownership unless they select this option.
+Successful calls still need an explicit disable operation.
+
+When writes may already be live, or cleanup itself fails, resources remain owned and the
+error includes `[assembly_resources_retained]`. Keep cleanup state and restore the hook
+before freeing its cave; report cleanup failure and allow a retry. This option does not
+undo `fullAccess` protection changes, committed writes, deallocation or started threads.
+
+Precommit cleanup continues after an individual free fails and restores earlier local
+bindings and exports. Resources still owned retain nonconflicting names for an explicit
+cleanup retry. The failure marker means cleanup is still required.
 
 ## `fullAccess`
 
