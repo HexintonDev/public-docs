@@ -29,6 +29,7 @@ interface SurfaceBootstrapMessageV1 {
     packageVersion: string;
     surfaceId: string;
     environment: {
+      mode?: "recording"; // Absent in ordinary live hosts.
       theme: "dark" | "light";
       locale: string;
       reducedMotion: boolean;
@@ -48,6 +49,36 @@ port. The frame has an opaque origin, so origin-string checks are not the author
 Install the port listener before calling `surface.ready`. Call it within five seconds, then wait for
 `lifecycle.changed` with `state: "active"`. Requests sent before ready or while suspended are
 rejected; they are not queued.
+
+## Recording mode
+
+Inside the isolated Save Mods editor, `sdk.environment.getSnapshot().mode` is `"recording"`.
+The field is absent in ordinary live hosts. The normal SDK methods still use the private port;
+the recording host handles them without executing game commands, game queries, or live Service
+subscriptions. Binding responses come from the optional
+[`recording.result` manifest declaration](custom-interface-manifest.md#isolated-save-mods-recording).
+Missing declarations do not become successful null responses.
+
+The declared results are initial preview data. They are not live values, and a fixed query response
+does not automatically implement a game-backed workflow. Keep local state inside the page when
+recording mode needs it, for example updating a selected value after a recorded command:
+
+```js
+let displayedHealth = 100;
+const recording = sdk.environment.getSnapshot().mode === "recording";
+async function setHealth(health) {
+  await sdk.commands.execute("health.set", { health });
+  if (recording) {
+    displayedHealth = health;
+    render();
+  }
+  // The live page continues to get current values through its existing ViewModel subscription.
+}
+```
+
+Use the declared initial response and packaged catalogue data to initialize the page. Avoid showing
+recorded command completion as proof that the game changed. Live hosts ignore `recording.result`
+and continue resolving the same binding aliases to their normal runnables and feeds.
 
 ## Localized Text
 

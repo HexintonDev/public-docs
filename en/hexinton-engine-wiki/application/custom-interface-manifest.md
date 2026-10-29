@@ -40,6 +40,47 @@ ViewModel or one-shot command; it does not expose Lua or native memory.
 `frontend.surfaces`, which describes a package-owned HTML document. Do not put a surface entry under
 `frontend.hosted`.
 
+## Isolated Save Mods recording
+
+Each binding can optionally declare `recording: { "result": ... }`. The result is a finite JSON
+value supplied by the recording host instead of executing the binding's runnable or subscribing to
+its live Service. This applies to `command`, `query`, and `viewModel` bindings:
+
+```json
+{
+  "bindings": {
+    "health.set": {
+      "type": "command", "action": "set-health",
+      "recording": { "result": null }
+    },
+    "inventory.search": {
+      "type": "query", "query": "search-inventory",
+      "recording": { "result": [{ "id": "potion", "name": "Potion" }] }
+    },
+    "health.current": {
+      "type": "viewModel", "viewModel": "health",
+      "recording": { "result": { "health": 100 } }
+    }
+  }
+}
+```
+
+Omitting `recording` means no recording response was declared. It is different from
+`"recording": { "result": null }`, which explicitly declares a successful null response.
+`"recording": {}`, `"recording": null`, and non-object declarations are invalid. Existing packages
+without this metadata keep their normal live behavior; declaring it does not change live execution.
+Save Mods opens the interface in its isolated editor when every declared binding has a recording
+response. Otherwise it shows a recording-support notice for that interface. Local preparation before
+Start is not saved; commands issued after Start become ordered replay steps. Queries and ViewModel
+reads never become steps. Loading resolves each saved command alias against the current package.
+
+These responses are authored initial preview data, not current game state or a simulation of the
+runnable. A query receives the same declared response regardless of its arguments. Stateful
+interfaces should use [`environment.mode === "recording"`](custom-interface-api.md#recording-mode)
+to maintain local UI state and filter packaged catalogue data. Arbitrary workflows that depend on
+live game queries are not automatically simulated. Recording does not execute game commands,
+queries, or live Service subscriptions.
+
 ## Entry document and folder
 
 Each surface owns one folder, `frontend/<surface-id>/`, and its `entry` must be exactly

@@ -9,6 +9,7 @@ Public documentation for Hexinton Mod and the Hexinton Engine scripting runtime.
 * [Host-Lua dependency queries, actions and services](en/hexinton-engine-wiki/engine/dependency-runnable-api.md)
 * [Public user guide](start-here/public-user-guide.md)
 * [Studio AI assistant and manual Apply](start-here/getting-started/studio-ai-assistant.md)
+* [Custom-interface manifest and isolated recording responses](en/hexinton-engine-wiki/application/custom-interface-manifest.md#isolated-save-mods-recording)
 * [Sample library](hexinton-engine-wiki/engine/samples/)
 
 The Hexinton Engine technical Wiki is for script authors, trainer creators, tool integrators, and AI assistants. The user guide is for people operating the installed Hexinton Mod client.
