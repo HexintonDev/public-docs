@@ -1,6 +1,6 @@
 # UE4SS Runtime
 
-Status: implemented runtime authoring contract, reviewed on 2026-10-07; framework location updated on 2026-10-21. Release builds of the client ship the pinned UE4SS framework with the installation, and the client uses it for every package UE4SS run. The runtime is intended for production use; complete client-to-game qualification is still required.
+Status: implemented runtime authoring contract, reviewed on 2026-10-07; framework location updated on 2026-10-21. Release builds of the client ship the pinned UE4SS framework with the installation, as the default; declared support packages can provide a custom distribution. The runtime is intended for production use; complete client-to-game qualification is still required.
 
 UE4SS runs Lua inside an attached Unreal game process. HexMod uses it to resolve Unreal objects, read reflected properties, call reflected functions and register managed callbacks. Ordinary engine Lua continues to run in a separate host-side interpreter with memory, address, symbol and assembly APIs. You can combine the two through [dependency runnable calls](dependency-runnable-api.md).
 
@@ -24,7 +24,16 @@ There is no new UI command format. Trainer controls and custom interfaces bind d
 
 The target must be a running native Windows x64 game, and the client must have sufficient process access. The selected UE4SS distribution must work with the game. On first UE4SS execution, the engine verifies/stages its prepared framework assets, loads the DLL into the game and waits for a matching bridge session. A separate user-run injector or pre-launch installation is not required by this loading path.
 
-The framework belongs to the client installation, not to packages. At startup the client configures one framework root for the whole process, `<application>/components/ue4ss`, which contains `.frameworks/ue4ss/profile.json` and the pinned distribution files; every package UE4SS run loads UE4SS from there. The applied scripts root holds only package folders: the engine no longer looks for `<scriptsRoot>/.frameworks/ue4ss`, so never copy the framework into a package or a scripts root. Bridge assets must accompany the native host module. If the installed framework is missing, UE4SS runnables fail with `ue4ss_unavailable` and a message that the installation is incomplete; reinstall the client. Studio's UE inspection tools use the same installed framework by default; an explicit `frameworkRoot` passed to `ue_attach` overrides it for that inspection only.
+The client configures its default framework root at startup, `<application>/components/ue4ss`,
+containing `.frameworks/ue4ss/profile.json` and the pinned distribution files. A support package
+can override the default with a validated top-level `ue4ss.frameworkRoot` declaration; see
+[package-provided UE4SS runtimes](ue4ss-package-runtime.md). The engine selects declarations from
+the applied package set, rejects conflicting profile digests, and otherwise uses the installed
+default. The old loose `<scriptsRoot>/.frameworks/ue4ss` layout is ignored. Bridge assets must
+accompany the native host module. For `ue4ss_unavailable`, inspect the selected distribution,
+manifest, asset hashes and process access before recommending reinstallation. Studio resolves
+support-package declarations from the saved workspace; an explicit inspection `frameworkRoot`
+is a development override.
 
 One connection is shared by UE packages in that process. Another already-loaded UE4SS installation is rejected unless it is the matching staged HexMod installation. Detach releases package work and the connection; it does not unload the DLL. An uncertain loader attempt requires game restart. An established matching DLL can be reused with a fresh attachment session.
 

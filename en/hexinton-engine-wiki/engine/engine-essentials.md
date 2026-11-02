@@ -58,14 +58,15 @@ Group a game's features into a few packages by player activity (survival, combat
 movement, world), not by source and not one feature per package. Do not split an activity into tiny
 packages: a toggle or two that share nothing else belongs in the nearest activity package.
 
-The engine has no .NET name resolver. For .NET games (CoreCLR such as Stardew Valley, or .NET
-Framework such as Terraria), Cheat Engine `.NET` symbols like `Terraria.Main::get_LocalPlayer+10`
-and trainer scripts that find methods by name cannot be resolved; the methods exist only after the
-runtime compiles them. The current workaround is a whole-process `AOBScanUnique` of the source's
-own bytes that refuses to patch unless there is exactly one match. Short prologue-only patterns
-are rarely unique, so those features, and features that call managed methods by name, cannot be
-converted yet; report them with that reason. Unity Mono games are different: the game's exported
-`mono_*` functions can be called with `executeCode` to resolve classes, methods and fields by name.
+The engine resolves classes, methods and fields by name in Unity Mono, IL2CPP, CoreCLR and
+.NET Framework CLR v4 through `managed.attach()` and its `rt:method` / `rt:field` APIs. Concrete
+.NET methods can be compiled on demand. CE symbol text such as
+`Terraria.Main::get_LocalPlayer+10` is not automatically resolved: use the
+[managed runtime API](managed-runtime-api.md). Its method address can be an entry stub, and
+CLR/CoreCLR do not return a code size. A source's body offset therefore needs independently
+verified body/range information. Lookup is separate from managed invocation and string/object
+marshalling; do not assume native `executeCode` makes an arbitrary managed call safe.
+Use [game speed](game-speed-api.md) for supported speed controls.
 
 For a custom HTML interface, reuse the supplied `surface-sdk.js` module and the public `hm-*` UI
 kit. The installed author-reference folder contains `_code/surface-sdk.js`,
@@ -168,8 +169,9 @@ Prefer the explicit form `alloc(name, size, hookSite)` in new code. In headers
 and other address expressions, put a module name that contains spaces in double quotes:
 `"Tales of Berseria.exe"+0x1234:`.
 
-`readmem(address, size)` inside a chunk writes the bytes currently at `address` (1 to 4096 bytes),
-for example to keep the original instructions a hook overwrites:
+`readmem(address, size)` inside a chunk copies the bytes currently at `address`. The size must
+be positive, the source readable and the destination large enough; there is no fixed 4096-byte
+limit. For example, keep the original instructions a hook overwrites:
 
 ```asm
 alloc(saved, 0x100)

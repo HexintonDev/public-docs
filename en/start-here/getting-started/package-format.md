@@ -25,6 +25,7 @@ Only manifest-declared files are runtime inputs. Use package-relative paths and 
 | `dependencies` | no       | Explicit package dependencies         |
 | `runtime`      | yes      | Files, public entries, and runnables  |
 | `application`  | no       | Application JavaScript scripts (`finder`, `launcher`) |
+| `ue4ss` | no | Support-package distribution: `{"frameworkRoot":"assets/ue4ss"}`; see [selection and validation](../../hexinton-engine-wiki/engine/ue4ss-package-runtime.md) |
 | `frontend`     | no       | Hosted UI declarations                |
 | `required`     | no       | `true` for a package players cannot switch off (restricted, see below) |
 

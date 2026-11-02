@@ -63,8 +63,9 @@ function disable()
 end
 
 function setHealth(arguments)
-    writeInteger(healthAddress, arguments.value)
-    return { ok = true, value = arguments.value }
+    if not writeInteger(healthAddress, arguments.value) then
+        error("Health could not be changed")
+    end
 end
 ```
 
@@ -89,6 +90,12 @@ The current native resolver uses `compatible` (or the legacy alternative `versio
 `tested`. Cloud package publication currently requires both `compatible` and a valid `tested`
 version within that range, so retain the shape above for packages intended for upload. Passing
 local dependency validation alone does not establish acceptance by cloud publication.
+
+Action return values are discarded. A required operation must check its result and raise
+an error on failure; returning `{ok=false}` does not fail an action. Queries return data.
+
+For custom Unreal distributions, a support package can declare top-level `ue4ss.frameworkRoot`;
+see [package-provided UE4SS runtimes](ue4ss-package-runtime.md).
 
 ## Validation Checklist
 

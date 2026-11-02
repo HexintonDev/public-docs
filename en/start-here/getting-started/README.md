@@ -54,4 +54,9 @@ not automatically enabled. Actions and queries can enable their owning package. 
 4. Return serializable query values; action completion does not expose an entrypoint return value.
 5. Test missing targets, ambiguous scans, repeated enable, action failure, and disable cleanup.
 
-Choose host Lua for process memory, UE4SS Lua for Unreal reflection, Auto Assembler for assembly actions, and application JavaScript for capability-gated host tasks. See [runtime selection](runtimes.md), [package format](package-format.md), and the [UE4SS/host-Lua sample](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md). UE4SS requires a prepared framework and is not automatically provisioned by Apply yet.
+Choose host Lua for process memory, UE4SS Lua for Unreal reflection, Auto Assembler for assembly actions, and application JavaScript for capability-gated host tasks. See [runtime selection](runtimes.md), [package format](package-format.md), and the [UE4SS/host-Lua sample](../../hexinton-engine-wiki/engine/samples/ue4ss-player-location.md). UE4SS requires a prepared installed distribution or a declared support-package distribution delivered with the packages.
+
+For managed games use the [managed runtime API](../../hexinton-engine-wiki/engine/managed-runtime-api.md);
+supported speed controls use the [game speed API](../../hexinton-engine-wiki/engine/game-speed-api.md).
+UE4SS can use the installed default or a declared
+[support-package distribution](../../hexinton-engine-wiki/engine/ue4ss-package-runtime.md).

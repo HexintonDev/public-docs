@@ -188,3 +188,19 @@ ownership clear and releases callback references promptly.
 Runnable return values must be JSON-compatible: `nil`, booleans, numbers, strings, and tables made
 from compatible values. Cyclic or unsupported values fail during result conversion. A timer handle,
 process handle, scan list, function, or thread is not a valid runnable result or event payload.
+
+## `requestSaveBackup`
+
+```lua
+requestSaveBackup(name, description?) -> requestId
+```
+
+Submits an asynchronous save-backup request to the desktop application. The name must contain
+1–80 UTF-8 bytes; the optional description may contain up to 1800 bytes. Missing application
+event support or invalid arguments raise a Lua error. The returned correlation ID acknowledges
+submission only; application results/history report success or failure. There is no Lua
+await/status API.
+
+The application uses the trusted attached game/package identity and its configured save
+profile. A script cannot select another account, game or arbitrary filesystem path. Stale
+attachments and packages outside the applied snapshot are rejected by the application.

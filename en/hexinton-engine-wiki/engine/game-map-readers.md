@@ -141,5 +141,5 @@ Use [unit and integration tests](testing.md) for production transformations, mis
 Current implementation references:
 
 - [Shared map types and guards](https://github.com/HexintonDev/HexModClient/tree/main/packages/game-maps/src)
-- [Client capability selection and command demand](https://github.com/HexintonDev/HexModClient/blob/main/ProcessEngine/host/HexEngine.WebViewTest/Views/src/features/maps/useMapRuntime.ts)
+- [Client capability selection and command demand](https://github.com/HexintonDev/HexModClient/blob/main/ProcessEngine/host/HexintonMod.Desktop/Views/src/features/maps/useMapRuntime.ts)
 - [Experimental reader packages and harness](https://github.com/HexintonDev/HexModClient/tree/main/ProcessEngine/experiments/game-maps)

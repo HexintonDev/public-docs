@@ -36,6 +36,9 @@ Read the pages in this order:
 | Configure trainer controls and custom surfaces | [Trainer controls and UI bindings](trainer-controls.md)  |
 | Read held keys for fly, noclip or other continuous movement | [Native hotkeys](native-hotkeys.md) |
 | Call a game function: item spawner, warp, NPC spawn, event | [Converting CE game-call scripts](converting-ce-game-calls.md) |
+| Resolve managed classes, methods and fields | [Managed runtime API](managed-runtime-api.md) |
+| Change game speed with cleanup ownership | [Game speed API](game-speed-api.md) |
+| Supply a custom Unreal runtime | [Package-provided UE4SS runtimes](ue4ss-package-runtime.md) |
 | Find an API function                           | [Lua API reference](lua-api-reference.md)                |
 | Use Auto Assembler directives                  | [Auto Assembler API](auto-assembler-api.md)              |
 | Publish live values to a UI                    | [Lua scripting](lua-scripting.md)                        |

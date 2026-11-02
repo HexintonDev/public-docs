@@ -141,6 +141,15 @@ Use `??` for a wildcard byte in an AOB pattern. Check scan results before readin
 
 For CE item spawners, warps and event calls, see [converting CE game-call scripts](converting-ce-game-calls.md).
 
+## Managed Runtime and Game Speed
+
+| API | Contract |
+| --- | --- |
+| [`managed.attach()`](managed-runtime-api.md) | Mono, IL2CPP, CoreCLR and CLR v4 class/method/field lookup |
+| [`rt:method(...)`](managed-runtime-api.md#class-and-method-lookup) | Overload selection and native entry point; code size is optional |
+| [`rt:field(...)`, `rt:static(...)`](managed-runtime-api.md#fields-and-static-storage) | Instance offsets and supported static storage |
+| [`speed.set(factor)`, `speed.get()`](game-speed-api.md) | Session game-speed setting, 0.1–10, with package cleanup ownership |
+
 ## Cheat Engine Helpers
 
 `bAnd`, `bOr`, `bXor`, `bNot`, `bShl`, `bShr`, the byte-table conversions (`dwordToByteTable`,
@@ -155,6 +164,7 @@ For CE item spawners, warps and event calls, see [converting CE game-call script
 | [`createTimer(...)`](lua-runtime-utilities-api.md#createtimer) | Create a timer (CE forms; callback errors do not stop it) |
 | [`sleep(milliseconds)`](lua-runtime-utilities-api.md#sleep) | Pause the current script |
 | [`process`](lua-runtime-utilities-api.md#process) | Attached process main module name |
+| [`requestSaveBackup(name, description?)`](lua-runtime-utilities-api.md#requestsavebackup) | Submit an application save-backup request; returns a correlation ID, not completion |
 | [`publishEvent(event, value)`](lua-runtime-utilities-api.md#publishevent) | Publish service state to a declared feed |
 | [`synchronize(fn, ...)`](lua-game-calls-and-worker-api.md#synchronize) | Call `fn` now on the Lua worker and return its results |
 | [`queue(fn, ...)`](lua-game-calls-and-worker-api.md#queue) | Run `fn` on a later Lua worker turn |
@@ -167,7 +177,8 @@ the package and must stop or become inactive during `disable`.
 
 ## Return Values and Errors
 
-Runnable functions may return JSON-compatible values: `nil`, booleans, numbers, strings, and tables
-containing compatible values. Raise an error when a required check fails. Every engine error,
+Queries may return JSON-compatible values; action return values are discarded. Required writes
+must check their boolean/count result and raise on failure. Compatible values include `nil`,
+booleans, numbers, strings and tables containing compatible values. Raise an error when a required check fails. Every engine error,
 including one raised in native code, can be caught with `pcall`. Do not continue with a
 write after an unresolved address, missing scan result, stale attachment, or invalid argument.
