@@ -91,7 +91,7 @@ Coordinate calibration is supplied by the map content, separately from the runti
 
 ## Facing direction
 
-Publish the real facing direction whenever the game exposes it: camera or controller yaw for third-person and first-person games where WeMod-style maps follow the camera, otherwise the player actor's yaw. Read the yaw ψ (radians) in the world plane spanned by the calibration's first two world axes, measured from +axis0 towards +axis1, and convert it through the published map calibration `matrix`:
+Publish the real facing direction whenever the game exposes it: camera or controller yaw for third-person and first-person games where the map follows the camera, otherwise the player actor's yaw. Read the yaw ψ (radians) in the world plane spanned by the calibration's first two world axes, measured from +axis0 towards +axis1, and convert it through the published map calibration `matrix`:
 
 ```lua
 -- m = calibration.matrix of the published map content (rows of x, y, z, translation coefficients)
